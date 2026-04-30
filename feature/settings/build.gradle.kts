@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.feature.settings"
+    namespace = "com.letapay.app.feature.settings"
 }
 
 kotlin {
@@ -33,6 +33,6 @@ kotlin {
 
 compose {
     resources {
-        packageOfResClass = "org.mifos.feature.settings.generated.resources"
+        packageOfResClass = "com.letapay.app.feature.settings.generated.resources"
     }
 }

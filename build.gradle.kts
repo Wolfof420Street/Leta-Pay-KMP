@@ -42,8 +42,6 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.wire) apply false
     alias(libs.plugins.ktrofit) apply false
-
-    alias(libs.plugins.room) apply false
 }
 
 object DynamicVersion {
@@ -52,6 +50,12 @@ object DynamicVersion {
         file.writeText(cleanedVersion)
     }
 }
+
+val enableWasmTargets = providers
+    .gradleProperty("letapay.enableWasm")
+    .map(String::toBoolean)
+    .orElse(false)
+    .get()
 
 tasks.register("versionFile") {
     val file = File(projectDir, "version.txt")
@@ -76,6 +80,11 @@ moduleGraphAssert {
     configurations += setOf("desktopMainImplementation", "desktopMainApi")
     configurations += setOf("jsMainImplementation", "jsMainApi")
     configurations += setOf("nativeMainImplementation", "nativeMainApi")
-    configurations += setOf("wasmJsMainImplementation", "wasmJsMainApi")
+    if (enableWasmTargets) {
+        configurations += setOf("wasmJsMainImplementation", "wasmJsMainApi")
+    }
 }
 
+subprojects {
+    if (name == "cmp-ios") return@subprojects
+}

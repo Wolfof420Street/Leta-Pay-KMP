@@ -13,7 +13,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.feature.profile"
+    namespace = "com.letapay.app.feature.profile"
 }
 
 kotlin {
@@ -31,6 +31,6 @@ kotlin {
 
 compose {
     resources {
-        packageOfResClass = "org.mifos.feature.profile.generated.resources"
+        packageOfResClass = "com.letapay.app.feature.profile.generated.resources"
     }
 }

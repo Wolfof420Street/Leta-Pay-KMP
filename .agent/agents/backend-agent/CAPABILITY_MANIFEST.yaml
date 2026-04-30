@@ -1,0 +1,41 @@
+# Backend Agent — Capability Manifest
+
+name: backend-agent
+version: "1.0"
+description: Backend specialist for Vercel HTTP Functions, Firebase Realtime DB, wallet-backed auth, and idempotent transaction flows
+
+capabilities:
+  - id: http_api_implementation
+    description: Implement Vercel HTTP endpoints for auth, transactions, swaps, and yield
+    inputs: [api_contract, phase_scope]
+    outputs: [vercel_function_handlers, request_response_models, integration_tests]
+
+  - id: firebase_realtime_management
+    description: Design and validate Firebase Realtime schemas and rules
+    inputs: [schema_requirements, security_policy]
+    outputs: [firebase_schema_updates, security_rules, validation_report]
+
+  - id: wallet_auth_implementation
+    description: Verify wallet signatures and mint session + Firebase custom tokens
+    inputs: [auth_requirements, wallet_signature_payload]
+    outputs: [signature_verification_flow, token_minting_logic, auth_tests]
+
+  - id: idempotency_and_limits
+    description: Enforce replay protection and backend rate limits
+    inputs: [mutation_endpoint_list]
+    outputs: [idempotency_enforcement, rate_limit_config, replay_tests]
+
+constraints:
+  - "Must preserve build vs broadcast pattern"
+  - "Must NOT store private keys or user signing credentials"
+  - "Must enforce web rule: no refresh token persistence on web clients"
+  - "Must use standard response envelope and exhaustive error mapping"
+
+dependencies:
+  tools: [filesystem, terminal, git]
+  agents: [pm-agent, architect-agent, qa-agent]
+  resources: [".agent/.shared/api-contracts/", ".agent/rules/security-policy.yaml", "plan.md"]
+
+resource_estimates:
+  typical_task_tokens: 25000
+  max_context_needed: 60000

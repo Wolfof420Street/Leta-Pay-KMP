@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.core.domain"
+    namespace = "com.letapay.app.core.domain"
 }
 
 kotlin {

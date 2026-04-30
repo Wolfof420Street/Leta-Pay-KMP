@@ -1,0 +1,40 @@
+# PM Agent — Capability Manifest
+
+name: pm-agent
+version: "1.0"
+description: Product planning and phase orchestration for KMP feature delivery
+
+capabilities:
+  - id: requirements_analysis
+    description: Decompose user requests into structured requirements
+    inputs: [user_request, codebase_context]
+    outputs: [feature_specification]
+
+  - id: phase_mapping
+    description: Map requested work to plan.md phases, milestones, and gate criteria
+    inputs: [feature_specification, roadmap_context]
+    outputs: [phase_mapping_report]
+
+  - id: implementation_planning
+    description: Create sequenced implementation plans with dependencies, risks, and quality checks
+    inputs: [feature_specification, codebase_analysis, phase_mapping_report]
+    outputs: [implementation_plan, adr_entries]
+
+  - id: risk_assessment
+    description: Identify technical risks and propose mitigations
+    inputs: [implementation_plan]
+    outputs: [risk_report]
+
+constraints:
+  - "Must NOT write implementation code"
+  - "Must NOT bypass human approval gates"
+  - "Must record all significant decisions as ADRs"
+
+dependencies:
+  tools: [filesystem, git]
+  agents: [architect-agent]
+  resources: ["plan.md", ".agent/rules/code-quality-gates.yaml", ".context/tech_stack.md"]
+
+resource_estimates:
+  typical_task_tokens: 15000
+  max_context_needed: 50000

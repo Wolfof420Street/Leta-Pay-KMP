@@ -21,11 +21,11 @@ import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cmp.shared.SharedApp
+import com.letapay.app.core.data.repository.NetworkMonitor
+import com.letapay.app.core.data.repository.UserDataRepository
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.init
 import org.koin.android.ext.android.inject
-import org.mifos.core.data.repository.NetworkMonitor
-import org.mifos.core.data.repository.UserDataRepository
 import template.core.base.analytics.AnalyticsHelper
 import template.core.base.analytics.lifecycleTracker
 import template.core.base.platform.update.AppUpdateManager

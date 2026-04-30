@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_wallet_title">Wallet</string>
+    <string name="feature_wallet_no_session">No active wallet session</string>
+    <string name="feature_wallet_total_prefix">Total USD</string>
+    <string name="feature_wallet_refreshing_button">Refreshing...</string>
+    <string name="feature_wallet_refresh_button">Refresh balance</string>
+    <string name="feature_wallet_disconnect_button">Disconnect wallet</string>
+    <string name="feature_wallet_loading_balances">Loading balances...</string>
+    <string name="feature_wallet_balance_empty">No balances returned from /api/portfolio/balance yet.</string>
+    <string name="feature_wallet_amount_prefix">Amount</string>
+    <string name="feature_wallet_chain_prefix">Chain</string>
+    <string name="feature_wallet_usd_prefix">USD</string>
+</resources>

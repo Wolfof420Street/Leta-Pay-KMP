@@ -22,14 +22,19 @@ kotlin {
             implementation(projects.core.model)
             implementation(projects.core.common)
             implementation(projects.core.datastore)
+            implementation(projects.core.network)
+            implementation(projects.core.database)
 
             implementation(projects.core.datastore)
             implementation(projects.coreBase.common)
             implementation(projects.coreBase.platform)
 
-            implementation(projects.feature.home)
-            implementation(projects.feature.profile)
-            implementation(projects.feature.settings)
+            implementation(projects.feature.auth)
+            implementation(projects.feature.wallet)
+            implementation(projects.feature.chat)
+            implementation(projects.feature.trade)
+            implementation(projects.feature.yield)
+            implementation(projects.feature.agent)
 
             //put your multiplatform dependencies here
             implementation(compose.material3)

@@ -194,7 +194,7 @@ architecture:
   sharing structure
 - [ ] [Sync Script](docs/SYNC_SCRIPT.md) - Information about keeping in sync with upstream changes
 - [ ] [Secrets Manager](docs/SECRETS_MANAGER.md) - Documentation for the keystore and secrets
-  management system
+  managem[CLAUDE.md](CLAUDE.md)ent system
 - [ ] [Fastlane Configuration](docs/FASTLANE_CONFIGURATION.md) - Guide to automating deployments
   with fastlane
 

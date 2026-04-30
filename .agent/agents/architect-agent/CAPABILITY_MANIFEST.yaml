@@ -1,0 +1,45 @@
+# Architect Agent — Capability Manifest
+
+name: architect-agent
+version: "1.0"
+description: "KMP architecture analysis, dependency governance, and phase-readiness guidance"
+
+capabilities:
+  - id: map_codebase
+    description: "Parallel analysis of existing codebase: stack, architecture, conventions, concerns"
+    inputs: [project_root]
+    outputs: [codebase_map, tech_stack_update, coding_standards_update]
+    parallel_agents:
+      - stack_detector
+      - architecture_mapper
+      - convention_discoverer
+      - concern_identifier
+
+  - id: pattern_validation
+    description: "Verify proposed changes fit KMP layered architecture and locked decisions"
+    inputs: [proposed_changes, codebase_map]
+    outputs: [compatibility_report, recommendations]
+
+  - id: phase_readiness_validation
+    description: "Validate proposed work against Phase 1-9 gate criteria"
+    inputs: [phase_scope, implementation_plan]
+    outputs: [phase_gate_report, blocker_list]
+
+  - id: brownfield_analysis
+    description: "Analyze existing project before adding new features"
+    inputs: [feature_request, codebase_map]
+    outputs: [integration_strategy, risk_assessment]
+
+constraints:
+  - "Must NOT modify code — read-only and advisory"
+  - "Must complete mapping before features are planned on brownfield projects"
+  - "Must identify patterns, not impose new ones"
+
+dependencies:
+  tools: [filesystem, git]
+  agents: [pm-agent]
+  resources: ["plan.md", ".agent/rules/code-quality-gates.yaml", ".planning/research/"]
+
+resource_estimates:
+  typical_task_tokens: 40000
+  max_context_needed: 100000

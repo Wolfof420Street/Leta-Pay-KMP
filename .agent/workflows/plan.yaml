@@ -1,0 +1,45 @@
+name: plan
+description: "Generate KMP phase-aligned implementation plan with dependencies, gates, and multi-platform scope"
+
+steps:
+  - name: intake
+    outputs:
+      - requirement_summary
+      - target_phase
+      - impacted_platforms
+
+  - name: architecture_alignment
+    agent: architect-agent
+    validations:
+      - layer_order_preserved
+      - no_circular_dependencies
+      - expect_actual_placement_valid
+
+  - name: task_decomposition
+    format: structured_tasks
+    required_fields:
+      - id
+      - priority
+      - agent
+      - depends_on
+      - modules
+      - acceptance_criteria
+
+  - name: contract_validation
+    agent: backend-agent
+    validations:
+      - build_broadcast_pattern_preserved
+      - firebase_schema_compatible
+      - auth_and_token_flow_consistent
+
+  - name: qa_gate_definition
+    agent: qa-agent
+    checks:
+      - ./gradlew spotlessCheck
+      - ./gradlew detekt
+      - ./gradlew commonTest test
+      - ./gradlew dependencyGuard
+
+outputs:
+  - .agent/plan.json
+  - .planning/PLAN_SUMMARY.md

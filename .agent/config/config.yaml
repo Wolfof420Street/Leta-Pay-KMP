@@ -1,0 +1,34 @@
+# Agent Configuration — Leta-Pay KMP
+# Primary execution config for KMP-focused orchestration.
+
+# Paths
+serena_path: .serena
+mcp_config: .agent/mcp.json
+
+# Project profile
+project_type: kotlin-multiplatform
+platform_targets:
+  - android
+  - ios
+  - desktop
+  - web
+
+# Default workflow entry points
+default_workflows:
+  plan: .agent/workflows/plan.yaml
+  orchestrate: .agent/workflows/orchestrate.yaml
+  review: .agent/workflows/review.yaml
+
+# Mandatory quality gate commands (must pass before completion)
+quality_gates:
+  - ./gradlew spotlessApply
+  - ./gradlew spotlessCheck
+  - ./gradlew detekt
+  - ./gradlew commonTest test
+  - ./gradlew dependencyGuard
+
+# Phase execution model from plan.md
+phase_model:
+  enabled: true
+  total_phases: 9
+  gate_required_to_advance: true

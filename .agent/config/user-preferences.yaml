@@ -1,0 +1,31 @@
+# User Preferences (Optional)
+# Project-specific user configuration
+#
+# This file is optional. Works with defaults if not present.
+# CLI priority: --vendor arg > agent_cli_mapping > default_cli > cli-config.yaml's active_vendor > gemini
+
+# Response language setting (ko, en, ja, zh, ...)
+language: en
+
+# Date/time format
+date_format: ISO
+timezone: UTC
+
+# Default CLI (for single tasks)
+default_cli: codex
+
+# KMP-oriented execution defaults
+project_focus:
+  architecture: kotlin-multiplatform
+  enforce_phase_gates: true
+  run_quality_gates_before_done: true
+
+# Per-agent CLI mapping (multi-CLI mode)
+agent_cli_mapping:
+  frontend: codex
+  backend: codex
+  mobile: codex
+  qa: codex
+  debug: codex
+  pm: codex
+  architect: codex

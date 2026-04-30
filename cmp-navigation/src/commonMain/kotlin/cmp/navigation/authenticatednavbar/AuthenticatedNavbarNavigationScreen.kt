@@ -36,19 +36,22 @@ import cmp.navigation.ui.KptRootScaffold
 import cmp.navigation.ui.ScaffoldNavigationData
 import cmp.navigation.ui.logDestinationChanged
 import cmp.navigation.ui.rememberKptNavController
+import com.letapay.app.core.ui.NavigationItem
+import com.letapay.app.feature.chat.chatDestination
+import com.letapay.app.feature.chat.navigateToChat
+import com.letapay.app.feature.trade.navigateToTrade
+import com.letapay.app.feature.trade.tradeDestination
+import com.letapay.app.feature.wallet.WalletRoute
+import com.letapay.app.feature.wallet.navigateToWallet
+import com.letapay.app.feature.wallet.walletDestination
+import com.letapay.app.feature.yield.navigateToYield
+import com.letapay.app.feature.yield.yieldDestination
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import org.mifos.core.ui.NavigationItem
-import org.mifos.feature.home.TasksDestination
-import org.mifos.feature.home.navigateToTasks
-import org.mifos.feature.home.tasksGraph
-import org.mifos.feature.profile.navigateToProfile
-import org.mifos.feature.profile.profileDestination
 import template.core.base.analytics.rememberAnalyticsHelper
 import template.core.base.ui.EventsEffect
-import template.core.base.ui.RootTransitionProviders
 
 @Composable
 internal fun AuthenticatedNavbarNavigationScreen(
@@ -57,7 +60,6 @@ internal fun AuthenticatedNavbarNavigationScreen(
         name = "AuthenticatedNavbarScreen",
     ),
     viewModel: AuthenticatedNavbarNavigationViewModel = koinViewModel(),
-    navigateToSettingsScreen: () -> Unit,
 ) {
     val analyticsHelper = rememberAnalyticsHelper()
     val scope = rememberCoroutineScope()
@@ -67,18 +69,21 @@ internal fun AuthenticatedNavbarNavigationScreen(
     EventsEffect(eventFlow = viewModel.eventFlow) { event ->
         navController.apply {
             when (event) {
-                AuthenticatedNavBarEvent.NavigateToHomeScreen -> {
+                AuthenticatedNavBarEvent.NavigateToChatScreen -> {
                     analyticsHelper.logDestinationChanged(event.tab.startDestinationRoute)
-                    navigateToTabOrRoot(tabToNavigateTo = event.tab) {
-                        navigateToTasks(navOptions = it)
-                    }
+                    navigateToTabOrRoot(tabToNavigateTo = event.tab) { navigateToChat(navOptions = it) }
                 }
-
-                AuthenticatedNavBarEvent.NavigateToProfileScreen -> {
+                AuthenticatedNavBarEvent.NavigateToWalletScreen -> {
                     analyticsHelper.logDestinationChanged(event.tab.startDestinationRoute)
-                    navigateToTabOrRoot(tabToNavigateTo = event.tab) {
-                        navigateToProfile(navOptions = it)
-                    }
+                    navigateToTabOrRoot(tabToNavigateTo = event.tab) { navigateToWallet(navOptions = it) }
+                }
+                AuthenticatedNavBarEvent.NavigateToTradeScreen -> {
+                    analyticsHelper.logDestinationChanged(event.tab.startDestinationRoute)
+                    navigateToTabOrRoot(tabToNavigateTo = event.tab) { navigateToTrade(navOptions = it) }
+                }
+                AuthenticatedNavBarEvent.NavigateToYieldScreen -> {
+                    analyticsHelper.logDestinationChanged(event.tab.startDestinationRoute)
+                    navigateToTabOrRoot(tabToNavigateTo = event.tab) { navigateToYield(navOptions = it) }
                 }
             }
         }
@@ -100,7 +105,6 @@ internal fun AuthenticatedNavbarNavigationScreen(
         navController = navController,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
-        navigateToSettingsScreen = navigateToSettingsScreen,
         onAction = remember(viewModel) {
             { viewModel.trySendAction(it) }
         },
@@ -110,15 +114,16 @@ internal fun AuthenticatedNavbarNavigationScreen(
 @Composable
 internal fun AuthenticatedNavbarNavigationScreenContent(
     navController: NavHostController,
-    navigateToSettingsScreen: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onAction: (AuthenticatedNavBarAction) -> Unit,
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val navigationItems = persistentListOf<NavigationItem>(
-        AuthenticatedNavBarTabItem.HomeTab,
-        AuthenticatedNavBarTabItem.ProfileTab,
+        AuthenticatedNavBarTabItem.ChatTab,
+        AuthenticatedNavBarTabItem.WalletTab,
+        AuthenticatedNavBarTabItem.TradeTab,
+        AuthenticatedNavBarTabItem.YieldTab,
     )
 
     KptRootScaffold(
@@ -130,42 +135,56 @@ internal fun AuthenticatedNavbarNavigationScreenContent(
             },
             onNavigationClick = { navigationItem ->
                 when (navigationItem) {
-                    is AuthenticatedNavBarTabItem.HomeTab -> {
-                        onAction(AuthenticatedNavBarAction.HomeTabClick)
-                    }
-
-                    is AuthenticatedNavBarTabItem.ProfileTab -> {
-                        onAction(AuthenticatedNavBarAction.SettingsTabClick)
-                    }
+                    is AuthenticatedNavBarTabItem.ChatTab -> onAction(AuthenticatedNavBarAction.ChatTabClick)
+                    is AuthenticatedNavBarTabItem.WalletTab -> onAction(AuthenticatedNavBarAction.WalletTabClick)
+                    is AuthenticatedNavBarTabItem.TradeTab -> onAction(AuthenticatedNavBarAction.TradeTabClick)
+                    is AuthenticatedNavBarTabItem.YieldTab -> onAction(AuthenticatedNavBarAction.YieldTabClick)
                 }
             },
             shouldShowNavigation = navigationItems.any {
                 navBackStackEntry.isCurrentRoute(route = it.startDestinationRoute)
             },
         ),
+        containerColor = androidx.compose.ui.graphics.Color(0xFF0A0A0F),
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
         modifier = modifier,
     ) {
-        // Because this Scaffold has a bottom navigation bar, the NavHost will:
-        // - consume the vertical navigation bar insets.
-        // - consume the IME insets.
         NavHost(
             navController = navController,
-            startDestination = TasksDestination,
-            enterTransition = RootTransitionProviders.Enter.fadeIn,
-            exitTransition = RootTransitionProviders.Exit.fadeOut,
-            popEnterTransition = RootTransitionProviders.Enter.fadeIn,
-            popExitTransition = RootTransitionProviders.Exit.fadeOut,
+            startDestination = WalletRoute,
+            enterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { 300 },
+                    animationSpec = androidx.compose.animation.core.tween(300),
+                ) + androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(300),
+                )
+            },
+            exitTransition = {
+                androidx.compose.animation.fadeOut(
+                    animationSpec = androidx.compose.animation.core.tween(300),
+                )
+            },
+            popEnterTransition = {
+                androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(300),
+                )
+            },
+            popExitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { 300 },
+                    animationSpec = androidx.compose.animation.core.tween(300),
+                ) + androidx.compose.animation.fadeOut(
+                    animationSpec = androidx.compose.animation.core.tween(300),
+                )
+            },
         ) {
-            // TOP LEVEL DESTINATION
-            tasksGraph(
-                navController = navController,
-                onSettingsClick = navigateToSettingsScreen,
-            )
-
-            profileDestination()
+            chatDestination()
+            walletDestination()
+            tradeDestination()
+            yieldDestination()
         }
     }
 }
@@ -175,14 +194,10 @@ private fun NavController.navigateToTabOrRoot(
     navigate: (NavOptions) -> Unit,
 ) {
     if (tabToNavigateTo.startDestinationRoute == currentDestination?.route) {
-        // We are at the start destination already, so nothing to do.
         return
     } else if (currentDestination?.parent?.route == tabToNavigateTo.graphRoute) {
-        // We are not at the start destination but we are in the correct graph,
-        // so lets pop up to the start destination.
         popBackStack(route = tabToNavigateTo.startDestinationRoute, inclusive = false)
     } else {
-        // We are not in correct graph at all, so navigate there.
         navigate(
             navOptions {
                 popUpTo(graph.findStartDestination().id) {

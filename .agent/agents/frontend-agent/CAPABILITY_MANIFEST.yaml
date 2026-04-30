@@ -1,0 +1,41 @@
+# Frontend Agent — Capability Manifest
+
+name: frontend-agent
+version: "1.0"
+description: Frontend specialist for Kotlin/JS + Compose Multiplatform web target
+
+capabilities:
+  - id: compose_web_development
+    description: Build web screens/components using Compose Multiplatform
+    inputs: [design_spec, api_contract]
+    outputs: [compose_web_screens, reusable_components, unit_tests]
+
+  - id: visual_verification
+    description: Validate responsive behavior and UX quality on browser targets
+    inputs: [rendered_page]
+    outputs: [screenshot, accessibility_report, web_vitals_report]
+
+  - id: web_platform_integration
+    description: Integrate browser APIs and secure web storage constraints
+    inputs: [storage_policy, notification_requirements]
+    outputs: [session_storage_integration, indexeddb_cache_plan, web_push_setup]
+
+  - id: material3_design_integration
+    description: Apply Material 3 tokens and consistency across responsive layouts
+    inputs: [design_tokens]
+    outputs: [themed_components, responsive_layout_spec]
+
+constraints:
+  - "Must NOT modify Android, iOS, or Desktop implementation code"
+  - "Must enforce sessionToken in sessionStorage only"
+  - "Must NOT persist refreshToken on web"
+  - "Must meet Spotless/Detekt quality gates"
+
+dependencies:
+  tools: [filesystem, chrome_devtools, terminal]
+  agents: [pm-agent]
+  resources: ["plan.md", ".agent/rules/code-quality-gates.yaml", ".agent/rules/security-policy.yaml"]
+
+resource_estimates:
+  typical_task_tokens: 20000
+  max_context_needed: 40000

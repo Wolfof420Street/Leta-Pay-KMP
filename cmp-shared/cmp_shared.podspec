@@ -1,20 +1,20 @@
 Pod::Spec.new do |spec|
     spec.name                     = 'cmp_shared'
-    spec.version                  = '2026.2.4'
-    spec.homepage                 = 'https://github.com/openMF/kmp-project-template'
+    spec.version                  = '0.0.1-beta.0.1+20260430T083231Z'
+    spec.homepage                 = ''
     spec.source                   = { :http=> ''}
     spec.authors                  = ''
     spec.license                  = ''
-    spec.summary                  = 'KMP Shared Module'
-    spec.vendored_frameworks      = 'build/cocoapods/framework/ComposeApp.framework'
+    spec.summary                  = ''
+    spec.vendored_frameworks      = 'build/cocoapods/framework/cmp_shared.framework'
     spec.libraries                = 'c++'
-    spec.ios.deployment_target    = '16.0'
                 
                 
-    if !Dir.exist?('build/cocoapods/framework/ComposeApp.framework') || Dir.empty?('build/cocoapods/framework/ComposeApp.framework')
+                
+    if !Dir.exist?('build/cocoapods/framework/cmp_shared.framework') || Dir.empty?('build/cocoapods/framework/cmp_shared.framework')
         raise "
 
-        Kotlin framework 'ComposeApp' doesn't exist yet, so a proper Xcode project can't be generated.
+        Kotlin framework 'cmp_shared' doesn't exist yet, so a proper Xcode project can't be generated.
         'pod install' should be executed after running ':generateDummyFramework' Gradle task:
 
             ./gradlew :cmp-shared:generateDummyFramework
@@ -28,7 +28,7 @@ Pod::Spec.new do |spec|
                 
     spec.pod_target_xcconfig = {
         'KOTLIN_PROJECT_PATH' => ':cmp-shared',
-        'PRODUCT_MODULE_NAME' => 'ComposeApp',
+        'PRODUCT_MODULE_NAME' => 'cmp_shared',
     }
                 
     spec.script_phases = [

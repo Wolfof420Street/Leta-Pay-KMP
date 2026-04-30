@@ -1,0 +1,148 @@
+/*
+ * Copyright 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ */
+package com.letapay.app.feature.yield
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+
+private val Background    = Color(0xFF0A0A0F)
+private val SurfaceHigh   = Color(0xFF1C1C26)
+private val AccentGold    = Color(0xFFFFB547)
+private val TextPrimary   = Color(0xFFF0F0F5)
+private val TextSecondary = Color(0xFF9898B0)
+private val TextTertiary  = Color(0xFF5A5A70)
+private val Success       = Color(0xFF2ECC71)
+private val CardMedium    = RoundedCornerShape(16.dp)
+
+data class YieldOpportunity(val protocol: String, val asset: String, val apy: String, val risk: String)
+
+@Composable
+fun YieldScreen(modifier: Modifier = Modifier) {
+    val totalStakedUsd = "$1,250.00"
+    val totalApy = "12.4%"
+    val opportunities = remember {
+        listOf(
+            YieldOpportunity("Aave", "USDC", "5.2%", "Low Risk"),
+            YieldOpportunity("Lido", "ETH", "3.8%", "Low Risk"),
+            YieldOpportunity("Compound", "DAI", "4.5%", "Medium Risk")
+        )
+    }
+    
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Background)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item { Spacer(Modifier.height(8.dp)) }
+        item {
+            Text(
+                text  = "Earn Yield",
+                style = MaterialTheme.typography.headlineLarge,
+                color = TextPrimary,
+            )
+        }
+        item {
+            // Summary Card
+            Surface(
+                color    = SurfaceHigh,
+                shape    = CardMedium,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column {
+                        Text("Total Staked", style = MaterialTheme.typography.labelMedium, color = TextTertiary)
+                        Spacer(Modifier.height(4.dp))
+                        Text(totalStakedUsd, style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("Average APY", style = MaterialTheme.typography.labelMedium, color = TextTertiary)
+                        Spacer(Modifier.height(4.dp))
+                        Text(totalApy, style = MaterialTheme.typography.headlineMedium, color = Success)
+                    }
+                }
+            }
+        }
+        item {
+            Text(
+                text  = "Opportunities",
+                style = MaterialTheme.typography.titleLarge,
+                color = TextPrimary,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+        }
+        items(opportunities) { opp ->
+            OpportunityRow(opp)
+        }
+    }
+}
+
+@Composable
+private fun OpportunityRow(opp: YieldOpportunity) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Protocol icon placeholder
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(AccentGold.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text  = opp.protocol.take(1),
+                color = AccentGold,
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(opp.protocol, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+            Text("${opp.asset} • ${opp.risk}", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(opp.apy, style = MaterialTheme.typography.bodyLarge, color = Success, fontWeight = FontWeight.SemiBold)
+            Text("APY", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+        }
+    }
+}

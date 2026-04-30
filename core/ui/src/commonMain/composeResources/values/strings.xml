@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_ui_password_strength_weak">Weak</string>
+    <string name="core_ui_password_strength_good">Good</string>
+    <string name="core_ui_password_strength_strong">Strong</string>
+    <string name="core_ui_password_strength_very_strong">Very Strong</string>
+    <string name="core_ui_password_min_characters">%1$d characters</string>
+</resources>

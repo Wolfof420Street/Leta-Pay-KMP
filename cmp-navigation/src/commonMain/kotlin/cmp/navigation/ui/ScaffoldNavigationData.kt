@@ -9,8 +9,8 @@
  */
 package cmp.navigation.ui
 
+import com.letapay.app.core.ui.NavigationItem
 import kotlinx.collections.immutable.ImmutableList
-import org.mifos.core.ui.NavigationItem
 
 data class ScaffoldNavigationData(
     val onNavigationClick: (NavigationItem) -> Unit,

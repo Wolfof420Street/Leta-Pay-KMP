@@ -1,0 +1,10 @@
+.gradle
+.idea
+build
+*/build
+!backend-ktor/build
+!backend-ktor/build/libs
+!backend-ktor/build/libs/*.jar
+*.iml
+node_modules
+.git

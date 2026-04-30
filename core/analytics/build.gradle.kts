@@ -14,7 +14,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.core.analytics"
+    namespace = "com.letapay.app.core.analytics"
 }
 
 kotlin {

@@ -1,0 +1,102 @@
+# Code Quality Gates — Leta-Pay KMP
+# Mandatory checks before merge or release.
+
+version: 1
+owner: leta-pay-kmp
+
+standards:
+  language:
+    primary: kotlin
+    targets: [android, ios, desktop, web]
+  architecture:
+    pattern: kmp-layered
+    layers: [ui, feature, data, core, platform]
+    allow_circular_dependencies: false
+
+commands:
+  format:
+    command: ./gradlew spotlessApply
+  format_check:
+    command: ./gradlew spotlessCheck
+  lint:
+    command: ./gradlew detekt
+  unit_tests:
+    command: ./gradlew commonTest test
+  dependency_guard:
+    command: ./gradlew dependencyGuard
+
+required_gates:
+  - id: spotless
+    type: formatting
+    tool: spotless
+    profile: ktlint-1.0.1
+    fail_on: any_violation
+    notes:
+      - Copyright headers required
+      - No merge if spotlessCheck fails
+
+  - id: detekt
+    type: static_analysis
+    tool: detekt
+    fail_on: any_issue
+    config_source: config/detekt/detekt.yml
+    max_issues: 0
+    thresholds:
+      CyclomaticComplexMethod: 15
+      LongMethod: 150
+      LongParameterList_function: 20
+      LongParameterList_constructor: 30
+      NestedBlockDepth: 4
+      LargeClass: 600
+
+  - id: tests
+    type: validation
+    tool: gradle-test
+    fail_on: failing_test
+    suites:
+      - commonTest
+      - android unit tests
+      - project test tasks
+
+  - id: dependency_guard
+    type: dependency_integrity
+    tool: dependency-guard
+    fail_on: unexpected_dependency_change
+
+  - id: architecture
+    type: structural
+    rule: layer_enforcement
+    fail_on:
+      - circular_dependency
+      - platform_code_in_commonMain
+      - cross_feature_forbidden_import
+
+coverage:
+  minimum_overall: 70
+  critical_path_minimum: 90
+  fail_on_decrease: true
+  critical_paths:
+    - authentication
+    - transaction_build_broadcast
+    - token_storage_and_session
+
+security:
+  secret_scan: required
+  dependency_audit: required
+  firebase_rules_validation: required
+  token_storage_policy:
+    android: EncryptedSharedPreferences
+    ios: Keychain
+    desktop: encrypted_file_or_keystore
+    web: sessionStorage_only
+
+branch_policy:
+  protected:
+    - master
+    - dev
+  direct_push_blocked: true
+  require_pr: true
+
+merge_policy:
+  block_if_any_gate_fails: true
+  require_all_platform_targets_green: true

@@ -1,6 +1,7 @@
 pluginManagement {
     includeBuild("build-logic")
     repositories {
+        maven("https://packages.jetbrains.team/maven/p/koog/maven")
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -16,6 +17,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.PREFER_PROJECT
     repositories {
+        maven("https://packages.jetbrains.team/maven/p/koog/maven")
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -58,6 +60,7 @@ include(":cmp-android")
 include(":cmp-desktop")
 include(":cmp-web")
 include(":cmp-navigation")
+include(":backend-ktor")
 
 include(":core:analytics")
 include(":core:common")
@@ -69,10 +72,15 @@ include(":core:domain")
 include(":core:model")
 include(":core:network")
 include(":core:ui")
+include(":core:ai")
 
-include(":feature:home")
+include(":feature:auth")
+include(":feature:wallet")
+include(":feature:chat")
+include(":feature:trade")
+include(":feature:yield")
+include(":feature:agent")
 include(":feature:profile")
-include(":feature:settings")
 
 include(":core-base:analytics")
 include(":core-base:common")

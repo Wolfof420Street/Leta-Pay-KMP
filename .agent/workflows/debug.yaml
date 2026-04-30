@@ -1,0 +1,36 @@
+name: debug
+description: "Structured KMP debugging with 3-Strike Rule and mandatory gate checks"
+
+protocol:
+  - name: classify
+    actions:
+      - determine_shared_vs_platform_scope
+      - identify_affected_platforms
+
+  - name: reproduce
+    actions:
+      - capture_error
+      - define_repro_steps
+
+  - name: investigate
+    actions:
+      - generate_ranked_hypotheses
+      - collect_evidence_per_hypothesis
+    max_attempts: 3
+    on_max_attempts: escalate
+
+  - name: fix
+    actions:
+      - apply_minimal_root_cause_fix
+      - add_regression_tests
+
+  - name: validate
+    checks:
+      - ./gradlew spotlessCheck
+      - ./gradlew detekt
+      - ./gradlew commonTest test
+
+  - name: document
+    actions:
+      - update_lessons_learned
+      - provide_platform_impact_notes

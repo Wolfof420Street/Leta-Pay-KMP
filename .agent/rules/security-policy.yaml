@@ -1,0 +1,93 @@
+# Security Policy — Leta-Pay KMP
+# Security baseline for multi-platform wallet + Firebase architecture.
+
+version: 1
+owner: leta-pay-kmp
+
+threat_model:
+  app_classification: fintech
+  custody_model: non_custodial
+  primary_risks:
+    - token_leakage
+    - signature_replay
+    - idempotency_bypass
+    - insecure_platform_storage
+    - firebase_rules_misconfiguration
+
+secrets:
+  commit_blocklist:
+    - secrets/
+    - keystores/
+    - "*.keystore"
+    - "*.p8"
+    - "*.p12"
+    - .env
+  scan:
+    enabled: true
+    action_on_detection: block_commit
+    patterns:
+      - "(?i)(api[_-]?key|secret|password|token|credential)"
+      - "(?i)Bearer\\s+[A-Za-z0-9\\-._~+/]+=*"
+      - "(?i)(private[_-]?key|wallet[_-]?seed|mnemonic)"
+
+authentication:
+  walletconnect:
+    required: true
+    signature_verification: server_side_required
+  tokens:
+    session_token:
+      ttl_minutes: 30
+      required_for_api_calls: true
+    refresh_token:
+      ttl_days: 7
+      rotation_required: true
+      web_allowed: false
+  firebase_custom_auth:
+    required: true
+    claims_required:
+      - sub
+      - sessionId
+
+storage_policy:
+  android:
+    session_token: EncryptedSharedPreferences
+    refresh_token: EncryptedSharedPreferences
+  ios:
+    session_token: Keychain
+    refresh_token: Keychain
+  desktop:
+    session_token: encrypted_file_or_keystore
+    refresh_token: encrypted_file_or_keystore
+  web:
+    session_token: sessionStorage_only
+    refresh_token: prohibited
+    localStorage_for_tokens: prohibited
+
+api_security:
+  build_broadcast_pattern: required
+  idempotency_key:
+    required_for_mutations: true
+    replay_protection: required
+  input_validation:
+    amount_validation: strict
+    slippage_validation: strict
+    address_validation: strict
+  rate_limit:
+    per_wallet_per_minute: 100
+    global_per_second: 10
+
+firebase:
+  rules_validation: required
+  least_privilege: required
+  device_token_registration:
+    required: true
+    plaintext_logging: prohibited
+
+audit:
+  logging:
+    enabled: true
+    redact_sensitive_fields: true
+  retention_days: 90
+  incident_response:
+    severity_levels: [critical, high, medium, low]
+    critical_response: immediate

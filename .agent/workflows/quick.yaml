@@ -1,0 +1,27 @@
+name: quick
+description: "Fast path for small KMP changes (<3 files) with mandatory formatting/lint/test checks"
+
+trigger: "small change, config tweak, minor bug fix, or docs adjustment"
+
+workflow:
+  - name: classify
+    action: determine_if_small_scope
+
+  - name: execute
+    action: apply_minimal_change
+    constraints:
+      - keep_layer_boundaries
+      - avoid_cross_module_sprawl
+
+  - name: verify
+    checks:
+      - ./gradlew spotlessCheck
+      - ./gradlew detekt
+      - run_relevant_module_tests_only
+
+  - name: report
+    output: quick_change_summary
+
+constraints:
+  - no_phase_skip_if_phase_sensitive
+  - no_security_policy_bypass

@@ -11,25 +11,30 @@ package cmp.navigation.rootnav
 
 import androidx.lifecycle.viewModelScope
 import cmp.navigation.rootnav.RootNavAction.Internal.UserStateUpdateReceive
+import com.letapay.app.core.data.repository.SessionRepository
+import com.letapay.app.core.data.repository.UserDataRepository
+import com.letapay.app.core.model.UserData
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import org.mifos.core.data.repository.UserDataRepository
-import org.mifos.core.model.AuthState
-import org.mifos.core.model.UserData
 import template.core.base.ui.BaseViewModel
 
 class RootNavViewModel(
+    sessionRepository: SessionRepository,
     userDataRepository: UserDataRepository,
 ) : BaseViewModel<RootNavState, Unit, RootNavAction>(
     initialState = RootNavState.Splash,
 ) {
 
     init {
-        userDataRepository.userData.map { userData ->
+        combine(
+            sessionRepository.sessionState,
+            userDataRepository.userData,
+        ) { sessionState, userData ->
             UserStateUpdateReceive(
-                authState = AuthState.Authenticated("sample-token"),
+                isBootstrapped = sessionState.isBootstrapped,
+                isAuthenticated = sessionState.session != null && userData.isAuthenticated,
                 userData = userData,
             )
         }.onEach(::handleAction)
@@ -45,21 +50,21 @@ class RootNavViewModel(
     private fun handleUserStateUpdateReceive(
         action: UserStateUpdateReceive,
     ) {
+        if (!action.isBootstrapped) {
+            mutableStateFlow.update { RootNavState.Splash }
+            return
+        }
+
         val userData = action.userData
 
-        // TODO:: Configure this based on the user state
         val updatedRootNavState = when {
             userData.firstTimeUser -> RootNavState.ShowOnboarding
 
-            !userData.isAuthenticated -> RootNavState.Auth
+            !action.isAuthenticated -> RootNavState.Auth
 
-            userData.passcode.isEmpty() -> RootNavState.UserLocked
-
-            userData.isUnlocked -> {
-                RootNavState.UserUnlocked(userData.activeUserId)
-            }
-
-            else -> RootNavState.UserLocked
+            else -> RootNavState.UserUnlocked(
+                activeUserId = userData.activeUserId.ifBlank { "wallet-user" },
+            )
         }
 
         mutableStateFlow.update { updatedRootNavState }
@@ -85,7 +90,8 @@ sealed class RootNavAction {
     sealed class Internal {
 
         data class UserStateUpdateReceive(
-            val authState: AuthState,
+            val isBootstrapped: Boolean,
+            val isAuthenticated: Boolean,
             val userData: UserData,
         ) : RootNavAction()
     }

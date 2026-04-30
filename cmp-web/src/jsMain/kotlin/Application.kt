@@ -8,9 +8,10 @@ import androidx.compose.ui.window.ComposeViewport
 import cmp.shared.SharedApp
 import cmp.shared.utils.initKoin
 import kotlinx.browser.document
-import kotlinx.browser.localStorage
 import kotlinx.browser.window
 import org.jetbrains.skiko.wasm.onWasmReady
+
+private var currentLanguageTag: String? = null
 
 /*
  * The entry point of the WebAssembly Compose application.
@@ -25,10 +26,8 @@ fun main() {
 
     initKoin() // Set up Koin for dependency injection.
 
-    // Apply stored language preference on startup
-    val storedLanguage = localStorage.getItem("app_language")
-    if (storedLanguage != null) {
-        document.documentElement?.setAttribute("lang", storedLanguage)
+    currentLanguageTag?.let { languageTag ->
+        document.documentElement?.setAttribute("lang", languageTag)
     }
 
     onWasmReady {
@@ -47,20 +46,13 @@ fun main() {
                     handleThemeMode = {},
                     handleAppLocale = { languageTag ->
                         if (languageTag != null) {
-                            // Store language preference in localStorage
-                            localStorage.setItem("app_language", languageTag)
-                            // Set HTML lang attribute for accessibility
+                            currentLanguageTag = languageTag
                             document.documentElement?.setAttribute("lang", languageTag)
                         } else {
-                            // System Default: remove stored language preference
-                            localStorage.removeItem("app_language")
-                            // Reset to browser's default language
+                            currentLanguageTag = null
                             val browserLang = window.navigator.language
                             document.documentElement?.setAttribute("lang", browserLang)
                         }
-                        // Reload page to apply language changes (required for web)
-                        // Note: This will reload the page, and locale selection depends on browser settings
-                        // window.location.reload()
                     },
                     onSplashScreenRemoved = {}
                 )

@@ -14,16 +14,24 @@ plugins {
     alias(libs.plugins.kotlinCocoapods)
 }
 
+val enableAppleTargets = providers
+    .gradleProperty("letapay.enableAppleTargets")
+    .map(String::toBoolean)
+    .orElse(false)
+    .get()
+
 kotlin {
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-            optimized = true
+    if (enableAppleTargets) {
+        listOf(
+            iosX64(),
+            iosArm64(),
+            iosSimulatorArm64(),
+        ).forEach { iosTarget ->
+            iosTarget.binaries.framework {
+                baseName = "ComposeApp"
+                isStatic = true
+                optimized = true
+            }
         }
     }
 
@@ -31,6 +39,7 @@ kotlin {
         commonMain.dependencies {
             // Navigation Modules
             implementation(projects.cmpNavigation)
+            implementation(compose.material3)
             implementation(compose.components.resources)
             implementation(projects.coreBase.platform)
             implementation(projects.coreBase.ui)
@@ -45,16 +54,18 @@ kotlin {
         }
     }
 
-    cocoapods {
-        summary = "KMP Shared Module"
-        homepage = "https://github.com/openMF/kmp-project-template"
-        version = project.version.toString().substringBefore("-").substringBefore("+")
-        ios.deploymentTarget = "16.0"
-        podfile = project.file("../cmp-ios/Podfile")
+    if (enableAppleTargets) {
+        cocoapods {
+            summary = "KMP Shared Module"
+            homepage = "https://github.com/openMF/kmp-project-template"
+            version = project.version.toString().substringBefore("-").substringBefore("+")
+            ios.deploymentTarget = "16.0"
+            podfile = project.file("../cmp-ios/Podfile")
 
-        framework {
-            baseName = "ComposeApp"
-            isStatic = true
+            framework {
+                baseName = "ComposeApp"
+                isStatic = true
+            }
         }
     }
 }

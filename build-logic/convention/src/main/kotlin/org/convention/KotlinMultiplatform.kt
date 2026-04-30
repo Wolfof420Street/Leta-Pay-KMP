@@ -14,6 +14,12 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  */
 @OptIn(ExperimentalWasmDsl::class, ExperimentalKotlinGradlePluginApi::class)
 internal fun Project.configureKotlinMultiplatform() {
+    val enableWasmTargets = providers
+        .gradleProperty("letapay.enableWasm")
+        .map(String::toBoolean)
+        .orElse(false)
+        .get()
+
     extensions.configure<KotlinMultiplatformExtension> {
         applyProjectHierarchyTemplate()
 
@@ -26,9 +32,12 @@ internal fun Project.configureKotlinMultiplatform() {
             this.nodejs()
             binaries.executable()
         }
-        wasmJs() {
-            browser()
-            nodejs()
+
+        if (enableWasmTargets) {
+            wasmJs() {
+                // Library modules run wasm tests on Node to avoid browser webpack coupling.
+                nodejs()
+            }
         }
 
         compilerOptions {
