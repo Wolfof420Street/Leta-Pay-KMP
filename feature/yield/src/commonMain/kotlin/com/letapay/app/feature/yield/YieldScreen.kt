@@ -37,14 +37,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-private val Background    = Color(0xFF0A0A0F)
-private val SurfaceHigh   = Color(0xFF1C1C26)
-private val AccentGold    = Color(0xFFFFB547)
-private val TextPrimary   = Color(0xFFF0F0F5)
+private val Background = Color(0xFF0A0A0F)
+private val SurfaceHigh = Color(0xFF1C1C26)
+private val AccentGold = Color(0xFFFFB547)
+private val TextPrimary = Color(0xFFF0F0F5)
 private val TextSecondary = Color(0xFF9898B0)
-private val TextTertiary  = Color(0xFF5A5A70)
-private val Success       = Color(0xFF2ECC71)
-private val CardMedium    = RoundedCornerShape(16.dp)
+private val TextTertiary = Color(0xFF5A5A70)
+private val Success = Color(0xFF2ECC71)
+private val CardMedium = RoundedCornerShape(16.dp)
 
 data class YieldOpportunity(val protocol: String, val asset: String, val apy: String, val risk: String)
 
@@ -56,10 +56,10 @@ fun YieldScreen(modifier: Modifier = Modifier) {
         listOf(
             YieldOpportunity("Aave", "USDC", "5.2%", "Low Risk"),
             YieldOpportunity("Lido", "ETH", "3.8%", "Low Risk"),
-            YieldOpportunity("Compound", "DAI", "4.5%", "Medium Risk")
+            YieldOpportunity("Compound", "DAI", "4.5%", "Medium Risk"),
         )
     }
-    
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -70,7 +70,7 @@ fun YieldScreen(modifier: Modifier = Modifier) {
         item { Spacer(Modifier.height(8.dp)) }
         item {
             Text(
-                text  = "Earn Yield",
+                text = "Earn Yield",
                 style = MaterialTheme.typography.headlineLarge,
                 color = TextPrimary,
             )
@@ -78,8 +78,8 @@ fun YieldScreen(modifier: Modifier = Modifier) {
         item {
             // Summary Card
             Surface(
-                color    = SurfaceHigh,
-                shape    = CardMedium,
+                color = SurfaceHigh,
+                shape = CardMedium,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(
@@ -101,7 +101,7 @@ fun YieldScreen(modifier: Modifier = Modifier) {
         }
         item {
             Text(
-                text  = "Opportunities",
+                text = "Opportunities",
                 style = MaterialTheme.typography.titleLarge,
                 color = TextPrimary,
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -130,7 +130,7 @@ private fun OpportunityRow(opp: YieldOpportunity) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text  = opp.protocol.take(1),
+                text = opp.protocol.take(1),
                 color = AccentGold,
                 style = MaterialTheme.typography.titleMedium,
             )

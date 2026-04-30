@@ -4,8 +4,7 @@ androidDesugarJdkLibs = "2.1.5"
 androidGradlePlugin = "8.12.3"
 androidTools = "31.12.3"
 
-# Android Version
-androidPackageNamespace = "org.letapay.app"
+
 
 commonsCodec = "1.20.0"
 firebaseBom = "34.7.0"

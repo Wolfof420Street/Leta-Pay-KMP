@@ -9,6 +9,7 @@
  */
 package com.letapay.app.core.data.repositoryImpl
 
+import com.letapay.app.core.common.UUIDGenerator
 import com.letapay.app.core.data.repository.SessionRepository
 import com.letapay.app.core.data.repository.YieldRepository
 import com.letapay.app.core.model.result.Resource
@@ -16,7 +17,6 @@ import com.letapay.app.core.model.yield.StakeResponse
 import com.letapay.app.core.model.yield.StakingPosition
 import com.letapay.app.core.model.yield.UnstakeResponse
 import com.letapay.app.core.model.yield.YieldOpportunity
-import com.letapay.app.core.common.UUIDGenerator
 import com.letapay.app.core.network.yield.YieldApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

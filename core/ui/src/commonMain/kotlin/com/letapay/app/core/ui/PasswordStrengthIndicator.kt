@@ -37,14 +37,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.letapay.app.core.designsystem.icon.AppIcons
 import com.letapay.app.core.designsystem.theme.LetaPayTheme
-import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import com.letapay.app.core.ui.generated.resources.Res
 import com.letapay.app.core.ui.generated.resources.core_ui_password_min_characters
 import com.letapay.app.core.ui.generated.resources.core_ui_password_strength_good
 import com.letapay.app.core.ui.generated.resources.core_ui_password_strength_strong
 import com.letapay.app.core.ui.generated.resources.core_ui_password_strength_very_strong
 import com.letapay.app.core.ui.generated.resources.core_ui_password_strength_weak
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Suppress("LongMethod", "CyclomaticComplexMethod", "MagicNumber")
 @Composable

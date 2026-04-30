@@ -9,6 +9,7 @@
  */
 package com.letapay.app.core.data.repositoryImpl
 
+import com.letapay.app.core.common.UUIDGenerator
 import com.letapay.app.core.data.repository.SessionRepository
 import com.letapay.app.core.data.repository.SwapRepository
 import com.letapay.app.core.model.result.Resource
@@ -16,7 +17,6 @@ import com.letapay.app.core.model.swap.SpotPrice
 import com.letapay.app.core.model.swap.SwapExecuteResponse
 import com.letapay.app.core.model.swap.SwapQuoteRequest
 import com.letapay.app.core.model.swap.SwapQuoteResponse
-import com.letapay.app.core.common.UUIDGenerator
 import com.letapay.app.core.network.swap.SwapApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

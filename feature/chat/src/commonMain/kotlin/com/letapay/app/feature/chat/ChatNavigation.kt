@@ -3,7 +3,7 @@
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, you can obtain one at https://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
@@ -351,10 +351,11 @@ private fun ChatBubble(
     ) {
         Surface(
             shape = MaterialTheme.shapes.medium,
-            color = if (isOutgoing)
+            color = if (isOutgoing) {
                 MaterialTheme.colorScheme.primaryContainer
-            else
-                MaterialTheme.colorScheme.surfaceVariant,
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            },
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
             modifier = Modifier.widthIn(max = 320.dp),
         ) {
