@@ -53,7 +53,31 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.letapay.app.core.model.chat.ChatMessage
+import com.letapay.app.core.ui.component.KptPrimaryButton
+import com.letapay.app.core.ui.component.KptSecondaryButton
+import kmp_project_template.feature.chat.generated.resources.Res
+import kmp_project_template.feature.chat.generated.resources.feature_chat_add_contact_alias_label
+import kmp_project_template.feature.chat.generated.resources.feature_chat_add_contact_button
+import kmp_project_template.feature.chat.generated.resources.feature_chat_add_contact_wallet_label
+import kmp_project_template.feature.chat.generated.resources.feature_chat_agent_state_prefix
+import kmp_project_template.feature.chat.generated.resources.feature_chat_agentkit_unavailable
+import kmp_project_template.feature.chat.generated.resources.feature_chat_command_title
+import kmp_project_template.feature.chat.generated.resources.feature_chat_confirm_button
+import kmp_project_template.feature.chat.generated.resources.feature_chat_connect_wallet_hint
+import kmp_project_template.feature.chat.generated.resources.feature_chat_contacts_connect_hint
+import kmp_project_template.feature.chat.generated.resources.feature_chat_contacts_title
+import kmp_project_template.feature.chat.generated.resources.feature_chat_firebase_binding_pending
+import kmp_project_template.feature.chat.generated.resources.feature_chat_firebase_ready
+import kmp_project_template.feature.chat.generated.resources.feature_chat_input_placeholder
+import kmp_project_template.feature.chat.generated.resources.feature_chat_pending_suffix
+import kmp_project_template.feature.chat.generated.resources.feature_chat_preview_button
+import kmp_project_template.feature.chat.generated.resources.feature_chat_send_button
+import kmp_project_template.feature.chat.generated.resources.feature_chat_session_prefix
+import kmp_project_template.feature.chat.generated.resources.feature_chat_status_streaming
+import kmp_project_template.feature.chat.generated.resources.feature_chat_sync_button
+import kmp_project_template.feature.chat.generated.resources.feature_chat_title
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Serializable
@@ -125,6 +149,7 @@ fun ChatScreen(
                             streamedSummary = state.streamedSummary,
                             isStreaming = state.isStreaming,
                             isActionInFlight = state.isCommandActionInFlight,
+                            isAgentKitUnavailable = state.isAgentKitUnavailable,
                         )
                         ContactComposer(
                             newWallet = state.newContactWallet,
@@ -174,19 +199,19 @@ private fun HeroHeader(
     firebaseErrorMessage: String?,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text("Chat", style = MaterialTheme.typography.displaySmall)
+        Text(stringResource(Res.string.feature_chat_title), style = MaterialTheme.typography.displaySmall)
         Text(
             text = walletAddress?.let {
-                "${"Session"} $it"
-            } ?: "Connect a wallet to begin.",
+                "${stringResource(Res.string.feature_chat_session_prefix)} $it"
+            } ?: stringResource(Res.string.feature_chat_connect_wallet_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = if (firebaseBound) {
-                "Firebase custom auth is active."
+                stringResource(Res.string.feature_chat_firebase_ready)
             } else {
-                firebaseErrorMessage ?: "Firebase binding is still establishing."
+                firebaseErrorMessage ?: stringResource(Res.string.feature_chat_firebase_binding_pending)
             },
             style = MaterialTheme.typography.labelMedium,
             color = if (firebaseBound) {
@@ -211,6 +236,7 @@ private fun CommandCard(
     streamedSummary: String,
     isStreaming: Boolean,
     isActionInFlight: Boolean,
+    isAgentKitUnavailable: Boolean,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -220,7 +246,7 @@ private fun CommandCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Command", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(Res.string.feature_chat_command_title), style = MaterialTheme.typography.titleMedium)
             BasicTextField(
                 value = command,
                 onValueChange = onCommandChange,
@@ -233,23 +259,28 @@ private fun CommandCard(
                     .padding(12.dp),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
+                KptSecondaryButton(
                     onClick = onPreview,
-                    enabled = !isActionInFlight,
-                    modifier = Modifier.weight(1f).height(52.dp),
-                ) {
-                    Text("Preview")
-                }
-                Button(
+                    enabled = !isActionInFlight && !isAgentKitUnavailable,
+                    modifier = Modifier.weight(1f),
+                    text = stringResource(Res.string.feature_chat_preview_button),
+                )
+                KptPrimaryButton(
                     onClick = onConfirm,
-                    enabled = previewSummary != null && !isActionInFlight,
-                    modifier = Modifier.weight(1f).height(52.dp),
-                ) {
-                    Text("Confirm")
-                }
+                    enabled = previewSummary != null && !isActionInFlight && !isAgentKitUnavailable,
+                    modifier = Modifier.weight(1f),
+                    text = stringResource(Res.string.feature_chat_confirm_button),
+                )
+            }
+            if (isAgentKitUnavailable) {
+                Text(
+                    text = stringResource(Res.string.feature_chat_agentkit_unavailable),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
             Text(
-                text = "${"Agent"}: $agentState",
+                text = "${stringResource(Res.string.feature_chat_agent_state_prefix)}: $agentState",
                 style = MaterialTheme.typography.labelMedium,
             )
             clarificationPrompt?.let {
@@ -270,7 +301,7 @@ private fun CommandCard(
             }
             if (isStreaming) {
                 Text(
-                    "...",
+                    stringResource(Res.string.feature_chat_status_streaming),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -296,11 +327,11 @@ private fun ContactComposer(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Contacts", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(Res.string.feature_chat_contacts_title), style = MaterialTheme.typography.titleMedium)
             Text(
                 text = walletAddress?.let {
-                    "${"Session"} $it"
-                } ?: "Connect first to manage contacts.",
+                    "${stringResource(Res.string.feature_chat_session_prefix)} $it"
+                } ?: stringResource(Res.string.feature_chat_contacts_connect_hint),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -308,33 +339,27 @@ private fun ContactComposer(
                 value = newWallet,
                 onValueChange = onWalletChange,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Contact wallet") },
+                label = { Text(stringResource(Res.string.feature_chat_add_contact_wallet_label)) },
                 singleLine = true,
             )
             OutlinedTextField(
                 value = newAlias,
                 onValueChange = onAliasChange,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Alias (optional)") },
+                label = { Text(stringResource(Res.string.feature_chat_add_contact_alias_label)) },
                 singleLine = true,
             )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
+                KptPrimaryButton(
                     onClick = onAddContact,
                     enabled = walletAddress != null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                ) {
-                    Text("Save")
-                }
-                Button(
+                    text = stringResource(Res.string.feature_chat_add_contact_button),
+                )
+                KptSecondaryButton(
                     onClick = onSyncContacts,
                     enabled = walletAddress != null,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                ) {
-                    Text("Sync")
-                }
+                    text = stringResource(Res.string.feature_chat_sync_button),
+                )
             }
         }
     }
@@ -369,7 +394,7 @@ private fun ChatBubble(
                         append(message.status.name)
                         if (message.isPending) {
                             append(' ')
-                            append("• pending")
+                            append(stringResource(Res.string.feature_chat_pending_suffix))
                         }
                     },
                     style = MaterialTheme.typography.labelMedium,
@@ -415,7 +440,7 @@ private fun ChatInputBar(
                 decorationBox = { inner ->
                     if (value.isEmpty()) {
                         Text(
-                            text = "Send, swap, stake - just ask",
+                            text = stringResource(Res.string.feature_chat_input_placeholder),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyLarge,
                         )
@@ -431,7 +456,7 @@ private fun ChatInputBar(
                 if (isProcessing) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                 } else {
-                    Text("Send")
+                    Text(stringResource(Res.string.feature_chat_send_button))
                 }
             }
         }

@@ -20,7 +20,7 @@ import com.letapay.backend.model.swap.SwapExecuteResponse
 import com.letapay.backend.model.swap.SwapQuoteRequest
 import com.letapay.backend.model.swap.SwapQuoteResponse
 import com.letapay.backend.security.WalletPrincipal
-import com.letapay.backend.service.CoinbaseService
+import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.IdempotencyService
 import com.letapay.backend.service.RateLimiterService
 import com.letapay.backend.service.SwapQuoteCacheService
@@ -47,7 +47,7 @@ private val supportedChains = setOf(1L, 137L, 8453L)
 private val supportedAssets = setOf("ETH", "USDC", "USDT", "DAI", "WETH", "WBTC", "MATIC")
 
 fun Route.configureSwapRoutes() {
-    val coinbaseSwapService by inject<CoinbaseService>()
+    val agentKitClient by inject<AgentKitClient>()
     val idempotencyService by inject<IdempotencyService>()
     val json by inject<Json>()
     val swapQuoteCacheService by inject<SwapQuoteCacheService>()
@@ -63,7 +63,7 @@ fun Route.configureSwapRoutes() {
                 validateSwapQuoteRequest(request)
 
                 val quote = withUpstreamTimeout {
-                    coinbaseSwapService.getSwapQuote(request)
+                    agentKitClient.getSwapQuote(principal.walletAddress, request)
                 }
                 quote.ensureSlippageWithin(request.slippageBps)
 
@@ -103,14 +103,14 @@ fun Route.configureSwapRoutes() {
 
                 val cachedQuote = swapQuoteCacheService.requireActiveQuote(request.quoteId)
                 val unsignedTx = withUpstreamTimeout {
-                    coinbaseSwapService.getSwapUnsignedTx(request.quoteId)
+                    agentKitClient.buildSwap(principal.walletAddress, cachedQuote)
                 }
-                if (unsignedTx.unsignedTx.chainId != cachedQuote.chainId) {
+                if (unsignedTx.chainId != cachedQuote.chainId) {
                     throw QuoteMismatchError()
                 }
                 val response = SwapExecuteResponse(
-                    unsignedTx = unsignedTx.unsignedTx,
-                    expiresAt = minOf(cachedQuote.expiresAt, unsignedTx.expiresAt),
+                    unsignedTx = unsignedTx,
+                    expiresAt = cachedQuote.expiresAt,
                 )
 
                 idempotencyService.complete(

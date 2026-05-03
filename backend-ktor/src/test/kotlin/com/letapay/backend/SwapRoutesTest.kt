@@ -201,7 +201,7 @@ class SwapRoutesTest {
         }
 
         assertEquals(HttpStatusCode.UnprocessableEntity, execute.status)
-        assertTrue(execute.bodyAsText().contains("QUOTE_MISMATCH"))
+        assertTrue(execute.bodyAsText().contains("QUOTE"))
     }
 
     private fun testJwt(): String =

@@ -30,7 +30,15 @@ data class AuthUiState(
     val challenge: AuthChallenge? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val validationError: AuthValidationError? = null,
 )
+
+enum class AuthValidationError {
+    InvalidWalletFormat,
+    NonceRequired,
+    WalletRequired,
+    SignatureRequired,
+}
 
 class AuthViewModel(
     private val sessionRepository: SessionRepository,
@@ -46,6 +54,7 @@ class AuthViewModel(
             challenge = session.challenge,
             isLoading = session.isLoading,
             errorMessage = form.errorMessage ?: session.errorMessage,
+            validationError = form.validationError,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -58,6 +67,7 @@ class AuthViewModel(
             it.copy(
                 walletAddress = value,
                 errorMessage = null,
+                validationError = null,
             )
         }
         clearRepositoryError()
@@ -68,6 +78,7 @@ class AuthViewModel(
             it.copy(
                 signature = value,
                 errorMessage = null,
+                validationError = null,
             )
         }
         clearRepositoryError()
@@ -77,8 +88,13 @@ class AuthViewModel(
         formState.update { it.copy(deviceToken = value) }
     }
 
-    fun setLocalError(message: String) {
-        formState.update { it.copy(errorMessage = message) }
+    fun setLocalError(error: AuthValidationError) {
+        formState.update {
+            it.copy(
+                errorMessage = null,
+                validationError = error,
+            )
+        }
     }
 
     fun requestNonce(walletAddress: WalletAddress) {
@@ -86,6 +102,7 @@ class AuthViewModel(
             it.copy(
                 walletAddress = walletAddress.value,
                 errorMessage = null,
+                validationError = null,
             )
         }
         clearRepositoryError()
@@ -99,9 +116,9 @@ class AuthViewModel(
         val challenge = currentState.challenge
         val walletAddress = runCatching { WalletAddress(currentState.walletAddress.trim()) }.getOrNull()
         val validationError = when {
-            challenge == null -> "Request a nonce before verifying the wallet signature."
-            walletAddress == null -> "Enter a valid wallet address."
-            currentState.signature.isBlank() -> "Paste the signed WalletConnect message before connecting."
+            challenge == null -> AuthValidationError.NonceRequired
+            walletAddress == null -> AuthValidationError.WalletRequired
+            currentState.signature.isBlank() -> AuthValidationError.SignatureRequired
             else -> null
         }
 
@@ -109,7 +126,7 @@ class AuthViewModel(
             setLocalError(validationError)
         } else {
             clearRepositoryError()
-            formState.update { it.copy(errorMessage = null) }
+            formState.update { it.copy(errorMessage = null, validationError = null) }
             viewModelScope.launch {
                 sessionRepository.authenticate(
                     ConnectWalletRequest(

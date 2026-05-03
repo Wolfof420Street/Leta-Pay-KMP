@@ -15,6 +15,7 @@ import com.letapay.backend.middleware.killSwitchGuard
 import com.letapay.backend.model.yield.StakeRequest
 import com.letapay.backend.model.yield.UnstakeRequest
 import com.letapay.backend.security.WalletPrincipal
+import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.IdempotencyService
 import com.letapay.backend.service.RateLimiterService
 import com.letapay.backend.service.YieldService
@@ -39,6 +40,7 @@ import org.koin.ktor.ext.inject
 fun Route.configureYieldRoutes() {
     val yieldService by inject<YieldService>()
     val idempotencyService by inject<IdempotencyService>()
+    val agentKitClient by inject<AgentKitClient>()
     val json by inject<Json>()
     val rateLimiter by inject<RateLimiterService>()
 
@@ -68,11 +70,21 @@ fun Route.configureYieldRoutes() {
                 }
                 val request = call.receive<StakeRequest>()
                 call.requireMatchingIdempotencyKey(request.idempotencyKey)
-                val response = yieldService.createStakePosition(
+                val opportunity = yieldService.getOpportunities(null).firstOrNull {
+                    it.opportunityId == request.opportunityId
+                }
+                    ?: throw BadRequestException("Unknown opportunityId.")
+                val unsignedTx = agentKitClient.buildStake(
+                    fromAddress = principal.walletAddress,
+                    request = request,
+                    chainId = opportunity.chain,
+                )
+                val position = yieldService.createStakePosition(
                     opportunityId = request.opportunityId,
                     amount = request.amount,
                     walletAddress = principal.walletAddress,
                 )
+                val response = position.copy(unsignedTx = unsignedTx)
                 idempotencyService.complete(
                     key = request.idempotencyKey,
                     walletAddress = principal.walletAddress,

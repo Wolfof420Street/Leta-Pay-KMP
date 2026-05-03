@@ -9,6 +9,7 @@
  */
 package com.letapay.backend.model.transaction
 
+import com.letapay.backend.model.swap.UnsignedTx
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -22,6 +23,7 @@ data class BuildRequest(
 data class BuildResponse(
     val status: String,
     val preview: String,
+    val unsignedTx: UnsignedTx? = null,
 )
 
 @Serializable

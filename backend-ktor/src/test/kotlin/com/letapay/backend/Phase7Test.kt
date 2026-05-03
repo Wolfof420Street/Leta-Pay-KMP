@@ -9,7 +9,7 @@
  */
 package com.letapay.backend
 
-import com.letapay.backend.service.CoinbaseService
+import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.DeviceTokenRecord
 import com.letapay.backend.service.DeviceTokenService
 import com.letapay.backend.service.HealthService
@@ -151,21 +151,34 @@ class Phase7Test {
         application {
             module(
                 module {
-                    single<CoinbaseService> {
-                        object : CoinbaseService {
-                            override suspend fun getSpotPrice(fromAsset: String, toAsset: String, chain: Long) =
-                                error("unused")
+                    single<AgentKitClient> {
+                        object : AgentKitClient {
+                            override suspend fun buildTransfer(
+                                fromAddress: String,
+                                toAddress: String,
+                                asset: String,
+                                amount: String,
+                                chainId: Long,
+                            ) = error("unused")
 
                             override suspend fun getSwapQuote(
+                                fromAddress: String,
                                 request: com.letapay.backend.model.swap.SwapQuoteRequest,
                             ): com.letapay.backend.model.swap.SwapQuote {
                                 delay(9_000L)
                                 error("timeout")
                             }
 
-                            override suspend fun getSwapUnsignedTx(quoteId: String) = error("unused")
+                            override suspend fun buildSwap(
+                                fromAddress: String,
+                                quote: com.letapay.backend.model.swap.SwapQuote,
+                            ) = error("unused")
 
-                            override suspend fun getTxStatus(txHash: String, chain: Long) = error("unused")
+                            override suspend fun buildStake(
+                                fromAddress: String,
+                                request: com.letapay.backend.model.yield.StakeRequest,
+                                chainId: Long,
+                            ) = error("unused")
                         }
                     }
                 },

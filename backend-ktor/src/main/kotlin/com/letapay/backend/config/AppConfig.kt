@@ -19,6 +19,8 @@ data class AppConfig(
     val parseModel: String,
     val planModel: String,
     val chatModel: String,
+    val agentKitSidecarUrl: String,
+    val sidecarSecret: String,
 ) {
     companion object {
         fun from(config: ApplicationConfig): AppConfig =
@@ -58,6 +60,16 @@ data class AppConfig(
                     path = "ai.models.chat",
                     env = "AI_CHAT_MODEL",
                     default = "gpt-4o-mini",
+                ),
+                agentKitSidecarUrl = config.string(
+                    path = "agentkit.sidecarUrl",
+                    env = "AGENTKIT_SIDECAR_URL",
+                    default = "http://agentkit-sidecar:3100",
+                ),
+                sidecarSecret = config.string(
+                    path = "agentkit.sidecarSecret",
+                    env = "SIDECAR_SECRET",
+                    default = "dev-sidecar-secret",
                 ),
             )
 

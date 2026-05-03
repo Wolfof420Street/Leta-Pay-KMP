@@ -39,6 +39,11 @@ sealed class AppError(
         val code: Int,
     ) : AppError(reason)
 
+    data class AgentKitUnavailable(
+        override val displayMessage: String =
+            "AI transaction builder is temporarily unavailable. You can retry shortly.",
+    ) : AppError(displayMessage)
+
     data class Unexpected(
         val causeMessage: String = "Unknown error",
     ) : AppError(causeMessage)

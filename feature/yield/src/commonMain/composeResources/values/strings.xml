@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
+<resources>
+    <string name="feature_yield_title">Earn Yield</string>
+    <string name="feature_yield_total_staked">Total Staked</string>
+    <string name="feature_yield_average_apy">Average APY</string>
+    <string name="feature_yield_opportunities">Opportunities</string>
+    <string name="feature_yield_apy_label">APY</string>
+    <string name="feature_yield_risk_low">Low Risk</string>
+    <string name="feature_yield_risk_medium">Medium Risk</string>
+</resources>

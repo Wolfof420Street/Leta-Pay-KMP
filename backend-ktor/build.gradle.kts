@@ -97,6 +97,7 @@ tasks.test {
 
 tasks.register<Jar>("buildFatJar") {
     archiveClassifier.set("all")
+    isZip64 = true
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     exclude(
         "META-INF/*.SF",

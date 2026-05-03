@@ -18,6 +18,7 @@
     <string name="feature_chat_agent_state_prefix">Agent</string>
     <string name="feature_chat_preview_button">Preview</string>
     <string name="feature_chat_confirm_button">Confirm</string>
+    <string name="feature_chat_agentkit_unavailable">AI actions are temporarily unavailable. You can continue with manual wallet actions and retry shortly.</string>
     <string name="feature_chat_status_streaming">...</string>
     <string name="feature_chat_contacts_title">Contacts</string>
     <string name="feature_chat_contacts_connect_hint">Connect first to manage contacts.</string>

@@ -20,4 +20,10 @@
     <string name="feature_wallet_amount_prefix">Amount</string>
     <string name="feature_wallet_chain_prefix">Chain</string>
     <string name="feature_wallet_usd_prefix">USD</string>
+    <string name="feature_wallet_assets">Assets</string>
+    <string name="feature_wallet_total_balance">Total Balance</string>
+    <string name="feature_wallet_action_send">Send</string>
+    <string name="feature_wallet_action_swap">Swap</string>
+    <string name="feature_wallet_action_stake">Stake</string>
+    <string name="feature_wallet_action_history">History</string>
 </resources>

@@ -49,7 +49,6 @@ object DatabaseFactory {
                 validationTimeout = 5_000L
                 connectionTestQuery = "SELECT 1"
                 isAutoCommit = false
-                transactionIsolation = "TRANSACTION_REPEATABLE_READ"
                 validate()
             },
         )

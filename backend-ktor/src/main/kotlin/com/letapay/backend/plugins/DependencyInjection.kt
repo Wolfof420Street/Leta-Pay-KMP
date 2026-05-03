@@ -14,6 +14,7 @@ import com.letapay.backend.config.AppConfig
 import com.letapay.backend.config.RuntimeState
 import com.letapay.backend.db.DatabaseFactory
 import com.letapay.backend.security.JwtTokenService
+import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.AuthService
 import com.letapay.backend.service.CircuitBreaker
 import com.letapay.backend.service.CoinbaseScreeningService
@@ -44,6 +45,7 @@ import com.letapay.backend.service.PushMessagingClient
 import com.letapay.backend.service.PushNotificationService
 import com.letapay.backend.service.RateLimiterService
 import com.letapay.backend.service.ScreeningService
+import com.letapay.backend.service.SidecarAgentKitClient
 import com.letapay.backend.service.StubCoinbaseService
 import com.letapay.backend.service.StubContactService
 import com.letapay.backend.service.SwapQuoteCacheService
@@ -141,6 +143,14 @@ fun Application.configureDependencyInjection(overrides: Module? = null) {
             single<ScreeningService> { CoinbaseScreeningService(get()) }
             single<IdempotencyService> { DatabaseIdempotencyService(get()) }
             single<TransactionService> { DatabaseTransactionService() }
+            single<AgentKitClient> {
+                val config = get<AppConfig>()
+                SidecarAgentKitClient(
+                    httpClient = get(),
+                    sidecarUrl = config.agentKitSidecarUrl,
+                    sidecarSecret = config.sidecarSecret,
+                )
+            }
             single<CoinbaseService> {
                 StubCoinbaseService(get(), get(), get(named("coinbaseCircuitBreaker")))
             }

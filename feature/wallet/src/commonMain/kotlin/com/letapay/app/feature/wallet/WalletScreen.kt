@@ -46,7 +46,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.letapay.app.core.model.blockchain.ChainId
 import com.letapay.app.core.model.wallet.AssetBalance
+import kmp_project_template.feature.wallet.generated.resources.Res
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_action_history
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_action_send
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_action_stake
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_action_swap
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_assets
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_total_balance
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 // Design tokens — copied locally to avoid module cycle
@@ -94,7 +102,7 @@ fun WalletScreen(
         }
         item {
             Text(
-                text = "Assets",
+                text = stringResource(Res.string.feature_wallet_assets),
                 style = MaterialTheme.typography.titleLarge,
                 color = TextPrimary,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -126,7 +134,7 @@ private fun BalanceHeroSection(totalUsd: String, isLoading: Boolean) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Total Balance",
+            text = stringResource(Res.string.feature_wallet_total_balance),
             style = MaterialTheme.typography.labelMedium,
             color = TextTertiary,
         )
@@ -163,10 +171,30 @@ private fun ActionButtonRow(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        ActionChip(label = "Send", color = AccentPrimary, onClick = onSend, modifier = Modifier.weight(1f))
-        ActionChip(label = "Swap", color = AccentPrimary, onClick = onSwap, modifier = Modifier.weight(1f))
-        ActionChip(label = "Stake", color = AccentGold, onClick = onStake, modifier = Modifier.weight(1f))
-        ActionChip(label = "History", color = TextSecondary, onClick = onHistory, modifier = Modifier.weight(1f))
+        ActionChip(
+            label = stringResource(Res.string.feature_wallet_action_send),
+            color = AccentPrimary,
+            onClick = onSend,
+            modifier = Modifier.weight(1f),
+        )
+        ActionChip(
+            label = stringResource(Res.string.feature_wallet_action_swap),
+            color = AccentPrimary,
+            onClick = onSwap,
+            modifier = Modifier.weight(1f),
+        )
+        ActionChip(
+            label = stringResource(Res.string.feature_wallet_action_stake),
+            color = AccentGold,
+            onClick = onStake,
+            modifier = Modifier.weight(1f),
+        )
+        ActionChip(
+            label = stringResource(Res.string.feature_wallet_action_history),
+            color = TextSecondary,
+            onClick = onHistory,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 

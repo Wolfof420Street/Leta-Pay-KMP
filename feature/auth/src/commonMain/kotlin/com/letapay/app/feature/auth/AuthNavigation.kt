@@ -20,9 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,7 +35,23 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.letapay.app.core.model.blockchain.WalletAddress
+import com.letapay.app.core.ui.component.KptPrimaryButton
+import kmp_project_template.feature.auth.generated.resources.Res
+import kmp_project_template.feature.auth.generated.resources.feature_auth_connect_wallet_button
+import kmp_project_template.feature.auth.generated.resources.feature_auth_device_token_label
+import kmp_project_template.feature.auth.generated.resources.feature_auth_error_invalid_wallet
+import kmp_project_template.feature.auth.generated.resources.feature_auth_error_nonce_required
+import kmp_project_template.feature.auth.generated.resources.feature_auth_error_signature_required
+import kmp_project_template.feature.auth.generated.resources.feature_auth_error_wallet_required
+import kmp_project_template.feature.auth.generated.resources.feature_auth_nonce_title
+import kmp_project_template.feature.auth.generated.resources.feature_auth_request_nonce_button
+import kmp_project_template.feature.auth.generated.resources.feature_auth_request_nonce_hint
+import kmp_project_template.feature.auth.generated.resources.feature_auth_signed_message_label
+import kmp_project_template.feature.auth.generated.resources.feature_auth_subtitle
+import kmp_project_template.feature.auth.generated.resources.feature_auth_title
+import kmp_project_template.feature.auth.generated.resources.feature_auth_wallet_label
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Serializable
@@ -67,14 +81,14 @@ fun AuthScreen(
     ) {
         Spacer(Modifier.height(24.dp))
         Text(
-            text = "Leta Pay",
+            text = stringResource(Res.string.feature_auth_title),
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
         )
         Text(
-            text = "Connect your wallet, sign once, and keep moving.",
+            text = stringResource(Res.string.feature_auth_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth(),
@@ -90,23 +104,21 @@ fun AuthScreen(
                     value = state.walletAddress,
                     onValueChange = viewModel::onWalletAddressChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Wallet address") },
+                    label = { Text(stringResource(Res.string.feature_auth_wallet_label)) },
                     singleLine = true,
                 )
 
-                Button(
+                KptPrimaryButton(
                     onClick = {
                         runCatching { WalletAddress(state.walletAddress.trim()) }
                             .onSuccess(viewModel::requestNonce)
                             .onFailure {
-                                viewModel.setLocalError("Enter a valid EVM wallet address first.")
+                                viewModel.setLocalError(AuthValidationError.InvalidWalletFormat)
                             }
                     },
                     enabled = !state.isLoading,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                ) {
-                    Text("Request nonce")
-                }
+                    text = stringResource(Res.string.feature_auth_request_nonce_button),
+                )
 
                 state.challenge?.let { challenge ->
                     Card(modifier = Modifier.fillMaxWidth()) {
@@ -114,7 +126,10 @@ fun AuthScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Text("Nonce", style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                stringResource(Res.string.feature_auth_nonce_title),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
                             Text(challenge.nonce, style = MaterialTheme.typography.bodyMedium)
                             Text(
                                 text = challenge.message,
@@ -124,7 +139,7 @@ fun AuthScreen(
                         }
                     }
                 } ?: Text(
-                    text = "Request a nonce to continue.",
+                    text = stringResource(Res.string.feature_auth_request_nonce_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -133,7 +148,7 @@ fun AuthScreen(
                     value = state.signature,
                     onValueChange = viewModel::onSignatureChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Signed message") },
+                    label = { Text(stringResource(Res.string.feature_auth_signed_message_label)) },
                     minLines = 4,
                 )
 
@@ -141,28 +156,27 @@ fun AuthScreen(
                     value = state.deviceToken,
                     onValueChange = viewModel::onDeviceTokenChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Device token (optional)") },
+                    label = { Text(stringResource(Res.string.feature_auth_device_token_label)) },
                     singleLine = true,
                 )
 
-                Button(
+                KptPrimaryButton(
                     onClick = viewModel::connectWallet,
                     enabled = !state.isLoading && state.challenge != null && state.signature.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.height(16.dp),
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        Text("Connect Wallet")
-                    }
-                }
+                    text = stringResource(Res.string.feature_auth_connect_wallet_button),
+                    isLoading = state.isLoading,
+                )
             }
         }
 
-        state.errorMessage?.let {
+        val validationErrorMessage = when (state.validationError) {
+            AuthValidationError.InvalidWalletFormat -> stringResource(Res.string.feature_auth_error_invalid_wallet)
+            AuthValidationError.NonceRequired -> stringResource(Res.string.feature_auth_error_nonce_required)
+            AuthValidationError.WalletRequired -> stringResource(Res.string.feature_auth_error_wallet_required)
+            AuthValidationError.SignatureRequired -> stringResource(Res.string.feature_auth_error_signature_required)
+            null -> null
+        }
+        (validationErrorMessage ?: state.errorMessage)?.let {
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodyMedium,

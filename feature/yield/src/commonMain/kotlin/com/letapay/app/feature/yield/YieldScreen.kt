@@ -29,13 +29,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kmp_project_template.feature.yield.generated.resources.Res
+import kmp_project_template.feature.yield.generated.resources.feature_yield_apy_label
+import kmp_project_template.feature.yield.generated.resources.feature_yield_average_apy
+import kmp_project_template.feature.yield.generated.resources.feature_yield_opportunities
+import kmp_project_template.feature.yield.generated.resources.feature_yield_risk_low
+import kmp_project_template.feature.yield.generated.resources.feature_yield_risk_medium
+import kmp_project_template.feature.yield.generated.resources.feature_yield_title
+import kmp_project_template.feature.yield.generated.resources.feature_yield_total_staked
+import org.jetbrains.compose.resources.stringResource
 
 private val Background = Color(0xFF0A0A0F)
 private val SurfaceHigh = Color(0xFF1C1C26)
@@ -52,13 +60,13 @@ data class YieldOpportunity(val protocol: String, val asset: String, val apy: St
 fun YieldScreen(modifier: Modifier = Modifier) {
     val totalStakedUsd = "$1,250.00"
     val totalApy = "12.4%"
-    val opportunities = remember {
-        listOf(
-            YieldOpportunity("Aave", "USDC", "5.2%", "Low Risk"),
-            YieldOpportunity("Lido", "ETH", "3.8%", "Low Risk"),
-            YieldOpportunity("Compound", "DAI", "4.5%", "Medium Risk"),
-        )
-    }
+    val lowRisk = stringResource(Res.string.feature_yield_risk_low)
+    val mediumRisk = stringResource(Res.string.feature_yield_risk_medium)
+    val opportunities = listOf(
+        YieldOpportunity("Aave", "USDC", "5.2%", lowRisk),
+        YieldOpportunity("Lido", "ETH", "3.8%", lowRisk),
+        YieldOpportunity("Compound", "DAI", "4.5%", mediumRisk),
+    )
 
     LazyColumn(
         modifier = modifier
@@ -70,7 +78,7 @@ fun YieldScreen(modifier: Modifier = Modifier) {
         item { Spacer(Modifier.height(8.dp)) }
         item {
             Text(
-                text = "Earn Yield",
+                text = stringResource(Res.string.feature_yield_title),
                 style = MaterialTheme.typography.headlineLarge,
                 color = TextPrimary,
             )
@@ -87,12 +95,20 @@ fun YieldScreen(modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column {
-                        Text("Total Staked", style = MaterialTheme.typography.labelMedium, color = TextTertiary)
+                        Text(
+                            stringResource(Res.string.feature_yield_total_staked),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextTertiary,
+                        )
                         Spacer(Modifier.height(4.dp))
                         Text(totalStakedUsd, style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Average APY", style = MaterialTheme.typography.labelMedium, color = TextTertiary)
+                        Text(
+                            stringResource(Res.string.feature_yield_average_apy),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextTertiary,
+                        )
                         Spacer(Modifier.height(4.dp))
                         Text(totalApy, style = MaterialTheme.typography.headlineMedium, color = Success)
                     }
@@ -101,7 +117,7 @@ fun YieldScreen(modifier: Modifier = Modifier) {
         }
         item {
             Text(
-                text = "Opportunities",
+                text = stringResource(Res.string.feature_yield_opportunities),
                 style = MaterialTheme.typography.titleLarge,
                 color = TextPrimary,
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -138,11 +154,24 @@ private fun OpportunityRow(opp: YieldOpportunity) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(opp.protocol, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
-            Text("${opp.asset} • ${opp.risk}", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+            Text(
+                "${opp.asset} • ${opp.risk}",
+                style = MaterialTheme.typography.labelMedium,
+                color = TextSecondary,
+            )
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text(opp.apy, style = MaterialTheme.typography.bodyLarge, color = Success, fontWeight = FontWeight.SemiBold)
-            Text("APY", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+            Text(
+                opp.apy,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Success,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                stringResource(Res.string.feature_yield_apy_label),
+                style = MaterialTheme.typography.labelSmall,
+                color = TextTertiary,
+            )
         }
     }
 }

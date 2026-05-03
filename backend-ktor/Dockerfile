@@ -1,12 +1,18 @@
+FROM gradle:8.10.2-jdk21-alpine AS build
+
+RUN apk add --no-cache bash
+
+WORKDIR /workspace
+COPY . .
+RUN ./gradlew --no-daemon :backend-ktor:buildFatJar --no-configuration-cache
+
 FROM eclipse-temurin:21-jre-alpine
-
 WORKDIR /opt/leta-pay
-
 RUN apk add --no-cache curl \
     && addgroup -S letapay \
     && adduser -S letapay -G letapay
 
-COPY backend-ktor/build/libs/*-all.jar app.jar
+COPY --from=build /workspace/backend-ktor/build/libs/*-all.jar app.jar
 
 RUN chown -R letapay:letapay /opt/leta-pay
 

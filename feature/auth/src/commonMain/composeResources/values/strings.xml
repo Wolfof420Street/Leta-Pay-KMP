@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
+<resources>
+    <string name="feature_auth_title">Leta Pay</string>
+    <string name="feature_auth_subtitle">Connect your wallet, sign once, and keep moving.</string>
+    <string name="feature_auth_wallet_label">Wallet address</string>
+    <string name="feature_auth_error_invalid_wallet">Enter a valid EVM wallet address first.</string>
+    <string name="feature_auth_request_nonce_button">Request nonce</string>
+    <string name="feature_auth_nonce_title">Nonce</string>
+    <string name="feature_auth_request_nonce_hint">Request a nonce to continue.</string>
+    <string name="feature_auth_signed_message_label">Signed message</string>
+    <string name="feature_auth_device_token_label">Device token (optional)</string>
+    <string name="feature_auth_connect_wallet_button">Connect Wallet</string>
+    <string name="feature_auth_error_nonce_required">Request a nonce before verifying the wallet signature.</string>
+    <string name="feature_auth_error_wallet_required">Enter a valid wallet address.</string>
+    <string name="feature_auth_error_signature_required">Paste the signed WalletConnect message before connecting.</string>
+</resources>

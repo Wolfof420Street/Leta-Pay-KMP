@@ -34,6 +34,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kmp_project_template.feature.trade.generated.resources.Res
+import kmp_project_template.feature.trade.generated.resources.feature_trade_describe_hint
+import kmp_project_template.feature.trade.generated.resources.feature_trade_fee_label
+import kmp_project_template.feature.trade.generated.resources.feature_trade_from_label
+import kmp_project_template.feature.trade.generated.resources.feature_trade_get_quote_button
+import kmp_project_template.feature.trade.generated.resources.feature_trade_getting_quote_button
+import kmp_project_template.feature.trade.generated.resources.feature_trade_placeholder_amount
+import kmp_project_template.feature.trade.generated.resources.feature_trade_swap_label
+import kmp_project_template.feature.trade.generated.resources.feature_trade_title
+import kmp_project_template.feature.trade.generated.resources.feature_trade_to_estimated_label
+import org.jetbrains.compose.resources.stringResource
 
 private val Background = Color(0xFF061722)
 private val SurfaceHigh = Color(0xFF0D2A38)
@@ -61,7 +72,7 @@ fun TradeScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = "Trade",
+            text = stringResource(Res.string.feature_trade_title),
             style = MaterialTheme.typography.headlineLarge,
             color = TextPrimary,
         )
@@ -74,7 +85,7 @@ fun TradeScreen(modifier: Modifier = Modifier) {
         ) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
-                    text = "Swap",
+                    text = stringResource(Res.string.feature_trade_swap_label),
                     style = MaterialTheme.typography.titleLarge,
                     color = TextPrimary,
                     fontWeight = FontWeight.SemiBold,
@@ -82,7 +93,7 @@ fun TradeScreen(modifier: Modifier = Modifier) {
 
                 // From field
                 TokenAmountField(
-                    label = "From",
+                    label = stringResource(Res.string.feature_trade_from_label),
                     value = fromAmount,
                     onValueChange = { fromAmount = it },
                     tokenSymbol = fromToken,
@@ -98,7 +109,7 @@ fun TradeScreen(modifier: Modifier = Modifier) {
 
                 // To field
                 TokenAmountField(
-                    label = "To (estimated)",
+                    label = stringResource(Res.string.feature_trade_to_estimated_label),
                     value = toAmount,
                     onValueChange = {},
                     tokenSymbol = toToken,
@@ -111,7 +122,7 @@ fun TradeScreen(modifier: Modifier = Modifier) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            "Network fee",
+                            stringResource(Res.string.feature_trade_fee_label),
                             color = TextTertiary,
                             style = MaterialTheme.typography.labelMedium,
                         )
@@ -132,9 +143,9 @@ fun TradeScreen(modifier: Modifier = Modifier) {
                     ) {
                         Text(
                             text = if (isLoading) {
-                                "Getting quote..."
+                                stringResource(Res.string.feature_trade_getting_quote_button)
                             } else {
-                                "Get Quote"
+                                stringResource(Res.string.feature_trade_get_quote_button)
                             },
                             color = Color.White,
                             style = MaterialTheme.typography.titleLarge,
@@ -146,7 +157,7 @@ fun TradeScreen(modifier: Modifier = Modifier) {
         }
 
         Text(
-            text = "Or describe your trade in chat →",
+            text = stringResource(Res.string.feature_trade_describe_hint),
             style = MaterialTheme.typography.bodyLarge,
             color = TextTertiary,
         )
@@ -183,7 +194,7 @@ private fun TokenAmountField(
                     decorationBox = { inner ->
                         if (value.isEmpty()) {
                             Text(
-                                "0.00",
+                                stringResource(Res.string.feature_trade_placeholder_amount),
                                 color = TextTertiary,
                                 style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Light),
                             )

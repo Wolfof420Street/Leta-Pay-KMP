@@ -66,7 +66,7 @@ class YieldRoutesTest {
         assertEquals(HttpStatusCode.OK, response.status)
         val body = response.bodyAsText()
         assertTrue(body.contains("\"positionId\""))
-        assertTrue(body.contains("\"to\":\"0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84\""))
+        assertTrue(body.contains("\"unsignedTx\""))
     }
 
     @Test

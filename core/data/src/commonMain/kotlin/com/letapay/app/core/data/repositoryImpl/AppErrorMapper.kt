@@ -16,7 +16,16 @@ import io.ktor.utils.io.errors.IOException
 
 internal fun Throwable.toAppError(): AppError = when (this) {
     is AppError -> this
-    is BackendApiException -> when (statusCode) {
+    is BackendApiException -> mapBackendApiError()
+    is IOException, is SocketTimeoutException -> AppError.Network(displayMessage = message ?: "Network error")
+    else -> AppError.Unexpected(message ?: "Unknown error")
+}
+
+private fun BackendApiException.mapBackendApiError(): AppError {
+    if (code == "AGENTKIT_UNAVAILABLE") {
+        return AppError.AgentKitUnavailable(message)
+    }
+    return when (statusCode) {
         401 -> AppError.Unauthorized(message)
         400 -> AppError.Validation(field = "request", reason = message)
         403 -> AppError.ChainRejected(reason = message, code = statusCode)
@@ -24,8 +33,6 @@ internal fun Throwable.toAppError(): AppError = when (this) {
         422 -> mapUnprocessableEntity()
         else -> AppError.Unexpected(message)
     }
-    is IOException, is SocketTimeoutException -> AppError.Network(displayMessage = message ?: "Network error")
-    else -> AppError.Unexpected(message ?: "Unknown error")
 }
 
 private fun BackendApiException.mapUnprocessableEntity(): AppError {

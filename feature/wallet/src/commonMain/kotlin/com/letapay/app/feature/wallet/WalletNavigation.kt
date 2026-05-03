@@ -31,7 +31,20 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import kmp_project_template.feature.wallet.generated.resources.Res
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_amount_prefix
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_balance_empty
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_chain_prefix
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_disconnect_button
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_loading_balances
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_no_session
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_refresh_button
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_refreshing_button
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_title
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_total_prefix
+import kmp_project_template.feature.wallet.generated.resources.feature_wallet_usd_prefix
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Serializable
@@ -60,13 +73,13 @@ fun WalletRouteScreen(
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Wallet", style = MaterialTheme.typography.headlineMedium)
+                Text(stringResource(Res.string.feature_wallet_title), style = MaterialTheme.typography.headlineMedium)
                 Text(
-                    text = state.walletAddress ?: "No active wallet session",
+                    text = state.walletAddress ?: stringResource(Res.string.feature_wallet_no_session),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    text = "${"Total USD"}: ${state.totalUsdValue ?: "--"}",
+                    text = "${stringResource(Res.string.feature_wallet_total_prefix)}: ${state.totalUsdValue ?: "--"}",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -84,9 +97,9 @@ fun WalletRouteScreen(
                     ) {
                         Text(
                             if (state.isLoading) {
-                                "Refreshing..."
+                                stringResource(Res.string.feature_wallet_refreshing_button)
                             } else {
-                                "Refresh balance"
+                                stringResource(Res.string.feature_wallet_refresh_button)
                             },
                         )
                     }
@@ -94,7 +107,7 @@ fun WalletRouteScreen(
                         onClick = viewModel::logout,
                         enabled = !state.isLoading,
                     ) {
-                        Text("Disconnect wallet")
+                        Text(stringResource(Res.string.feature_wallet_disconnect_button))
                     }
                 }
             }
@@ -114,9 +127,9 @@ fun WalletRouteScreen(
             item {
                 Text(
                     text = if (state.isLoading) {
-                        "Loading balances..."
+                        stringResource(Res.string.feature_wallet_loading_balances)
                     } else {
-                        "No balances returned from /api/portfolio/balance yet."
+                        stringResource(Res.string.feature_wallet_balance_empty)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -130,16 +143,16 @@ fun WalletRouteScreen(
                     ) {
                         Text(balance.symbol, style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "${"Amount"}: ${balance.amount}",
+                            "${stringResource(Res.string.feature_wallet_amount_prefix)}: ${balance.amount}",
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Text(
-                            "${"Chain"}: ${balance.chainId.value}",
+                            "${stringResource(Res.string.feature_wallet_chain_prefix)}: ${balance.chainId.value}",
                             style = MaterialTheme.typography.bodySmall,
                         )
                         balance.usdValue?.let {
                             Text(
-                                "${"USD"}: $it",
+                                "${stringResource(Res.string.feature_wallet_usd_prefix)}: $it",
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }

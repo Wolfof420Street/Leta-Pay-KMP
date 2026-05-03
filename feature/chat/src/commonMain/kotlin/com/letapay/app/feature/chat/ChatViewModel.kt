@@ -18,12 +18,15 @@ import com.letapay.app.core.data.repository.SessionRepository
 import com.letapay.app.core.model.chat.ChatMessage
 import com.letapay.app.core.model.chat.Contact
 import com.letapay.app.feature.agent.AgentOrchestrator
+import kmp_project_template.feature.chat.generated.resources.Res
+import kmp_project_template.feature.chat.generated.resources.feature_chat_no_execution_result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 
 data class ChatUiState(
     val walletAddress: String? = null,
@@ -35,8 +38,8 @@ data class ChatUiState(
     val newContactWallet: String = "",
     val newContactAlias: String = "",
     val messageDraft: String = "",
-    val commandDraft: String = "swap 0.5 ETH to USDC",
-    val agentState: String = "Idle",
+    val commandDraft: String = "",
+    val agentState: String = "",
     val previewSummary: String? = null,
     val clarificationPrompt: String? = null,
     val terminalMessage: String? = null,
@@ -46,6 +49,7 @@ data class ChatUiState(
     val isSendingMessage: Boolean = false,
     val isCommandActionInFlight: Boolean = false,
     val errorMessage: String? = null,
+    val isAgentKitUnavailable: Boolean = false,
 )
 
 class ChatViewModel(
@@ -93,6 +97,8 @@ class ChatViewModel(
             isLoadingChat = chatState.isLoading,
             isSendingMessage = chatState.isSending,
             errorMessage = chatState.errorMessage ?: summaryState.errorMessage ?: sessionState.errorMessage,
+            isAgentKitUnavailable = (chatState.errorMessage ?: summaryState.errorMessage ?: sessionState.errorMessage)
+                ?.contains("AGENTKIT_UNAVAILABLE", ignoreCase = true) == true,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -192,7 +198,7 @@ class ChatViewModel(
                 agentOrchestrator.confirmPlan(planId)
                 val result = agentOrchestrator.terminalMessage.value
                     ?: agentOrchestrator.currentPlan.value?.previewSummary
-                    ?: "No execution result available."
+                    ?: getString(Res.string.feature_chat_no_execution_result)
                 chatSummaryRepository.streamSummary(
                     event = "PreviewConfirmed",
                     transactionResult = result,

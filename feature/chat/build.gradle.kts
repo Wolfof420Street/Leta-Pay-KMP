@@ -18,6 +18,7 @@ android {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.core.ui)
             implementation(projects.feature.agent)
             implementation(projects.core.model)
             implementation(projects.core.data)
