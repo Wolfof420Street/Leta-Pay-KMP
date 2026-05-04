@@ -114,3 +114,8 @@ agentkit-sidecar/*.log
 agentkit-sidecar/npm-debug.log*
 agentkit-sidecar/yarn-debug.log*
 agentkit-sidecar/yarn-error.log*
+
+
+# AI Agent configurations
+.agents/
+.agent/
