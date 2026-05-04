@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { z } from "zod";
-import { buildAgentKit } from "../agentkit";
 
 const router = Router();
 
@@ -14,14 +13,6 @@ const StakeSchema = z.object({
 router.post("/build", async (req, res, next) => {
   try {
     const body = StakeSchema.parse(req.body);
-    const agentKit = await buildAgentKit(body.fromAddress);
-    const action = resolveStakeAction(agentKit.getActions(), body.protocol);
-    const sdkResult = await action.invoke(stakeActionArgs(body) as never);
-
-    if (typeof sdkResult === "string" && sdkResult.toLowerCase().includes("transaction hash")) {
-      throw new Error("Stake action attempted execution; sidecar only supports unsigned transaction builds");
-    }
-
     const chainId = body.networkId === "polygon-mainnet" ? 137 : body.networkId === "base-mainnet" ? 8453 : 1;
     const amountWei = toWei(body.amount, 18);
     const opportunityId = body.protocol === "LIDO" ? "LIDO_STETH_STAKE" : "AAVE_V3_SUPPLY_WETH";
@@ -41,7 +32,7 @@ router.post("/build", async (req, res, next) => {
           protocol: body.protocol,
           opportunityId,
           amount: body.amount,
-          agentkit: sdkResult,
+          mode: "deterministic-build",
         },
       },
     });
@@ -57,31 +48,6 @@ function toWei(amount: string, decimals: number): bigint {
   }
   const normalizedFrac = (frac + "0".repeat(decimals)).slice(0, decimals);
   return BigInt(whole) * (10n ** BigInt(decimals)) + BigInt(normalizedFrac || "0");
-}
-
-function resolveStakeAction(
-  actions: Array<{ name: string; invoke: (args: unknown) => Promise<string> }>,
-  protocol: "LIDO" | "AAVE",
-): { name: string; invoke: (args: unknown) => Promise<string> } {
-  const preferred = protocol === "AAVE" ? ["supply", "deposit"] : ["deposit", "supply"];
-  const action = preferred
-    .map((candidate) => actions.find((item) => item.name === candidate))
-    .find((item) => item != null);
-  if (!action) {
-    throw new Error(`No AgentKit stake action available for ${protocol}`);
-  }
-  return action;
-}
-
-function stakeActionArgs(body: z.infer<typeof StakeSchema>): Record<string, unknown> {
-  if (body.protocol === "AAVE") {
-    return {
-      amount: body.amount,
-      asset: "WETH",
-      chainId: body.networkId === "polygon-mainnet" ? 137 : body.networkId === "base-mainnet" ? 8453 : 1,
-    };
-  }
-  return { amount: body.amount };
 }
 
 function padAddress(address: string): string {

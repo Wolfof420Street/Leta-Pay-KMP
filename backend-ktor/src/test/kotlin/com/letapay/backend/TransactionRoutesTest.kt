@@ -20,10 +20,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
-import org.koin.dsl.module
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.koin.dsl.module as koinModule
 
 class TransactionRoutesTest {
     private val walletA = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
@@ -31,7 +31,7 @@ class TransactionRoutesTest {
 
     @Test
     fun `transactions build requires idempotency key`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.post("/transactions/build") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt(walletA, "tx-session-1")}")
@@ -46,8 +46,8 @@ class TransactionRoutesTest {
     @Test
     fun `transactions build rejects screened address`() = testApplication {
         application {
-            module(
-                module {
+            configureApp(
+                koinModule {
                     single<ScreeningService> {
                         object : ScreeningService {
                             override suspend fun check(address: String): Boolean = false
@@ -70,7 +70,7 @@ class TransactionRoutesTest {
 
     @Test
     fun `transactions send stores and returns status plus history`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val sendResponse = client.post("/transactions/send") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt(walletA, "tx-session-3")}")
@@ -102,7 +102,7 @@ class TransactionRoutesTest {
 
     @Test
     fun `idempotency key is wallet-scoped and cannot be poisoned cross-wallet`() = testApplication {
-        application { module() }
+        application { configureApp() }
         val key = "cross-wallet-key-1"
 
         val attacker = client.post("/transactions/build") {

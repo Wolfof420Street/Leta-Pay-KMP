@@ -117,3 +117,6 @@ class CircuitOpenError(name: String) :
 
 class PayloadTooLargeError :
     BackendException("PAYLOAD_TOO_LARGE", HttpStatusCode.PayloadTooLarge, "Request body exceeds the 64 KB limit.")
+
+class InvalidRequestError(message: String) :
+    BackendException("INVALID_REQUEST", HttpStatusCode.BadRequest, message)

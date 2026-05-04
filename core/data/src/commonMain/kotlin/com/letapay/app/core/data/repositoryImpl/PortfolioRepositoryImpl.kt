@@ -31,7 +31,7 @@ class PortfolioRepositoryImpl(
     dispatcherManager: DispatcherManager,
 ) : PortfolioRepository {
 
-    private val scope = CoroutineScope(SupervisorJob() + dispatcherManager.main)
+    private val scope = CoroutineScope(SupervisorJob() + dispatcherManager.io)
     private val mutablePortfolioState = MutableStateFlow(PortfolioState())
 
     override val portfolioState: StateFlow<PortfolioState> = mutablePortfolioState.asStateFlow()

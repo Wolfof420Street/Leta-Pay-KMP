@@ -1,80 +1,56 @@
-# Manager Rules — Leta-Pay KMP Constitution
+# Manager Rules — Leta Pay Canonical Constitution
 
-This file is the operating constitution for all agents in this repository.
+This file is the mandatory operating contract for all AI agents in this repository.
 
-## Identity
-You are GitHub Copilot, the KMP project coordinator for Leta-Pay.
+## 1. Canonical Architecture
 
-## Non-Negotiable Project Rules
-- Follow the locked architecture in plan.md.
-- Build for all 4 targets: Android, iOS, Desktop, Web.
-- Never place platform-specific code in commonMain.
-- Enforce Spotless + Detekt before completion.
-- Never store user private keys (non-custodial WalletConnect model).
+- Backend is Kotlin Ktor (`backend-ktor`).
+- Sidecar is Node.js + Coinbase AgentKit (`agentkit-sidecar`).
+- Backend and sidecar communicate over internal HTTP only using `x-sidecar-secret`.
+- Sidecar never serves public internet traffic and never owns user custody keys.
+- Ktor is the public policy boundary for auth, rate limits, idempotency, and kill-switch enforcement.
 
-## Architecture Guardrails
-- Layer order: UI -> Feature -> Data -> Core -> Platform.
-- No circular dependencies.
-- No cross-feature imports that bypass shared/core boundaries.
-- Use typed domain primitives (ChainId, WalletAddress, TxHash, AssetId), not raw strings.
-- Async state uses Resource<T> + StateFlow patterns.
+## 2. Frontend Architecture Rules
 
-## Phase Governance (From plan.md)
-- Work is sequenced through Phase 1-9.
-- Do not skip phase gates.
-- A phase can advance only when gate checklist is green.
+- UI stack is Compose Multiplatform across Android, iOS, Desktop, and Web.
+- State management must follow Unidirectional Data Flow.
+- Repositories are offline-first and SQLDelight-backed where local persistence applies.
+- Frontend domain errors must map exactly to backend machine error codes.
+- No platform-specific code in `commonMain`.
 
-Phase list:
-1. Auth + WalletConnect + Session
-2. Portfolio + Balance + Chat
-3. Notifications (FCM/APNs/Web Push)
-4. Build endpoints (no side effects)
-5. Broadcast endpoints + idempotency
-6. Trade + Swap integration
-7. Yield + staking
-8. Biometrics + security hardening
-9. Performance + release readiness
+## 3. Build and Validation Rules
 
-## Quality Gates (Required)
-Before declaring done, run:
-- ./gradlew spotlessApply
-- ./gradlew spotlessCheck
-- ./gradlew detekt
-- ./gradlew commonTest test
-- ./gradlew dependencyGuard
+- Run build and validation tasks serially.
+- Every Gradle command must include:
+  - `--no-daemon`
+  - `--no-configuration-cache`
+- Required validation baseline:
+  - `./gradlew --no-daemon --no-configuration-cache :backend-ktor:spotlessCheck`
+  - `./gradlew --no-daemon --no-configuration-cache :backend-ktor:detekt`
+  - `./gradlew --no-daemon --no-configuration-cache :backend-ktor:test`
+  - `./gradlew --no-daemon --no-configuration-cache :cmp-web:compileKotlinJs`
+  - `./gradlew --no-daemon --no-configuration-cache :cmp-web:jsBrowserDistribution`
+  - `cd agentkit-sidecar && npm ci && npm run build`
 
-Mandatory outcomes:
-- spotlessCheck passes
-- detekt issues = 0
-- tests pass
-- dependency guard passes
+## 4. Zero Placeholder Policy
 
-## Security Directives
-- SessionToken TTL: 30 minutes.
-- RefreshToken TTL: 7 days (not on Web).
-- Web must not persist refreshToken.
-- Web sessionToken storage: sessionStorage only.
-- Validate wallet signatures server-side before minting Firebase custom token.
-- Never log secrets, tokens, or signing payloads in plaintext.
+- Never commit placeholder code.
+- Never leave `TODO`, `FIXME`, mock payloads, fake secrets, or fake API responses in committed changes.
+- If a requirement is blocked, report the blocker explicitly instead of stubbing behavior.
 
-## Debugging and Recovery
-- Follow 3-Strike Rule:
-  1. Attempt fix
-  2. Attempt alternative fix
-  3. Attempt minimal root-cause fix
-  4. If still failing: stop, report, escalate
-- Always add or update regression tests for bug fixes.
+## 5. Security and Custody Rules
 
-## Delivery Protocol
+- Never store private keys or seed phrases.
+- Keep WalletConnect signing external to Leta Pay services.
+- Treat `KILL_SWITCH_VALUE_MOVES` as mandatory control for value-moving routes.
+- Preserve backend idempotency guarantees for all value-moving operations.
+
+## 6. Delivery Protocol
+
 Every handoff must include:
+
 - Scope completed
 - Files changed
 - Commands executed
-- Gate results
+- Validation result
 - Remaining risks or blockers
-
-## Prohibited Actions
-- Direct commits to master or dev
-- Production-destructive commands
-- Circumventing quality gates
-- Introducing platform-only assumptions into shared logic

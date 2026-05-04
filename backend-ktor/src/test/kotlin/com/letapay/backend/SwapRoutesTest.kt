@@ -24,15 +24,15 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
-import org.koin.dsl.module
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.koin.dsl.module as koinModule
 
 class SwapRoutesTest {
     @Test
     fun `swap quote with valid body returns quote response`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.post("/swap/quote") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -51,7 +51,7 @@ class SwapRoutesTest {
 
     @Test
     fun `swap quote with low slippage returns 400`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.post("/swap/quote") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -68,7 +68,7 @@ class SwapRoutesTest {
 
     @Test
     fun `swap quote with unknown chain returns 400`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.post("/swap/quote") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -85,7 +85,7 @@ class SwapRoutesTest {
 
     @Test
     fun `swap execute with expired quote returns 422`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.post("/swap/execute") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -104,7 +104,7 @@ class SwapRoutesTest {
 
     @Test
     fun `swap execute without idempotency key returns 400`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.post("/swap/execute") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -120,7 +120,7 @@ class SwapRoutesTest {
     fun `swap execute with kill switch active returns 503`() = testApplication {
         System.setProperty("KILL_SWITCH_VALUE_MOVES", "true")
         try {
-            application { module() }
+            application { configureApp() }
 
             val response = client.post("/swap/execute") {
                 header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -143,8 +143,8 @@ class SwapRoutesTest {
     @Test
     fun `swap execute rejects mismatched quote execution params`() = testApplication {
         application {
-            module(
-                module {
+            configureApp(
+                koinModule {
                     single<CoinbaseService> {
                         object : CoinbaseService {
                             override suspend fun getSpotPrice(
@@ -157,6 +157,8 @@ class SwapRoutesTest {
                             override suspend fun getSwapQuote(request: SwapQuoteRequest): SwapQuote =
                                 SwapQuote(
                                     quoteId = "q-1",
+                                    fromAsset = request.fromAsset,
+                                    toAsset = request.toAsset,
                                     fromAmount = request.amount,
                                     toAmount = "10",
                                     rate = "1.0",
@@ -165,6 +167,7 @@ class SwapRoutesTest {
                                     expiresAt = System.currentTimeMillis() + 60_000L,
                                     calldata = "0x1",
                                     chainId = 137L,
+                                    slippageBps = request.slippageBps,
                                 )
 
                             override suspend fun getSwapUnsignedTx(quoteId: String): UnsignedSwapTx =

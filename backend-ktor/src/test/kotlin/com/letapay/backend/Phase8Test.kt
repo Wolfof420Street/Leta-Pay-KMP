@@ -22,12 +22,12 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.test.runTest
-import org.koin.dsl.module
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import org.koin.dsl.module as koinModule
 
 class Phase8Test {
     @Test
@@ -97,8 +97,8 @@ class Phase8Test {
     @Test
     fun `health returns degraded db when probe fails`() = testApplication {
         application {
-            module(
-                module {
+            configureApp(
+                koinModule {
                     single<HealthService> {
                         object : HealthService {
                             override suspend fun dbStatus(): String = "degraded"

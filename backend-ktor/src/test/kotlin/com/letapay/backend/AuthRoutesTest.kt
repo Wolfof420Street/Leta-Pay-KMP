@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
 class AuthRoutesTest {
     @Test
     fun `POST auth request-nonce returns nonce and expiry`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.post("/auth/request-nonce") {
             contentType(ContentType.Application.Json)
@@ -42,7 +42,7 @@ class AuthRoutesTest {
 
     @Test
     fun `POST auth verify-signature replay attack returns NONCE_ALREADY_USED`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val walletAddress = TEST_CREDENTIALS.address
         val nonceBody = client.post("/auth/request-nonce") {
@@ -86,7 +86,7 @@ class AuthRoutesTest {
 
     @Test
     fun `POST auth refresh-token with invalid token returns INVALID_REFRESH_TOKEN`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.post("/auth/refresh-token") {
             contentType(ContentType.Application.Json)
@@ -99,7 +99,7 @@ class AuthRoutesTest {
 
     @Test
     fun `revoked session cannot reuse same jwt after revoke-session`() = testApplication {
-        application { module() }
+        application { configureApp() }
         val walletAddress = TEST_CREDENTIALS.address
         val nonceBody = client.post("/auth/request-nonce") {
             contentType(ContentType.Application.Json)
@@ -147,7 +147,7 @@ class AuthRoutesTest {
 
     @Test
     fun `request-nonce cannot evade pre-auth rate limit by rotating forwarded for header`() = testApplication {
-        application { module() }
+        application { configureApp() }
         val wallet = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         repeat(10) { attempt ->
             val response = client.post("/auth/request-nonce") {

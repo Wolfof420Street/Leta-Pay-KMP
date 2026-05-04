@@ -24,11 +24,12 @@ import com.letapay.backend.model.auth.GeneratedNonce
 import com.letapay.backend.model.auth.VerifyRequest
 import com.letapay.backend.security.JwtTokenService
 import de.mkammerer.argon2.Argon2Factory
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
 import org.web3j.crypto.Hash
 import org.web3j.crypto.Keys
@@ -56,12 +57,13 @@ class DefaultAuthService(
     private val firebaseTokenService: FirebaseTokenService,
 ) : AuthService {
     private val argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id)
+    private suspend fun <T> db(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) { block() }
 
     override suspend fun generateNonce(walletAddress: String): GeneratedNonce {
         val nonce = UUID.randomUUID().toString()
         val expiresAt = System.currentTimeMillis() + FIVE_MINUTES_MS
 
-        transaction {
+        db {
             // Fix: persist nonce expiry with a nullable usedAt flag so replay checks have durable state.
             Nonces.insert {
                 it[Nonces.nonce] = nonce
@@ -78,7 +80,7 @@ class DefaultAuthService(
         val nonce = extractNonce(request.message)
         val now = System.currentTimeMillis()
 
-        transaction {
+        db {
             val nonceRow = Nonces.selectAll().where { Nonces.nonce eq nonce }.singleOrNull()
                 ?: throw NonceMissingError()
 
@@ -110,7 +112,7 @@ class DefaultAuthService(
 
     override suspend fun rotateRefreshToken(rawToken: String, deviceFingerprint: String?): AuthTokens {
         val (selector, rawSecret) = parseRefreshToken(rawToken)
-        val session = transaction {
+        val session = db {
             Sessions.selectAll()
                 .where { Sessions.refreshTokenSelector eq selector }
                 .singleOrNull()
@@ -120,7 +122,7 @@ class DefaultAuthService(
         val now = System.currentTimeMillis()
         val familyId = session[Sessions.familyId]
 
-        transaction {
+        db {
             val familyRows = Sessions.selectAll().where { Sessions.familyId eq familyId }.toList()
             if (familyRows.any { it[Sessions.revokedAt] != null }) {
                 revokeFamily(familyId, now)
@@ -151,7 +153,7 @@ class DefaultAuthService(
 
     override suspend fun revokeSession(sessionId: String) {
         val now = System.currentTimeMillis()
-        transaction {
+        db {
             Sessions.update({ Sessions.id eq sessionId }) {
                 it[revokedAt] = now
             }
@@ -173,7 +175,7 @@ class DefaultAuthService(
         val firebaseToken = mintFirebaseToken(walletAddress, sessionId)
         val refreshHash = hashRefreshToken(refreshSecret)
 
-        transaction {
+        db {
             Sessions.insert {
                 it[id] = sessionId
                 it[Sessions.walletAddress] = walletAddress

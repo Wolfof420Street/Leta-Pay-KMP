@@ -1,39 +1,42 @@
 # Backend Agent - Tech Stack Reference
 
-## Python (Preferred)
-- **Framework**: Ktor 0.110+
-- **ORM**: SQLAlchemy 2.0 (async)
-- **Validation**: kotlinx.serialization v2
-- **Database**: PostgreSQL 16+, Redis 7+
-- **Auth**: python-jose (JWT), passlib (bcrypt)
-- **Testing**: pytest, httpx (async test client)
-- **Migrations**: Alembic
+## Canonical Backend Stack
 
-## Node.js (Alternative)
-- **Framework**: Express.js, NestJS, Hono
-- **ORM**: Prisma, Drizzle
-- **Validation**: Zod
-- **Auth**: jsonwebtoken, bcrypt
-- **Testing**: Jest, Supertest
+- **Language**: Kotlin (JVM 21)
+- **Framework**: Ktor 3.x
+- **Database**: PostgreSQL 16+
+- **Cache/coordination**: Redis 7+
+- **Persistence stack**: Exposed + HikariCP
+- **Validation/serialization**: kotlinx.serialization
+- **Auth/session**: Wallet signature verification + JWT session model
 
-## Architecture
+## Sidecar Integration Stack
+
+- **Sidecar runtime**: Node.js 20+
+- **Sidecar framework**: Express + Zod
+- **Agent layer**: Coinbase AgentKit
+- **Boundary**: internal HTTP only with `x-sidecar-secret`
+
+## Runtime Architecture
 
 ```
-backend/
-  domain/           # Business logic (pure Python, no framework deps)
-  application/      # Use cases, services
-  infrastructure/   # Database, cache, external APIs
-  presentation/     # API endpoints, middleware
+backend-ktor/
+  config/            # Runtime config and env binding
+  routes/            # Public API routes
+  service/           # Policy and orchestration services
+  client/            # Sidecar and provider clients
+  data/              # Persistence and repository logic
 ```
 
-## Security Requirements
-- Password hashing: bcrypt (cost factor 10-12)
-- JWT: 15min access tokens, 7 day refresh tokens
-- Rate limiting on auth endpoints
-- Input validation with kotlinx.serialization/Zod
-- Parameterized queries (never string interpolation)
+## Security and Policy Requirements
 
-## Serena MCP Shortcuts
-- `find_symbol("create_todo")`: Locate existing function
-- `get_symbols_overview("app/api")`: List all endpoints
-- `find_referencing_symbols("User")`: Find all usages of a model
+- Non-custodial custody model (no private key storage)
+- Backend-enforced idempotency for value-moving endpoints
+- Backend-enforced kill switch (`KILL_SWITCH_VALUE_MOVES`)
+- Strict input validation and machine-readable error envelopes
+
+## Command Baseline
+
+- `./gradlew --no-daemon --no-configuration-cache :backend-ktor:spotlessCheck`
+- `./gradlew --no-daemon --no-configuration-cache :backend-ktor:detekt`
+- `./gradlew --no-daemon --no-configuration-cache :backend-ktor:test`

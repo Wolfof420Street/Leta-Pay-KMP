@@ -32,16 +32,16 @@ import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import org.koin.dsl.module
 import org.koin.ktor.ext.get
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.koin.dsl.module as koinModule
 
 class Phase7Test {
     @Test
     fun `put device token with valid token returns 204`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.put("/device-token") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -56,7 +56,7 @@ class Phase7Test {
     fun `put device token twice keeps one active token per wallet and platform`() = testApplication {
         lateinit var service: DeviceTokenService
         application {
-            module()
+            configureApp()
             service = get()
         }
 
@@ -81,7 +81,7 @@ class Phase7Test {
     fun `delete device token marks token inactive`() = testApplication {
         lateinit var service: DeviceTokenService
         application {
-            module()
+            configureApp()
             service = get()
         }
 
@@ -104,7 +104,7 @@ class Phase7Test {
 
     @Test
     fun `health returns 200 with status field present`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val response = client.get("/health")
 
@@ -115,8 +115,8 @@ class Phase7Test {
     @Test
     fun `health returns degraded db when probe reports degraded`() = testApplication {
         application {
-            module(
-                module {
+            configureApp(
+                koinModule {
                     single<HealthService> {
                         object : HealthService {
                             override suspend fun dbStatus(): String = "degraded"
@@ -135,7 +135,7 @@ class Phase7Test {
 
     @Test
     fun `request body greater than 64kb returns 413`() = testApplication {
-        application { module() }
+        application { configureApp() }
 
         val oversizedWallet = "0x" + "a".repeat(70_000)
         val response = client.post("/auth/request-nonce") {
@@ -149,8 +149,8 @@ class Phase7Test {
     @Test
     fun `timeout on coinbase quote returns 504 upstream timeout`() = testApplication {
         application {
-            module(
-                module {
+            configureApp(
+                koinModule {
                     single<AgentKitClient> {
                         object : AgentKitClient {
                             override suspend fun buildTransfer(

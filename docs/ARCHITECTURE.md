@@ -90,3 +90,12 @@ Typical local/prod decomposition:
 - `postgres`: system-of-record state
 - `redis`: ephemeral coordination/cache support
 - Frontend targets consume backend over HTTP(S), never sidecar directly
+
+## 7. Data Model and Policy Storage
+
+- Durable transaction/session/idempotency metadata lives in Postgres.
+- Transient rate-limit and operational coordination state uses Redis.
+- Backend-enforced kill switch (`KILL_SWITCH_VALUE_MOVES`) is evaluated before any value-moving side effects.
+- Idempotency enforcement and replay semantics are backend-owned and must not be delegated to clients or sidecar.
+
+See `DATA_MODEL.md` for the full data model and idempotency behavior contract.

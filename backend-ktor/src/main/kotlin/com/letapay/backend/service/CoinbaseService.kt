@@ -98,6 +98,8 @@ class StubCoinbaseService(
                     val fallbackToAmount = fromAmount.multiply(BigDecimal("0.98")).stripTrailingZeros().toPlainString()
                     return@execute SwapQuote(
                         quoteId = UUID.randomUUID().toString(),
+                        fromAsset = request.fromAsset,
+                        toAsset = request.toAsset,
                         fromAmount = request.amount,
                         toAmount = fallbackToAmount,
                         rate = "0.98",
@@ -106,12 +108,15 @@ class StubCoinbaseService(
                         expiresAt = System.currentTimeMillis() + 60_000,
                         calldata = "0xswapdeadbeef",
                         chainId = request.chain,
+                        slippageBps = request.slippageBps,
                     )
                 }
                 val toAmount = response.toAmount.takeIf { it.isNotBlank() }
                     ?: fromAmount.multiply(BigDecimal("0.98")).stripTrailingZeros().toPlainString()
                 SwapQuote(
                     quoteId = response.quoteId.ifBlank { UUID.randomUUID().toString() },
+                    fromAsset = request.fromAsset,
+                    toAsset = request.toAsset,
                     fromAmount = request.amount,
                     toAmount = toAmount,
                     rate = response.rate,
@@ -120,6 +125,7 @@ class StubCoinbaseService(
                     expiresAt = response.expiresAt,
                     calldata = response.calldata,
                     chainId = request.chain,
+                    slippageBps = request.slippageBps,
                 )
             }
         } catch (exception: NumberFormatException) {

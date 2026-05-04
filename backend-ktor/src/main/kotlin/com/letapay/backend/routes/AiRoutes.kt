@@ -21,7 +21,6 @@ import io.ktor.http.ContentType
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
 import io.ktor.server.request.contentType
-import io.ktor.server.request.header
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondTextWriter
@@ -39,41 +38,37 @@ fun Route.configureAiRoutes() {
     val aiCommandService by inject<AiCommandService>()
     val rateLimiter by inject<RateLimiterService>()
 
-    route("/ai") {
-        sse("/chat-stream") {
-            val token = call.request.header("Authorization")?.removePrefix("Bearer ")
-                ?: call.parameters["token"]
-                ?: return@sse close()
-            if (token.isBlank()) {
-                return@sse close()
-            }
-
-            val event = call.request.queryParameters["event"].orEmpty()
-            val txHash = call.request.queryParameters["txHash"]
-            aiCommandService.streamSummary(event = event, txHash = txHash).collect { chunk ->
-                send(ServerSentEvent(data = chunk))
-            }
-        }
-    }
-    route("/api/ai") {
-        post("/chat-stream") {
-            val request = if (call.request.contentType().match(ContentType.Application.Json)) {
-                call.receive<PlanRequest>()
-            } else {
-                PlanRequest(message = "")
-            }
-            call.respondTextWriter(contentType = ContentType.Text.EventStream) {
-                aiCommandService
-                    .streamSummary(event = request.message.ifBlank { "chat" }, txHash = null)
-                    .collect { chunk ->
-                        write("data: $chunk\n\n")
-                        flush()
-                    }
-            }
-        }
-    }
-
     authenticate("session-auth") {
+        route("/ai") {
+            sse("/chat-stream") {
+                requireNotNull(call.principal<WalletPrincipal>())
+                val event = call.request.queryParameters["event"].orEmpty()
+                val txHash = call.request.queryParameters["txHash"]
+                aiCommandService.streamSummary(event = event, txHash = txHash).collect { chunk ->
+                    send(ServerSentEvent(data = chunk))
+                }
+            }
+        }
+
+        route("/api/ai") {
+            post("/chat-stream") {
+                requireNotNull(call.principal<WalletPrincipal>())
+                val request = if (call.request.contentType().match(ContentType.Application.Json)) {
+                    call.receive<PlanRequest>()
+                } else {
+                    PlanRequest(message = "")
+                }
+                call.respondTextWriter(contentType = ContentType.Text.EventStream) {
+                    aiCommandService
+                        .streamSummary(event = request.message.ifBlank { "chat" }, txHash = null)
+                        .collect { chunk ->
+                            write("data: $chunk\n\n")
+                            flush()
+                        }
+                }
+            }
+        }
+
         route("/ai") {
             post("/parse") {
                 val principal = requireNotNull(call.principal<WalletPrincipal>())

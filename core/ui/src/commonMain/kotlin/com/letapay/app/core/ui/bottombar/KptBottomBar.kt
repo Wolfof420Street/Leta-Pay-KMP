@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -31,7 +32,7 @@ fun KptBottomBar(
         windowInsets = windowInsets,
         modifier = modifier.fillMaxWidth(),
         tonalElevation = 0.dp,
-        containerColor = androidx.compose.ui.graphics.Color(0xFF1C1C26),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         navigationItems.forEach { navigationItem ->
             KptNavigationBarItem(

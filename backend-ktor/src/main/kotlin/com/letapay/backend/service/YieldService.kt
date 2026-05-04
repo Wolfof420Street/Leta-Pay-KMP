@@ -10,6 +10,7 @@
 package com.letapay.backend.service
 
 import com.letapay.backend.db.StakingPositions
+import com.letapay.backend.error.InvalidRequestError
 import com.letapay.backend.error.OpportunityDisabledError
 import com.letapay.backend.error.OpportunityNotFoundError
 import com.letapay.backend.error.PositionNotActiveError
@@ -21,7 +22,6 @@ import com.letapay.backend.model.yield.StakingPosition
 import com.letapay.backend.model.yield.StakingStatus
 import com.letapay.backend.model.yield.UnstakeResponse
 import com.letapay.backend.model.yield.YieldOpportunity
-import io.ktor.server.plugins.BadRequestException
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
@@ -67,6 +67,8 @@ interface YieldService {
         amount: String,
         walletAddress: String,
     ): UnstakeResponse
+
+    suspend fun requireOpportunity(opportunityId: String): YieldOpportunity
 
     suspend fun reconcilePositions()
 }
@@ -209,6 +211,9 @@ class DefaultYieldService(
         }
     }
 
+    override suspend fun requireOpportunity(opportunityId: String): YieldOpportunity =
+        findOpportunity(opportunityId)
+
     private suspend fun pricePosition(amount: String, asset: String, chain: Long): String {
         val quote = pricingService.quote(chain = chain.toString(), asset = asset)
         val usdValue = amount.toBigDecimalOrZero().multiply(quote.price.toBigDecimalOrZero())
@@ -237,13 +242,13 @@ class DefaultYieldService(
     private fun ensureMinAmount(amount: String, opportunity: YieldOpportunity) {
         ensurePositiveAmount(amount)
         if (amount.toBigDecimalOrZero() < opportunity.minAmount.toBigDecimalOrZero()) {
-            throw BadRequestException("Amount must be at least ${opportunity.minAmount} ${opportunity.asset}.")
+            throw InvalidRequestError("Amount must be at least ${opportunity.minAmount} ${opportunity.asset}.")
         }
     }
 
     private fun ensurePositiveAmount(amount: String) {
         if (amount.toBigDecimalOrNull() == null || amount.toBigDecimalOrZero() <= BigDecimal.ZERO) {
-            throw BadRequestException("Amount must be a positive decimal string.")
+            throw InvalidRequestError("Amount must be a positive decimal string.")
         }
     }
 

@@ -12,11 +12,12 @@ package com.letapay.backend.service
 import com.letapay.backend.db.Transactions
 import com.letapay.backend.model.transaction.TransactionRecord
 import com.letapay.backend.model.transaction.TransactionStatusResponse
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.util.UUID
 
 interface TransactionService {
@@ -45,7 +46,7 @@ class DatabaseTransactionService : TransactionService {
     ): TransactionStatusResponse {
         val txHash = "0x${UUID.randomUUID().toString().replace("-", "").padEnd(64, '0').take(64)}"
         val createdAt = System.currentTimeMillis()
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             Transactions.insert {
                 it[Transactions.txHash] = txHash
                 it[Transactions.walletAddress] = walletAddress
@@ -63,7 +64,7 @@ class DatabaseTransactionService : TransactionService {
     }
 
     override suspend fun history(walletAddress: String): List<TransactionRecord> =
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             Transactions.selectAll()
                 .where { Transactions.walletAddress eq walletAddress }
                 .map { row ->
@@ -79,7 +80,7 @@ class DatabaseTransactionService : TransactionService {
         }
 
     override suspend fun status(walletAddress: String, txHash: String): TransactionStatusResponse =
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             val row = Transactions.selectAll()
                 .where {
                     (Transactions.walletAddress eq walletAddress) and

@@ -7,6 +7,8 @@
  *
  * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
+@file:Suppress("MatchingDeclarationName")
+
 package com.letapay.app.feature.yield
 
 import androidx.compose.foundation.background
@@ -24,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kmp_project_template.feature.yield.generated.resources.Res
@@ -44,15 +44,6 @@ import kmp_project_template.feature.yield.generated.resources.feature_yield_risk
 import kmp_project_template.feature.yield.generated.resources.feature_yield_title
 import kmp_project_template.feature.yield.generated.resources.feature_yield_total_staked
 import org.jetbrains.compose.resources.stringResource
-
-private val Background = Color(0xFF0A0A0F)
-private val SurfaceHigh = Color(0xFF1C1C26)
-private val AccentGold = Color(0xFFFFB547)
-private val TextPrimary = Color(0xFFF0F0F5)
-private val TextSecondary = Color(0xFF9898B0)
-private val TextTertiary = Color(0xFF5A5A70)
-private val Success = Color(0xFF2ECC71)
-private val CardMedium = RoundedCornerShape(16.dp)
 
 data class YieldOpportunity(val protocol: String, val asset: String, val apy: String, val risk: String)
 
@@ -71,7 +62,7 @@ fun YieldScreen(modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Background)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -80,14 +71,14 @@ fun YieldScreen(modifier: Modifier = Modifier) {
             Text(
                 text = stringResource(Res.string.feature_yield_title),
                 style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
             )
         }
         item {
             // Summary Card
             Surface(
-                color = SurfaceHigh,
-                shape = CardMedium,
+                color = MaterialTheme.colorScheme.surface,
+                shape = MaterialTheme.shapes.large,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(
@@ -98,19 +89,27 @@ fun YieldScreen(modifier: Modifier = Modifier) {
                         Text(
                             stringResource(Res.string.feature_yield_total_staked),
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextTertiary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(4.dp))
-                        Text(totalStakedUsd, style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
+                        Text(
+                            totalStakedUsd,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             stringResource(Res.string.feature_yield_average_apy),
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextTertiary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(4.dp))
-                        Text(totalApy, style = MaterialTheme.typography.headlineMedium, color = Success)
+                        Text(
+                            totalApy,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 }
             }
@@ -119,7 +118,7 @@ fun YieldScreen(modifier: Modifier = Modifier) {
             Text(
                 text = stringResource(Res.string.feature_yield_opportunities),
                 style = MaterialTheme.typography.titleLarge,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(vertical = 8.dp),
             )
         }
@@ -142,35 +141,39 @@ private fun OpportunityRow(opp: YieldOpportunity) {
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(AccentGold.copy(alpha = 0.15f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = opp.protocol.take(1),
-                color = AccentGold,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleMedium,
             )
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(opp.protocol, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+            Text(
+                opp.protocol,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
             Text(
                 "${opp.asset} • ${opp.risk}",
                 style = MaterialTheme.typography.labelMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 opp.apy,
                 style = MaterialTheme.typography.bodyLarge,
-                color = Success,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
                 stringResource(Res.string.feature_yield_apy_label),
                 style = MaterialTheme.typography.labelSmall,
-                color = TextTertiary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

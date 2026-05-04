@@ -1,36 +1,30 @@
 # Frontend Agent - Tech Stack Reference
 
-## Core Stack
-- **Framework**: Compose Web 14+ (App Router), Compose 18+
-- **Language**: TypeScript (strict mode)
-- **Styling**: Compose theming CSS 3+ (NO inline styles)
-- **Components**: Compose components, Radix UI
-- **State**: Compose Context, StateFlow, or Redux Toolkit
-- **Forms**: Compose Hook Form + Zod
-- **API Client**: repository flows
-- **Testing**: Vitest, Compose Testing Library, Playwright
+## Canonical Frontend Stack
 
-## Code Standards
-- Explicit TypeScript interfaces for props
-- Compose theming classes only (no inline styles)
-- Semantic HTML with ARIA labels
-- Keyboard navigation support
+- **Framework**: Compose Multiplatform
+- **Language**: Kotlin Multiplatform
+- **Targets**: Android, iOS, Desktop JVM, Web JS
+- **State model**: Unidirectional Data Flow + StateFlow-driven UI state
+- **Local persistence**: SQLDelight repositories (offline-first)
 
-## Project Structure
+## Contract and Error Rules
 
-```
-src/
-  app/           # Compose Web App Router pages
-  components/
-    ui/          # Reusable primitives (button, card)
-    [feature]/   # Feature components
-  lib/
-    api/         # API clients (repository flows hooks)
-    hooks/       # Custom hooks
-  types/         # TypeScript types
-```
+- Frontend domain errors must map one-to-one with backend machine error codes
+- Build/sign/broadcast UX must preserve backend policy semantics
+- Web token handling must respect non-persistent session constraints
 
-## Serena MCP Shortcuts
-- `find_symbol("ComponentName")`: Locate existing component
-- `get_symbols_overview("src/components")`: List all components
-- `find_referencing_symbols("Button")`: Find usages before changes
+## Project Structure Focus
+
+- Shared logic in `feature/*`, `core/*`, and `cmp-shared/`
+- Platform UI entry points in `cmp-android/`, `cmp-ios/`, `cmp-desktop/`, `cmp-web/`
+- Platform-specific implementations remain in platform source sets only
+
+## Command Baseline
+
+- `./gradlew --no-daemon --no-configuration-cache :cmp-web:compileKotlinJs`
+- `./gradlew --no-daemon --no-configuration-cache :cmp-web:jsBrowserDistribution`
+
+## Commit Hygiene
+
+- Do not commit `TODO`, `FIXME`, mock payloads, or placeholder data

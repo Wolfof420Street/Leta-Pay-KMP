@@ -9,6 +9,7 @@
  */
 package com.letapay.backend.routes
 
+import com.letapay.backend.error.InvalidRequestError
 import com.letapay.backend.middleware.enforceGlobalAndWalletRateLimit
 import com.letapay.backend.middleware.idempotencyGuard
 import com.letapay.backend.middleware.killSwitchGuard
@@ -24,7 +25,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
-import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.path
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -51,7 +51,7 @@ fun Route.configureYieldRoutes() {
                 call.enforceGlobalAndWalletRateLimit(rateLimiter, principal.walletAddress)
                 val chainParam = call.request.queryParameters["chain"]
                 val chain = chainParam?.toLongOrNull()
-                    ?: chainParam?.let { throw BadRequestException("chain must be a valid numeric chain id.") }
+                    ?: chainParam?.let { throw InvalidRequestError("chain must be a valid numeric chain id.") }
                 call.respond(yieldService.getOpportunities(chain))
             }
 
@@ -70,10 +70,7 @@ fun Route.configureYieldRoutes() {
                 }
                 val request = call.receive<StakeRequest>()
                 call.requireMatchingIdempotencyKey(request.idempotencyKey)
-                val opportunity = yieldService.getOpportunities(null).firstOrNull {
-                    it.opportunityId == request.opportunityId
-                }
-                    ?: throw BadRequestException("Unknown opportunityId.")
+                val opportunity = yieldService.requireOpportunity(request.opportunityId)
                 val unsignedTx = agentKitClient.buildStake(
                     fromAddress = principal.walletAddress,
                     request = request,
@@ -136,6 +133,6 @@ fun Route.configureYieldRoutes() {
 
 private fun ApplicationCall.requireMatchingIdempotencyKey(expectedKey: String) {
     if (request.headers["Idempotency-Key"] != expectedKey) {
-        throw BadRequestException("Idempotency key header must match request body.")
+        throw InvalidRequestError("Idempotency key header must match request body.")
     }
 }

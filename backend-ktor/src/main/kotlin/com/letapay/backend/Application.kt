@@ -43,7 +43,7 @@ fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
-fun Application.module(overrides: org.koin.core.module.Module? = null) {
+fun Application.configureApp(overrides: org.koin.core.module.Module? = null) {
     configureMonitoring()
     configureSerialization()
     configureStatusPages()

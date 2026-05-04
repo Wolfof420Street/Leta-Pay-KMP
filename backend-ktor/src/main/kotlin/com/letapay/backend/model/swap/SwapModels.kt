@@ -59,6 +59,8 @@ data class UnsignedTx(
 @Serializable
 data class SwapQuote(
     val quoteId: String,
+    val fromAsset: String,
+    val toAsset: String,
     val fromAmount: String,
     val toAmount: String,
     val rate: String,
@@ -67,6 +69,7 @@ data class SwapQuote(
     val expiresAt: Long,
     val calldata: String,
     val chainId: Long = 1,
+    val slippageBps: Int = 50,
 )
 
 @Serializable

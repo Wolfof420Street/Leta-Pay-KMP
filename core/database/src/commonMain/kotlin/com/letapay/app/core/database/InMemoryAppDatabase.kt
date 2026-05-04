@@ -13,11 +13,13 @@ import com.letapay.app.core.database.dao.ChatMessageDao
 import com.letapay.app.core.database.dao.ContactDao
 import com.letapay.app.core.database.dao.DeviceTokenDao
 import com.letapay.app.core.database.dao.PendingMessageDao
+import com.letapay.app.core.database.dao.StakingPositionDao
 import com.letapay.app.core.database.dao.TransactionDao
 import com.letapay.app.core.database.entity.ChatMessageEntity
 import com.letapay.app.core.database.entity.ContactEntity
 import com.letapay.app.core.database.entity.DeviceTokenEntity
 import com.letapay.app.core.database.entity.PendingMessageEntity
+import com.letapay.app.core.database.entity.StakingPositionEntity
 import com.letapay.app.core.database.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +31,7 @@ class InMemoryAppDatabase : AppDatabase {
     override val chatMessageDao: ChatMessageDao = InMemoryChatMessageDao()
     override val pendingMessageDao: PendingMessageDao = InMemoryPendingMessageDao()
     override val contactDao: ContactDao = InMemoryContactDao()
+    override val stakingPositionDao: StakingPositionDao = InMemoryStakingPositionDao()
 }
 
 private class InMemoryDeviceTokenDao : DeviceTokenDao {
@@ -115,5 +118,21 @@ private class InMemoryContactDao : ContactDao {
         contacts.value = contacts.value.filterNot {
             it.ownerWallet == ownerWallet && it.contactWallet == contactWallet
         }
+    }
+}
+
+private class InMemoryStakingPositionDao : StakingPositionDao {
+    private val positions = MutableStateFlow<List<StakingPositionEntity>>(emptyList())
+
+    override fun observePositions(walletAddress: String): Flow<List<StakingPositionEntity>> =
+        positions.map { entries ->
+            entries
+                .filter { it.walletAddress == walletAddress }
+                .sortedByDescending(StakingPositionEntity::updatedAt)
+        }
+
+    override suspend fun replacePositions(walletAddress: String, positions: List<StakingPositionEntity>) {
+        val retained = this.positions.value.filterNot { it.walletAddress == walletAddress }
+        this.positions.value = retained + positions
     }
 }

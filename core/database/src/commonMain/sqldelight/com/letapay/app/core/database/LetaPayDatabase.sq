@@ -167,3 +167,23 @@ selectContactsByOwner:
 SELECT * FROM contact
 WHERE owner_wallet = ?
 ORDER BY last_interaction_at DESC, contact_wallet ASC;
+
+deleteStakingPositionsByWallet:
+DELETE FROM staking_position
+WHERE wallet_address = ?;
+
+upsertStakingPosition:
+INSERT OR REPLACE INTO staking_position(
+    id,
+    wallet_address,
+    chain_id,
+    asset_id,
+    amount,
+    provider_id,
+    updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+selectStakingPositionsByWallet:
+SELECT * FROM staking_position
+WHERE wallet_address = ?
+ORDER BY updated_at DESC;

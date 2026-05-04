@@ -24,6 +24,15 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use(errorHandler);
 
 const PORT = Number(process.env.PORT ?? 3100);
+process.on("unhandledRejection", (reason) => {
+  // eslint-disable-next-line no-console
+  console.error("Unhandled rejection", reason);
+});
+process.on("uncaughtException", (error) => {
+  // eslint-disable-next-line no-console
+  console.error("Uncaught exception", error);
+  process.exit(1);
+});
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`AgentKit sidecar listening on :${PORT}`);

@@ -30,7 +30,7 @@ class ApplicationTest {
     @Test
     fun `health endpoint returns ok`() = testApplication {
         application {
-            module()
+            configureApp()
         }
 
         val response = client.get("/health")
@@ -42,7 +42,7 @@ class ApplicationTest {
     @Test
     fun `request nonce returns nonce and expiry`() = testApplication {
         application {
-            module()
+            configureApp()
         }
 
         val response = client.post("/auth/request-nonce") {
@@ -58,7 +58,7 @@ class ApplicationTest {
     @Test
     fun `ai parse returns deterministic send result`() = testApplication {
         application {
-            module()
+            configureApp()
         }
 
         val response = client.post("/ai/parse") {
@@ -79,7 +79,7 @@ class ApplicationTest {
     @Test
     fun `ai parse rate limit exceeded returns 429`() = testApplication {
         application {
-            module()
+            configureApp()
         }
 
         var limited: io.ktor.client.statement.HttpResponse? = null
@@ -102,7 +102,7 @@ class ApplicationTest {
     @Test
     fun `transactions send without idempotency key returns 400`() = testApplication {
         application {
-            module()
+            configureApp()
         }
 
         val response = client.post("/transactions/send") {
@@ -120,7 +120,7 @@ class ApplicationTest {
         System.setProperty("KILL_SWITCH_VALUE_MOVES", "true")
 
         application {
-            module()
+            configureApp()
         }
 
         val response = client.post("/transactions/build") {
@@ -137,7 +137,7 @@ class ApplicationTest {
     @Test
     fun `invalid tx hash returns required error code`() = testApplication {
         application {
-            module()
+            configureApp()
         }
 
         val response = client.get("/transactions/status/not-a-hash") {
@@ -151,7 +151,7 @@ class ApplicationTest {
     @Test
     fun `verify signature rejects nonce replay`() = testApplication {
         application {
-            module()
+            configureApp()
         }
 
         val walletAddress = TEST_CREDENTIALS.address

@@ -95,6 +95,8 @@ class SidecarAgentKitClient(
         if (response == null) {
             return SwapQuote(
                 quoteId = "fallback-quote-${System.currentTimeMillis()}",
+                fromAsset = request.fromAsset,
+                toAsset = request.toAsset,
                 fromAmount = request.amount,
                 toAmount = request.amount,
                 rate = "1.0",
@@ -103,12 +105,15 @@ class SidecarAgentKitClient(
                 expiresAt = System.currentTimeMillis() + 60_000,
                 calldata = "0x",
                 chainId = request.chain,
+                slippageBps = request.slippageBps,
             )
         }
 
         val quote = response.quote
         return SwapQuote(
             quoteId = quote.string("quoteId") ?: "quote-${System.currentTimeMillis()}",
+            fromAsset = request.fromAsset,
+            toAsset = request.toAsset,
             fromAmount = quote.string("fromAmount") ?: request.amount,
             toAmount = quote.string("toAmount") ?: request.amount,
             rate = quote.string("rate") ?: "1.0",
@@ -117,6 +122,7 @@ class SidecarAgentKitClient(
             expiresAt = quote.long("expiresAt") ?: (System.currentTimeMillis() + 60_000),
             calldata = quote.string("calldata") ?: "0x",
             chainId = request.chain,
+            slippageBps = request.slippageBps,
         )
     }
 
@@ -127,11 +133,11 @@ class SidecarAgentKitClient(
                 setBody(
                     mapOf(
                         "fromAddress" to fromAddress,
-                        "fromAsset" to "ETH",
-                        "toAsset" to "USDC",
+                        "fromAsset" to quote.fromAsset,
+                        "toAsset" to quote.toAsset,
                         "amount" to quote.fromAmount,
                         "networkId" to quote.chainId.toNetworkId(),
-                        "slippageBps" to 50,
+                        "slippageBps" to quote.slippageBps,
                     ),
                 )
             }.body<SidecarCalldataResponse>()

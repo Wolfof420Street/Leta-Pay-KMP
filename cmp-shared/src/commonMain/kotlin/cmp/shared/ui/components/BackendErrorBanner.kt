@@ -22,9 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cmp.shared.generated.resources.Res
+import cmp.shared.generated.resources.backend_error_banner_dismiss
 import cmp.shared.ui.theme.LetaColors
 import cmp.shared.ui.theme.LetaShapes
 import cmp.shared.ui.theme.LetaSpacing
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun BackendErrorBanner(
@@ -64,7 +67,7 @@ fun BackendErrorBanner(
                     modifier = Modifier.padding(end = LetaSpacing.md),
                 )
                 Button(onClick = onDismiss) {
-                    Text("Dismiss")
+                    Text(stringResource(Res.string.backend_error_banner_dismiss))
                 }
             }
         }

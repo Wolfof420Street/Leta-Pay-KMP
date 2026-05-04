@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { z } from "zod";
-import { buildAgentKit } from "../agentkit";
 
 const router = Router();
 
@@ -15,22 +14,6 @@ const TransferBuildSchema = z.object({
 router.post("/build", async (req, res, next) => {
   try {
     const body = TransferBuildSchema.parse(req.body);
-    const agentKit = await buildAgentKit(body.fromAddress);
-    const transferAction = agentKit.getActions().find((a) => a.name === "transfer");
-    if (!transferAction) throw new Error("Transfer action not available");
-
-    // Invoke AgentKit for validation and provider consistency; fail closed if it returns a broadcast result.
-    const result = await transferAction.invoke({
-      amount: body.amount,
-      tokenAddress: tokenAddress(body.asset, body.networkId),
-      destinationAddress: body.toAddress,
-      gasless: false,
-    } as never);
-
-    if (typeof result === "string" && result.toLowerCase().includes("transaction hash")) {
-      throw new Error("Transfer action attempted execution; sidecar only supports unsigned transaction builds");
-    }
-
     const amountWei = toWeiAmount(body.amount, body.asset);
     const calldata = {
       from: body.fromAddress,
@@ -38,7 +21,7 @@ router.post("/build", async (req, res, next) => {
       data: `0xa9059cbb${padAddress(body.toAddress)}${padUint(amountWei)}`,
       value: "0x0",
       chainId: toChainId(body.networkId),
-      metadata: { agentkit: result },
+      metadata: { mode: "deterministic-build" },
     };
 
     res.json({ success: true, calldata });

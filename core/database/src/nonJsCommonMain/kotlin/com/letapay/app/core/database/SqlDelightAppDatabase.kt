@@ -17,11 +17,13 @@ import com.letapay.app.core.database.dao.ChatMessageDao
 import com.letapay.app.core.database.dao.ContactDao
 import com.letapay.app.core.database.dao.DeviceTokenDao
 import com.letapay.app.core.database.dao.PendingMessageDao
+import com.letapay.app.core.database.dao.StakingPositionDao
 import com.letapay.app.core.database.dao.TransactionDao
 import com.letapay.app.core.database.entity.ChatMessageEntity
 import com.letapay.app.core.database.entity.ContactEntity
 import com.letapay.app.core.database.entity.DeviceTokenEntity
 import com.letapay.app.core.database.entity.PendingMessageEntity
+import com.letapay.app.core.database.entity.StakingPositionEntity
 import com.letapay.app.core.database.entity.TransactionEntity
 import com.letapay.app.core.model.chat.ChatMessageStatus
 import com.letapay.app.core.model.payment.TransactionStatus
@@ -39,6 +41,7 @@ class SqlDelightAppDatabase(
     override val chatMessageDao: ChatMessageDao = SqlDelightChatMessageDao(database)
     override val pendingMessageDao: PendingMessageDao = SqlDelightPendingMessageDao(database)
     override val contactDao: ContactDao = SqlDelightContactDao(database)
+    override val stakingPositionDao: StakingPositionDao = SqlDelightStakingPositionDao(database)
 }
 
 private class SqlDelightDeviceTokenDao(
@@ -296,6 +299,50 @@ private class SqlDelightContactDao(
             owner_wallet = ownerWallet,
             contact_wallet = contactWallet,
         )
+    }
+}
+
+private class SqlDelightStakingPositionDao(
+    private val database: LetaPayDatabase,
+) : StakingPositionDao {
+    override fun observePositions(walletAddress: String): Flow<List<StakingPositionEntity>> {
+        return database.letaPayDatabaseQueries
+            .selectStakingPositionsByWallet(wallet_address = walletAddress) {
+                    id,
+                    dbWalletAddress,
+                    chainId,
+                    assetId,
+                    amount,
+                    providerId,
+                    updatedAt,
+                ->
+                StakingPositionEntity(
+                    positionId = id,
+                    walletAddress = dbWalletAddress,
+                    chainId = chainId,
+                    opportunityId = assetId,
+                    amount = amount,
+                    status = providerId,
+                    updatedAt = updatedAt,
+                )
+            }
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    override suspend fun replacePositions(walletAddress: String, positions: List<StakingPositionEntity>) {
+        database.letaPayDatabaseQueries.deleteStakingPositionsByWallet(wallet_address = walletAddress)
+        positions.forEach { position ->
+            database.letaPayDatabaseQueries.upsertStakingPosition(
+                id = position.positionId,
+                wallet_address = position.walletAddress,
+                chain_id = position.chainId,
+                asset_id = position.opportunityId,
+                amount = position.amount,
+                provider_id = position.status,
+                updated_at = position.updatedAt,
+            )
+        }
     }
 }
 

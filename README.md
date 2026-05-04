@@ -1,6 +1,6 @@
 # LetaPay
 
-[![PR Checks](https://github.com/Wolfof420Street/Leta-Pay-KMP/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/Wolfof420Street/Leta-Pay-KMP/actions/workflows/pr-checks.yml)
+[![Leta Pay CI](https://github.com/Wolfof420Street/Leta-Pay-KMP/actions/workflows/pr-check.yml/badge.svg)](https://github.com/Wolfof420Street/Leta-Pay-KMP/actions/workflows/pr-check.yml)
 ![Android](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)
 ![Desktop](https://img.shields.io/badge/Platform-Desktop-0078D4)
 ![Web](https://img.shields.io/badge/Platform-Web-F7DF1E?logo=javascript&logoColor=000)

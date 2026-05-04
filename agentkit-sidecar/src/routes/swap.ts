@@ -47,21 +47,6 @@ router.post("/quote", async (req, res, next) => {
 router.post("/build", async (req, res, next) => {
   try {
     const body = SwapSchema.parse(req.body);
-    const agentKit = await buildAgentKit(body.fromAddress);
-    const action = agentKit.getActions().find((a) => a.name === "get_swap_price");
-    if (!action) throw new Error("Swap quote action not available");
-
-    const rawQuote = await action.invoke({
-      fromToken: body.fromAsset,
-      toToken: body.toAsset,
-      fromAmount: body.amount,
-      slippageBps: body.slippageBps,
-    } as never);
-    const quote = parseAgentKitJson(rawQuote);
-    if (quote.success === false) {
-      throw new Error(String(quote.error ?? "Failed to fetch swap quote"));
-    }
-
     // Build-only response. Route execution stays in client wallet + backend orchestration layers.
     const calldata = {
       from: body.fromAddress,
@@ -75,7 +60,7 @@ router.post("/build", async (req, res, next) => {
         toAsset: body.toAsset,
         amount: body.amount,
         slippageBps: body.slippageBps,
-        quote,
+        mode: "deterministic-build",
       },
     };
 

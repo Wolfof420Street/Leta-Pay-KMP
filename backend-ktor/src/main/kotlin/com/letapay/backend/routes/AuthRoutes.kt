@@ -95,7 +95,7 @@ fun Route.configureAuthRoutes() {
 
 private suspend fun <T> withUpstreamTimeout(block: suspend () -> T): T =
     try {
-        withTimeout(5_000L) { block() }
+        withTimeout(10_000L) { block() }
     } catch (_: TimeoutCancellationException) {
         throw UpstreamTimeoutError()
     }

@@ -51,7 +51,7 @@ class ChatRepositoryImpl(
     dispatcherManager: DispatcherManager,
 ) : ChatRepository {
 
-    private val scope = CoroutineScope(SupervisorJob() + dispatcherManager.main)
+    private val scope = CoroutineScope(SupervisorJob() + dispatcherManager.io)
     private val mutableState = MutableStateFlow(ChatState())
     private val activeWallet = sessionRepository.sessionState.map { it.session?.walletAddress?.value }
     private val activeThreadId = MutableStateFlow<String?>(null)

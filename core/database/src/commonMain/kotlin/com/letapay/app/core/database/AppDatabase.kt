@@ -13,6 +13,7 @@ import com.letapay.app.core.database.dao.ChatMessageDao
 import com.letapay.app.core.database.dao.ContactDao
 import com.letapay.app.core.database.dao.DeviceTokenDao
 import com.letapay.app.core.database.dao.PendingMessageDao
+import com.letapay.app.core.database.dao.StakingPositionDao
 import com.letapay.app.core.database.dao.TransactionDao
 
 interface AppDatabase {
@@ -21,4 +22,5 @@ interface AppDatabase {
     val chatMessageDao: ChatMessageDao
     val pendingMessageDao: PendingMessageDao
     val contactDao: ContactDao
+    val stakingPositionDao: StakingPositionDao
 }
