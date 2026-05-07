@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.letapay.app.core.designsystem.theme.LetaSpacing
 import com.letapay.app.core.model.blockchain.ChainId
 import com.letapay.app.core.model.wallet.AssetBalance
 import kmp_project_template.feature.wallet.generated.resources.Res
@@ -57,15 +58,7 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
-// Design tokens — copied locally to avoid module cycle
-private val Background = androidx.compose.ui.graphics.Color(0xFF0A0A0F)
-private val SurfaceElevated = androidx.compose.ui.graphics.Color(0xFF13131A)
-private val SurfaceHigh = androidx.compose.ui.graphics.Color(0xFF1C1C26)
-private val AccentPrimary = androidx.compose.ui.graphics.Color(0xFF6C63FF)
-private val AccentGold = androidx.compose.ui.graphics.Color(0xFFFFB547)
-private val TextPrimary = androidx.compose.ui.graphics.Color(0xFFF0F0F5)
-private val TextSecondary = androidx.compose.ui.graphics.Color(0xFF9898B0)
-private val TextTertiary = androidx.compose.ui.graphics.Color(0xFF5A5A70)
+// Chain-specific colors remain hardcoded as they represent brand colors
 private val ChainEthereum = androidx.compose.ui.graphics.Color(0xFF627EEA)
 private val ChainPolygon = androidx.compose.ui.graphics.Color(0xFF8247E5)
 private val ChainBase = androidx.compose.ui.graphics.Color(0xFF0052FF)
@@ -83,7 +76,7 @@ fun WalletScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Background),
+            .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         item {
@@ -104,8 +97,8 @@ fun WalletScreen(
             Text(
                 text = stringResource(Res.string.feature_wallet_assets),
                 style = MaterialTheme.typography.titleLarge,
-                color = TextPrimary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = LetaSpacing.md, vertical = LetaSpacing.sm),
             )
         }
         if (uiState.isLoading) {
@@ -130,28 +123,28 @@ private fun BalanceHeroSection(totalUsd: String, isLoading: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 32.dp),
+            .padding(horizontal = LetaSpacing.lg, vertical = LetaSpacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = stringResource(Res.string.feature_wallet_total_balance),
             style = MaterialTheme.typography.labelMedium,
-            color = TextTertiary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(LetaSpacing.sm))
         if (isLoading) {
             Box(
                 Modifier
                     .width(200.dp)
                     .height(52.dp)
                     .clip(CardMedium)
-                    .background(SurfaceHigh),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
             )
         } else {
             Text(
                 text = totalUsd,
                 style = MaterialTheme.typography.displayLarge,
-                color = TextPrimary.copy(alpha = animatedAlpha),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = animatedAlpha),
                 fontWeight = FontWeight.Light,
             )
         }
@@ -168,30 +161,30 @@ private fun ActionButtonRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = LetaSpacing.md, vertical = LetaSpacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(LetaSpacing.sm),
     ) {
         ActionChip(
             label = stringResource(Res.string.feature_wallet_action_send),
-            color = AccentPrimary,
+            color = MaterialTheme.colorScheme.primary,
             onClick = onSend,
             modifier = Modifier.weight(1f),
         )
         ActionChip(
             label = stringResource(Res.string.feature_wallet_action_swap),
-            color = AccentPrimary,
+            color = MaterialTheme.colorScheme.primary,
             onClick = onSwap,
             modifier = Modifier.weight(1f),
         )
         ActionChip(
             label = stringResource(Res.string.feature_wallet_action_stake),
-            color = AccentGold,
+            color = MaterialTheme.colorScheme.tertiary,
             onClick = onStake,
             modifier = Modifier.weight(1f),
         )
         ActionChip(
             label = stringResource(Res.string.feature_wallet_action_history),
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             onClick = onHistory,
             modifier = Modifier.weight(1f),
         )
@@ -208,7 +201,7 @@ private fun ActionChip(
     Surface(
         onClick = onClick,
         shape = Pill,
-        color = SurfaceHigh,
+        color = MaterialTheme.colorScheme.surfaceVariant,
         modifier = modifier,
     ) {
         Text(
@@ -216,7 +209,7 @@ private fun ActionChip(
             color = color,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = LetaSpacing.sm, vertical = 10.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
     }
@@ -246,12 +239,12 @@ private fun AssetRow(asset: AssetBalance) {
         ChainId.Ethereum.value -> ChainEthereum
         ChainId.Polygon.value -> ChainPolygon
         ChainId.Base.value -> ChainBase
-        else -> TextTertiary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = LetaSpacing.md, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Token icon circle
@@ -271,20 +264,28 @@ private fun AssetRow(asset: AssetBalance) {
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(asset.symbol, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
-            Text(asset.symbol, style = MaterialTheme.typography.labelMedium, color = TextTertiary)
+            Text(
+                asset.symbol,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                asset.symbol,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 text = asset.usdValue ?: "$0.00",
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Medium,
             )
             Text(
                 text = asset.amount,
                 style = MaterialTheme.typography.labelMedium,
-                color = TextTertiary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -295,20 +296,44 @@ private fun ShimmerAssetRow() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = LetaSpacing.md, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(40.dp).clip(CircleShape).background(SurfaceHigh),
+            Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant),
         )
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Box(Modifier.fillMaxWidth(0.4f).height(14.dp).clip(CardMedium).background(SurfaceHigh))
-            Box(Modifier.fillMaxWidth(0.25f).height(12.dp).clip(CardMedium).background(SurfaceElevated))
+            Box(
+                Modifier
+                    .fillMaxWidth(0.4f)
+                    .height(14.dp)
+                    .clip(CardMedium)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            )
+            Box(
+                Modifier
+                    .fillMaxWidth(0.25f)
+                    .height(12.dp)
+                    .clip(CardMedium)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Box(Modifier.width(70.dp).height(14.dp).clip(CardMedium).background(SurfaceHigh))
-            Box(Modifier.width(50.dp).height(12.dp).clip(CardMedium).background(SurfaceElevated))
+            Box(
+                Modifier
+                    .width(70.dp)
+                    .height(14.dp)
+                    .clip(CardMedium)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            )
+            Box(
+                Modifier
+                    .width(50.dp)
+                    .height(12.dp)
+                    .clip(CardMedium)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
         }
     }
 }

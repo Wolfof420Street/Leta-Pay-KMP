@@ -19,6 +19,7 @@ import com.letapay.app.core.network.di.NetworkModule
 import com.letapay.app.feature.agent.di.AgentModule
 import com.letapay.app.feature.auth.di.AuthModule
 import com.letapay.app.feature.chat.ChatViewModel
+import com.letapay.app.feature.trade.TradeViewModel
 import com.letapay.app.feature.wallet.WalletViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -43,6 +44,7 @@ object KoinModules {
         viewModelOf(::RootNavViewModel)
         viewModelOf(::ChatViewModel)
         viewModelOf(::WalletViewModel)
+        viewModelOf(::TradeViewModel)
     }
 
     private val phase1Infrastructure = module {

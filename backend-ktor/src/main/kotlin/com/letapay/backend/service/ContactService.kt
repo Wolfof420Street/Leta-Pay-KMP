@@ -12,11 +12,11 @@ package com.letapay.backend.service
 import com.letapay.backend.model.contact.ContactRecord
 
 interface ContactService {
-    suspend fun list(): List<ContactRecord>
+    suspend fun list(ownerWallet: String): List<ContactRecord>
 }
 
 class StubContactService : ContactService {
-    override suspend fun list(): List<ContactRecord> = listOf(
+    override suspend fun list(ownerWallet: String): List<ContactRecord> = listOf(
         ContactRecord(
             id = "contact_demo_1",
             displayName = "Satoshi Demo",

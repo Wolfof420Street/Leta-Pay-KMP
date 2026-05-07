@@ -30,39 +30,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
-private val Background = Color(0xFF0A0A0F)
-private val SurfaceHigh = Color(0xFF1C1C26)
-private val TextPrimary = Color(0xFFF0F0F5)
-private val TextSecondary = Color(0xFF9898B0)
-private val TextTertiary = Color(0xFF5A5A70)
-private val Error = Color(0xFFE74C3C)
+import kmp_project_template.feature.profile.generated.resources.Res
+import kmp_project_template.feature.profile.generated.resources.feature_profile_account
+import kmp_project_template.feature.profile.generated.resources.feature_profile_connected_wallet
+import kmp_project_template.feature.profile.generated.resources.feature_profile_disconnect_wallet
+import kmp_project_template.feature.profile.generated.resources.feature_profile_network_preferences
+import kmp_project_template.feature.profile.generated.resources.feature_profile_notifications
+import kmp_project_template.feature.profile.generated.resources.feature_profile_security_privacy
+import kmp_project_template.feature.profile.generated.resources.feature_profile_settings
+import kmp_project_template.feature.profile.generated.resources.feature_profile_wallet_placeholder
+import org.jetbrains.compose.resources.stringResource
 private val CardMedium = RoundedCornerShape(16.dp)
 
 @Composable
 internal fun ProfileScreen(modifier: Modifier = Modifier) {
-    val walletAddress = "0x7a3...9b24"
+    val walletAddress = stringResource(Res.string.feature_profile_wallet_placeholder)
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Background)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
     ) {
         Spacer(Modifier.height(24.dp))
         Text(
-            text = "Account",
+            text = stringResource(Res.string.feature_profile_account),
             style = MaterialTheme.typography.headlineLarge,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(24.dp))
 
         // Profile Card
         Surface(
-            color = SurfaceHigh,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shape = CardMedium,
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -75,7 +77,7 @@ internal fun ProfileScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape)
-                        .background(TextTertiary.copy(alpha = 0.2f)),
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("🤖", style = MaterialTheme.typography.headlineMedium)
@@ -83,16 +85,16 @@ internal fun ProfileScreen(modifier: Modifier = Modifier) {
                 Spacer(Modifier.width(16.dp))
                 Column {
                     Text(
-                        text = "Connected Wallet",
+                        text = stringResource(Res.string.feature_profile_connected_wallet),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Medium,
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = walletAddress,
                         style = MaterialTheme.typography.labelMedium,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -100,30 +102,30 @@ internal fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(32.dp))
         Text(
-            text = "Settings",
+            text = stringResource(Res.string.feature_profile_settings),
             style = MaterialTheme.typography.titleMedium,
-            color = TextTertiary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 8.dp),
         )
         Spacer(Modifier.height(16.dp))
 
-        SettingsRow("Security & Privacy")
-        SettingsRow("Notifications")
-        SettingsRow("Network Preferences")
-        SettingsRow("App Theme")
+        SettingsRow(stringResource(Res.string.feature_profile_security_privacy))
+        SettingsRow(stringResource(Res.string.feature_profile_notifications))
+        SettingsRow(stringResource(Res.string.feature_profile_network_preferences))
+        SettingsRow(stringResource(Res.string.feature_profile_settings))
 
         Spacer(Modifier.weight(1f))
 
         Surface(
             onClick = { /* Handle logout */ },
-            color = SurfaceHigh,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shape = CardMedium,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                text = "Disconnect Wallet",
+                text = stringResource(Res.string.feature_profile_disconnect_wallet),
                 style = MaterialTheme.typography.titleMedium,
-                color = Error,
+                color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(16.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
@@ -144,12 +146,12 @@ private fun SettingsRow(title: String) {
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
         )
         Text(
             text = "→",
             style = MaterialTheme.typography.bodyLarge,
-            color = TextTertiary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

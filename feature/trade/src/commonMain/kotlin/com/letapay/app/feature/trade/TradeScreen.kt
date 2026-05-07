@@ -24,16 +24,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.letapay.app.core.designsystem.theme.LetaSpacing
 import kmp_project_template.feature.trade.generated.resources.Res
 import kmp_project_template.feature.trade.generated.resources.feature_trade_describe_hint
 import kmp_project_template.feature.trade.generated.resources.feature_trade_fee_label
@@ -45,64 +43,57 @@ import kmp_project_template.feature.trade.generated.resources.feature_trade_swap
 import kmp_project_template.feature.trade.generated.resources.feature_trade_title
 import kmp_project_template.feature.trade.generated.resources.feature_trade_to_estimated_label
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
-private val Background = Color(0xFF061722)
-private val SurfaceHigh = Color(0xFF0D2A38)
-private val SurfaceBorder = Color(0xFF1F4E65)
-private val AccentPrimary = Color(0xFF0EA5A6)
-private val TextPrimary = Color(0xFFE8F5FA)
-private val TextTertiary = Color(0xFF93B8C7)
 private val CardMedium = RoundedCornerShape(16.dp)
 private val Pill = RoundedCornerShape(50)
 
 @Composable
-fun TradeScreen(modifier: Modifier = Modifier) {
-    var fromAmount by remember { mutableStateOf("") }
-    var toAmount by remember { mutableStateOf("") }
-    val fromToken = "ETH"
-    val toToken = "USDC"
-    val estimatedFeeUsd = "$2.50"
-    var isLoading by remember { mutableStateOf(false) }
+fun TradeScreen(
+    modifier: Modifier = Modifier,
+    viewModel: TradeViewModel = koinViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Background)
-            .padding(horizontal = 16.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = LetaSpacing.md, vertical = LetaSpacing.lg),
+        verticalArrangement = Arrangement.spacedBy(LetaSpacing.md),
     ) {
         Text(
             text = stringResource(Res.string.feature_trade_title),
             style = MaterialTheme.typography.headlineLarge,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
         )
 
         // Swap card
         Surface(
-            color = SurfaceHigh,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             shape = CardMedium,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(LetaSpacing.md)) {
                 Text(
                     text = stringResource(Res.string.feature_trade_swap_label),
                     style = MaterialTheme.typography.titleLarge,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.SemiBold,
                 )
 
                 // From field
                 TokenAmountField(
                     label = stringResource(Res.string.feature_trade_from_label),
-                    value = fromAmount,
-                    onValueChange = { fromAmount = it },
-                    tokenSymbol = fromToken,
+                    value = uiState.fromAmount,
+                    onValueChange = viewModel::updateFromAmount,
+                    tokenSymbol = uiState.fromToken,
                 )
 
                 // Arrow divider
                 Text(
                     text = "↓",
-                    color = AccentPrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
@@ -110,30 +101,34 @@ fun TradeScreen(modifier: Modifier = Modifier) {
                 // To field
                 TokenAmountField(
                     label = stringResource(Res.string.feature_trade_to_estimated_label),
-                    value = toAmount,
+                    value = uiState.toAmount,
                     onValueChange = {},
-                    tokenSymbol = toToken,
+                    tokenSymbol = uiState.toToken,
                     readOnly = true,
                 )
 
-                if (estimatedFeeUsd.isNotEmpty()) {
+                if (uiState.estimatedFeeUsd.isNotEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
                             stringResource(Res.string.feature_trade_fee_label),
-                            color = TextTertiary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.labelMedium,
                         )
-                        Text(estimatedFeeUsd, color = TextTertiary, style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            uiState.estimatedFeeUsd,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
                     }
                 }
 
                 Surface(
-                    onClick = { isLoading = !isLoading },
+                    onClick = viewModel::toggleLoading,
                     shape = Pill,
-                    color = AccentPrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                 ) {
                     Row(
@@ -142,12 +137,12 @@ fun TradeScreen(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = if (isLoading) {
+                            text = if (uiState.isLoading) {
                                 stringResource(Res.string.feature_trade_getting_quote_button)
                             } else {
                                 stringResource(Res.string.feature_trade_get_quote_button)
                             },
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Medium,
                         )
@@ -159,7 +154,7 @@ fun TradeScreen(modifier: Modifier = Modifier) {
         Text(
             text = stringResource(Res.string.feature_trade_describe_hint),
             style = MaterialTheme.typography.bodyLarge,
-            color = TextTertiary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -173,12 +168,16 @@ private fun TokenAmountField(
     readOnly: Boolean = false,
 ) {
     Surface(
-        color = Background,
+        color = MaterialTheme.colorScheme.background,
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = TextTertiary)
+        Column(Modifier.fillMaxWidth().padding(LetaSpacing.md)) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 BasicTextField(
@@ -186,26 +185,26 @@ private fun TokenAmountField(
                     onValueChange = onValueChange,
                     readOnly = readOnly,
                     textStyle = MaterialTheme.typography.headlineLarge.copy(
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Light,
                     ),
-                    cursorBrush = SolidColor(AccentPrimary),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     modifier = Modifier.weight(1f),
                     decorationBox = { inner ->
                         if (value.isEmpty()) {
                             Text(
                                 stringResource(Res.string.feature_trade_placeholder_amount),
-                                color = TextTertiary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Light),
                             )
                         }
                         inner()
                     },
                 )
-                Surface(shape = Pill, color = SurfaceHigh) {
+                Surface(shape = Pill, color = MaterialTheme.colorScheme.surfaceVariant) {
                     Text(
                         text = tokenSymbol.ifEmpty { "---" },
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),

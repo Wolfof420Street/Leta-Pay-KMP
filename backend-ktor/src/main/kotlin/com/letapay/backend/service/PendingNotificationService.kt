@@ -10,11 +10,12 @@
 package com.letapay.backend.service
 
 import com.letapay.backend.db.PendingNotifications
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
 import java.util.UUID
 
@@ -56,7 +57,7 @@ class DatabasePendingNotificationService : PendingNotificationService {
         notificationType: String,
         watchUntil: Long,
     ) {
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             PendingNotifications.insert {
                 it[id] = UUID.randomUUID().toString()
                 it[PendingNotifications.walletAddress] = walletAddress
@@ -73,14 +74,14 @@ class DatabasePendingNotificationService : PendingNotificationService {
     }
 
     override suspend fun watching(): List<PendingNotificationRecord> =
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             PendingNotifications.selectAll()
                 .where { PendingNotifications.status eq "WATCHING" }
                 .map(::toRecord)
         }
 
     override suspend fun updateStatus(id: String, status: String) {
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             PendingNotifications.update({ PendingNotifications.id eq id }) {
                 it[PendingNotifications.status] = status
             }

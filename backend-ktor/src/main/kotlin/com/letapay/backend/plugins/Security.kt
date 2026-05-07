@@ -18,11 +18,12 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.jwt.jwt
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.ktor.ext.get
 
 fun Application.configureSecurity() {
@@ -48,9 +49,9 @@ fun Application.configureSecurity() {
     }
 }
 
-private fun isActiveSession(sessionId: String, walletAddress: String): Boolean {
+private suspend fun isActiveSession(sessionId: String, walletAddress: String): Boolean {
     val now = System.currentTimeMillis()
-    return transaction {
+    return newSuspendedTransaction(Dispatchers.IO) {
         val existing = Sessions.selectAll()
             .where {
                 (Sessions.id eq sessionId) and
@@ -58,11 +59,11 @@ private fun isActiveSession(sessionId: String, walletAddress: String): Boolean {
             }
             .singleOrNull()
         if (existing != null) {
-            return@transaction existing[Sessions.revokedAt] == null && existing[Sessions.expiresAt] > now
+            return@newSuspendedTransaction existing[Sessions.revokedAt] == null && existing[Sessions.expiresAt] > now
         }
 
         if (!SessionBootstrapRegistry.consume(sessionId, walletAddress)) {
-            return@transaction false
+            return@newSuspendedTransaction false
         }
 
         Sessions.insertIgnore {

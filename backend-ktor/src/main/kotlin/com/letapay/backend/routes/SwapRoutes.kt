@@ -43,15 +43,13 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 
-private val supportedChains = setOf(1L, 137L, 8453L)
-private val supportedAssets = setOf("ETH", "USDC", "USDT", "DAI", "WETH", "WBTC", "MATIC")
-
 fun Route.configureSwapRoutes() {
     val agentKitClient by inject<AgentKitClient>()
     val idempotencyService by inject<IdempotencyService>()
     val json by inject<Json>()
     val swapQuoteCacheService by inject<SwapQuoteCacheService>()
     val rateLimiter by inject<RateLimiterService>()
+    val swapService by inject<com.letapay.backend.service.SwapService>()
 
     authenticate("session-auth") {
         route("/swap") {
@@ -60,7 +58,7 @@ fun Route.configureSwapRoutes() {
                 val principal = requireNotNull(call.principal<WalletPrincipal>())
                 call.enforceGlobalAndWalletRateLimit(rateLimiter, principal.walletAddress)
                 val request = call.receive<SwapQuoteRequest>()
-                validateSwapQuoteRequest(request)
+                swapService.validateQuoteRequest(request)
 
                 val quote = withUpstreamTimeout {
                     agentKitClient.getSwapQuote(principal.walletAddress, request)
@@ -124,18 +122,6 @@ fun Route.configureSwapRoutes() {
             }
         }
     }
-}
-
-private fun validateSwapQuoteRequest(request: SwapQuoteRequest) {
-    val violation = when {
-        request.slippageBps !in 10..1000 -> "slippageBps must be between 10 and 1000."
-        request.chain !in supportedChains -> "Unsupported swap chain: ${request.chain}."
-        request.fromAsset.uppercase() !in supportedAssets ||
-            request.toAsset.uppercase() !in supportedAssets -> "Swap asset is not in the MVP whitelist."
-        request.amount.isBlank() -> "amount is required."
-        else -> null
-    }
-    if (violation != null) throw BadRequestException(violation)
 }
 
 private suspend fun <T> withUpstreamTimeout(block: suspend () -> T): T =

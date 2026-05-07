@@ -10,11 +10,12 @@
 package com.letapay.backend.service
 
 import com.letapay.backend.db.DeviceTokens
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
 import java.util.UUID
 
@@ -42,7 +43,7 @@ class DatabaseDeviceTokenService : DeviceTokenService {
     override suspend fun upsert(walletAddress: String, fcmToken: String, platform: String) {
         val normalizedPlatform = platform.lowercase()
         val now = System.currentTimeMillis()
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             // Fix: deactivate older tokens first so only one active token survives per wallet+platform.
             DeviceTokens.update({
                 (DeviceTokens.walletAddress eq walletAddress) and (DeviceTokens.platform eq normalizedPlatform)
@@ -62,7 +63,7 @@ class DatabaseDeviceTokenService : DeviceTokenService {
     }
 
     override suspend fun deactivate(walletAddress: String, fcmToken: String) {
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             DeviceTokens.update({
                 (DeviceTokens.walletAddress eq walletAddress) and (DeviceTokens.fcmToken eq fcmToken)
             }) {
@@ -73,7 +74,7 @@ class DatabaseDeviceTokenService : DeviceTokenService {
     }
 
     override suspend fun deactivateToken(fcmToken: String) {
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             DeviceTokens.update({ DeviceTokens.fcmToken eq fcmToken }) {
                 it[active] = false
                 it[updatedAt] = System.currentTimeMillis()
@@ -82,14 +83,14 @@ class DatabaseDeviceTokenService : DeviceTokenService {
     }
 
     override suspend fun activeTokens(walletAddress: String): List<DeviceTokenRecord> =
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             DeviceTokens.selectAll()
                 .where { (DeviceTokens.walletAddress eq walletAddress) and (DeviceTokens.active eq true) }
                 .map(::toRecord)
         }
 
     override suspend fun records(walletAddress: String, platform: String?): List<DeviceTokenRecord> =
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             DeviceTokens.selectAll()
                 .where {
                     if (platform == null) {

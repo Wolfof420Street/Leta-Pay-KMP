@@ -9,7 +9,10 @@
  */
 package com.letapay.backend.routes
 
+import com.letapay.backend.security.WalletPrincipal
 import com.letapay.backend.service.ContactService
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -19,9 +22,12 @@ import org.koin.ktor.ext.inject
 fun Route.configureContactRoutes() {
     val contactService by inject<ContactService>()
 
-    route("/contacts") {
-        get {
-            call.respond(contactService.list())
+    authenticate("session-auth") {
+        route("/contacts") {
+            get {
+                val principal = requireNotNull(call.principal<WalletPrincipal>())
+                call.respond(contactService.list(ownerWallet = principal.walletAddress))
+            }
         }
     }
 }

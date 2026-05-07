@@ -22,11 +22,12 @@ import com.letapay.backend.model.yield.StakingPosition
 import com.letapay.backend.model.yield.StakingStatus
 import com.letapay.backend.model.yield.UnstakeResponse
 import com.letapay.backend.model.yield.YieldOpportunity
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
 import org.web3j.abi.FunctionEncoder
 import org.web3j.abi.datatypes.Address
@@ -77,6 +78,8 @@ interface YieldService {
 class DefaultYieldService(
     private val pricingService: PricingService,
 ) : YieldService {
+    private suspend fun <T> db(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) { block() }
+
     override suspend fun getOpportunities(chain: Long?): List<YieldOpportunity> =
         opportunities.filter { chain == null || it.chain == chain }
 
@@ -115,7 +118,7 @@ class DefaultYieldService(
     }
 
     override suspend fun getPositions(walletAddress: String): List<StakingPosition> {
-        val rows = transaction {
+        val rows = db {
             StakingPositions.selectAll()
                 .where { StakingPositions.walletAddress eq walletAddress }
                 .sortedByDescending { it[StakingPositions.createdAt] }
@@ -145,7 +148,7 @@ class DefaultYieldService(
         val now = System.currentTimeMillis()
         val positionId = UUID.randomUUID().toString()
 
-        transaction {
+        db {
             StakingPositions.insert {
                 it[StakingPositions.positionId] = positionId
                 it[StakingPositions.opportunityId] = opportunityId
@@ -176,7 +179,7 @@ class DefaultYieldService(
         val opportunity = findOpportunity(position[StakingPositions.opportunityId])
         val unsignedTx = buildUnstakeTx(positionId, amount, walletAddress)
 
-        transaction {
+        db {
             StakingPositions.update({ StakingPositions.positionId eq positionId }) {
                 it[status] = StakingStatus.PendingUnstake.name
             }
@@ -186,7 +189,7 @@ class DefaultYieldService(
     }
 
     override suspend fun reconcilePositions() {
-        val activeRows = transaction {
+        val activeRows = db {
             StakingPositions.selectAll()
                 .where { StakingPositions.status eq StakingStatus.Active.name }
                 .toList()
@@ -201,7 +204,7 @@ class DefaultYieldService(
                 asset = opportunity.outputAsset,
                 chain = row[StakingPositions.chainId],
             )
-            transaction {
+            db {
                 StakingPositions.update({ StakingPositions.positionId eq row[StakingPositions.positionId] }) {
                     it[StakingPositions.currentValue] = current.stripTrailingZeros().toPlainString()
                     it[StakingPositions.accruedRewards] = rewards.stripTrailingZeros().toPlainString()
@@ -252,7 +255,7 @@ class DefaultYieldService(
         }
     }
 
-    private fun loadPosition(positionId: String): ResultRow = transaction {
+    private suspend fun loadPosition(positionId: String): ResultRow = db {
         StakingPositions.selectAll()
             .where { StakingPositions.positionId eq positionId }
             .singleOrNull()

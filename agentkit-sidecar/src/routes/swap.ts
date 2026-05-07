@@ -6,11 +6,24 @@ const router = Router();
 
 const SwapSchema = z.object({
   fromAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  fromAsset: z.string(),
-  toAsset: z.string(),
-  amount: z.string(),
+  fromAsset: z.enum(["ETH", "USDC", "USDT", "DAI", "WETH", "WBTC", "MATIC"]),
+  toAsset: z.enum(["ETH", "USDC", "USDT", "DAI", "WETH", "WBTC", "MATIC"]),
+  amount: z.string().regex(/^\d+(\.\d+)?$/),
   networkId: z.enum(["ethereum-mainnet", "polygon-mainnet", "base-mainnet"]),
   slippageBps: z.number().int().min(10).max(1000).optional().default(50),
+});
+
+const SwapQuoteResponseSchema = z.object({
+  success: z.boolean().optional(),
+  error: z.string().optional(),
+  quoteId: z.string().optional(),
+  fromAmount: z.string().optional(),
+  toAmount: z.string().optional(),
+  rate: z.string().optional(),
+  priceImpactBps: z.number().int().optional(),
+  estimatedFeeUsd: z.string().optional(),
+  expiresAt: z.number().int().optional(),
+  calldata: z.string().optional(),
 });
 
 router.post("/quote", async (req, res, next) => {
@@ -25,8 +38,8 @@ router.post("/quote", async (req, res, next) => {
       toToken: body.toAsset,
       fromAmount: body.amount,
       slippageBps: body.slippageBps,
-    } as never);
-    const quote = parseAgentKitJson(rawQuote);
+    } as Record<string, unknown>);
+    const quote = SwapQuoteResponseSchema.parse(parseAgentKitJson(rawQuote));
 
     if (quote.success === false) {
       throw new Error(String(quote.error ?? "Failed to fetch swap quote"));
@@ -73,8 +86,10 @@ router.post("/build", async (req, res, next) => {
 function parseAgentKitJson(raw: string): Record<string, unknown> {
   try {
     return JSON.parse(raw);
-  } catch {
-    throw new Error(`Unexpected AgentKit response: ${raw}`);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("AgentKit JSON parse failure", { raw, error: String(err) });
+    throw new Error(`Malformed AgentKit JSON payload (${raw.length} bytes): ${String(err)}`);
   }
 }
 

@@ -7,7 +7,7 @@
  *
  * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
-package cmp.shared.ui.theme
+package com.letapay.app.core.designsystem.theme
 
 import androidx.compose.ui.unit.dp
 

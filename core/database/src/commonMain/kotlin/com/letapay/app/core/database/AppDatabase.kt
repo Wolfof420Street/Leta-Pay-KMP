@@ -23,4 +23,5 @@ interface AppDatabase {
     val pendingMessageDao: PendingMessageDao
     val contactDao: ContactDao
     val stakingPositionDao: StakingPositionDao
+    val portfolioDao: com.letapay.app.core.database.dao.PortfolioDao
 }

@@ -9,21 +9,18 @@
  */
 package com.letapay.backend.routes
 
-import com.letapay.backend.error.AddressRejectedError
 import com.letapay.backend.error.InvalidTxHashError
 import com.letapay.backend.middleware.enforceGlobalAndWalletRateLimit
 import com.letapay.backend.middleware.idempotencyGuard
 import com.letapay.backend.middleware.killSwitchGuard
 import com.letapay.backend.model.transaction.BuildRequest
-import com.letapay.backend.model.transaction.BuildResponse
 import com.letapay.backend.model.transaction.SendRequest
 import com.letapay.backend.model.transaction.SendResponse
 import com.letapay.backend.security.WalletPrincipal
-import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.IdempotencyService
 import com.letapay.backend.service.PendingNotificationService
 import com.letapay.backend.service.RateLimiterService
-import com.letapay.backend.service.ScreeningService
+import com.letapay.backend.service.TransactionCommandService
 import com.letapay.backend.service.TransactionService
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -43,19 +40,17 @@ import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 
 fun Route.configureTransactionRoutes() {
-    val screeningService by inject<ScreeningService>()
+    val transactionCommandService by inject<TransactionCommandService>()
     val transactionService by inject<TransactionService>()
     val idempotencyService by inject<IdempotencyService>()
     val pendingNotificationService by inject<PendingNotificationService>()
-    val agentKitClient by inject<AgentKitClient>()
     val rateLimiter by inject<RateLimiterService>()
     val json by inject<Json>()
 
     authenticate("session-auth") {
         route("/transactions") {
             configureBuildRoute(
-                screeningService = screeningService,
-                agentKitClient = agentKitClient,
+                transactionCommandService = transactionCommandService,
                 rateLimiter = rateLimiter,
                 idempotencyService = idempotencyService,
                 json = json,
@@ -88,8 +83,7 @@ fun Route.configureTransactionRoutes() {
 }
 
 private fun Route.configureBuildRoute(
-    screeningService: ScreeningService,
-    agentKitClient: AgentKitClient,
+    transactionCommandService: TransactionCommandService,
     rateLimiter: RateLimiterService,
     idempotencyService: IdempotencyService,
     json: Json,
@@ -109,21 +103,11 @@ private fun Route.configureBuildRoute(
         }
 
         val request = call.receive<BuildRequest>()
-        if (!screeningService.check(request.to)) {
-            throw AddressRejectedError()
-        }
         val chainId = call.request.headers["X-Chain-Id"]?.toLongOrNull() ?: 1L
-        val unsignedTx = agentKitClient.buildTransfer(
-            fromAddress = principal.walletAddress,
-            toAddress = request.to,
-            asset = request.asset ?: "ETH",
-            amount = request.amount ?: "0",
+        val response = transactionCommandService.build(
+            walletAddress = principal.walletAddress,
+            request = request,
             chainId = chainId,
-        )
-        val response = BuildResponse(
-            status = "prepared",
-            preview = "Prepared unsigned transaction for ${request.to}.",
-            unsignedTx = unsignedTx,
         )
         idempotencyService.complete(
             key = call.request.headers["Idempotency-Key"].orEmpty(),

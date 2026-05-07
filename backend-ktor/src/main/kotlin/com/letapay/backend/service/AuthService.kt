@@ -19,12 +19,14 @@ import com.letapay.backend.error.NonceExpiredError
 import com.letapay.backend.error.NonceMissingError
 import com.letapay.backend.error.RefreshTokenExpiredError
 import com.letapay.backend.error.TokenFamilyRevokedError
+import com.letapay.backend.error.UpstreamTimeoutError
 import com.letapay.backend.model.auth.AuthTokens
 import com.letapay.backend.model.auth.GeneratedNonce
 import com.letapay.backend.model.auth.VerifyRequest
 import com.letapay.backend.security.JwtTokenService
 import de.mkammerer.argon2.Argon2Factory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
@@ -112,22 +114,24 @@ class DefaultAuthService(
 
     override suspend fun rotateRefreshToken(rawToken: String, deviceFingerprint: String?): AuthTokens {
         val (selector, rawSecret) = parseRefreshToken(rawToken)
-        val session = db {
-            Sessions.selectAll()
+
+        // Perform the entire rotation + new token issuance atomically to avoid TOCTOU races.
+        val provisionalTokens = db {
+            val session = Sessions.selectAll()
                 .where { Sessions.refreshTokenSelector eq selector }
                 .singleOrNull()
                 ?.takeIf { row -> verifyRefreshToken(rawSecret, row[Sessions.refreshTokenHash]) }
-        } ?: throw InvalidRefreshTokenError()
+                ?: throw InvalidRefreshTokenError()
 
-        val now = System.currentTimeMillis()
-        val familyId = session[Sessions.familyId]
+            val now = System.currentTimeMillis()
+            val familyId = session[Sessions.familyId]
 
-        db {
             val familyRows = Sessions.selectAll().where { Sessions.familyId eq familyId }.toList()
             if (familyRows.any { it[Sessions.revokedAt] != null }) {
                 revokeFamily(familyId, now)
                 throw TokenFamilyRevokedError()
             }
+
             if (session[Sessions.expiresAt] <= now) {
                 throw RefreshTokenExpiredError()
             }
@@ -135,20 +139,55 @@ class DefaultAuthService(
             Sessions.update({ Sessions.id eq session[Sessions.id] }) {
                 it[revokedAt] = now
             }
+
+            val walletAddress = session[Sessions.walletAddress]
+            val resolvedDeviceFingerprint = deviceFingerprint ?: session[Sessions.deviceFingerprint]
+            val sessionId = UUID.randomUUID().toString()
+            val refreshSelector = UUID.randomUUID().toString()
+            val refreshSecret = UUID.randomUUID().toString()
+            val refreshToken = "$refreshSelector:$refreshSecret"
+            val sessionExpiresAt = Instant.now().plus(30, ChronoUnit.MINUTES)
+            val refreshExpiresAt = System.currentTimeMillis() + SEVEN_DAYS_MS
+            val sessionToken = jwtTokenService.mintSessionToken(walletAddress, sessionId, sessionExpiresAt)
+            val refreshHash = hashRefreshToken(refreshSecret)
+
+            Sessions.insert {
+                it[id] = sessionId
+                it[Sessions.walletAddress] = walletAddress
+                it[Sessions.refreshTokenSelector] = refreshSelector
+                it[Sessions.refreshTokenHash] = refreshHash
+                it[Sessions.familyId] = familyId
+                it[Sessions.deviceFingerprint] = resolvedDeviceFingerprint
+                it[expiresAt] = refreshExpiresAt
+                it[revokedAt] = null
+            }
+
+            ProvisionalTokens(
+                walletAddress = walletAddress,
+                sessionId = sessionId,
+                sessionToken = sessionToken,
+                refreshToken = refreshToken,
+                expiresAt = sessionExpiresAt.toEpochMilli(),
+            )
         }
 
-        return issueTokens(
-            walletAddress = session[Sessions.walletAddress],
-            familyId = familyId,
-            deviceFingerprint = deviceFingerprint ?: session[Sessions.deviceFingerprint],
+        val firebaseToken = mintFirebaseToken(
+            walletAddress = provisionalTokens.walletAddress,
+            sessionId = provisionalTokens.sessionId,
+        )
+        return AuthTokens(
+            sessionToken = provisionalTokens.sessionToken,
+            refreshToken = provisionalTokens.refreshToken,
+            firebaseToken = firebaseToken,
+            expiresAt = provisionalTokens.expiresAt,
         )
     }
 
     override suspend fun mintFirebaseToken(walletAddress: String, sessionId: String): String =
         try {
             firebaseTokenService.createCustomToken(walletAddress, sessionId)
-        } catch (_: Exception) {
-            "firebase-token-unavailable"
+        } catch (e: TimeoutCancellationException) {
+            throw UpstreamTimeoutError()
         }
 
     override suspend fun revokeSession(sessionId: String) {
@@ -254,3 +293,11 @@ class DefaultAuthService(
         private val NONCE_REGEX = Regex("""Nonce:\s*([A-Za-z0-9-]+)""")
     }
 }
+
+private data class ProvisionalTokens(
+    val walletAddress: String,
+    val sessionId: String,
+    val sessionToken: String,
+    val refreshToken: String,
+    val expiresAt: Long,
+)

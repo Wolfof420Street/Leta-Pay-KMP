@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
+<resources>
+    <string name="feature_profile_account">Account</string>
+    <string name="feature_profile_connected_wallet">Connected Wallet</string>
+    <string name="feature_profile_disconnect_wallet">Disconnect Wallet</string>
+    <string name="feature_profile_settings">Settings</string>
+    <string name="feature_profile_security_privacy">Security &amp; Privacy</string>
+    <string name="feature_profile_notifications">Notifications</string>
+    <string name="feature_profile_network_preferences">Network Preferences</string>
+    <string name="feature_profile_wallet_placeholder">0x7a3...9b24</string>
+</resources>

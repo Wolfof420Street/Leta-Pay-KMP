@@ -12,6 +12,7 @@ package com.letapay.app.core.data.repositoryImpl
 import com.letapay.app.core.common.UUIDGenerator
 import com.letapay.app.core.data.repository.SessionRepository
 import com.letapay.app.core.data.repository.SwapRepository
+import com.letapay.app.core.database.AppDatabase
 import com.letapay.app.core.model.result.Resource
 import com.letapay.app.core.model.swap.SpotPrice
 import com.letapay.app.core.model.swap.SwapExecuteResponse
@@ -24,11 +25,20 @@ import kotlinx.coroutines.flow.flow
 class SwapRepositoryImpl(
     private val swapApi: SwapApi,
     private val sessionRepository: SessionRepository,
+    private val appDatabase: AppDatabase,
 ) : SwapRepository {
 
     override fun getSpotPrice(fromAsset: String, toAsset: String, chainId: Long): Flow<Resource<SpotPrice>> = flow {
         emit(Resource.Loading())
         val sessionToken = sessionRepository.sessionState.value.session?.sessionToken ?: throw Exception("Unauthorized")
+        val cacheKey = "$chainId:${fromAsset.uppercase()}:${toAsset.uppercase()}"
+        appDatabase.portfolioDao.getCachedSpotPrice(cacheKey)?.let { cachedPrice ->
+            emit(
+                Resource.Success(
+                    SpotPrice(fromAsset = fromAsset, toAsset = toAsset, chain = chainId, price = cachedPrice),
+                ),
+            )
+        }
         val quote = swapApi.quote(
             sessionToken = sessionToken,
             request = SwapQuoteRequest(
@@ -38,7 +48,13 @@ class SwapRepositoryImpl(
                 chain = chainId,
             ),
         )
-        emit(Resource.Success(SpotPrice(fromAsset = fromAsset, toAsset = toAsset, chain = chainId, price = quote.rate)))
+        val spotPrice = SpotPrice(fromAsset = fromAsset, toAsset = toAsset, chain = chainId, price = quote.rate)
+        appDatabase.portfolioDao.upsertSpotPrice(
+            cacheKey = cacheKey,
+            price = spotPrice.price,
+            updatedAt = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+        )
+        emit(Resource.Success(spotPrice))
     }
 
     override suspend fun quote(request: SwapQuoteRequest): Resource<SwapQuoteResponse> {

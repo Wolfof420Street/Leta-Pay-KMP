@@ -20,6 +20,10 @@ sealed class AppError(
         override val displayMessage: String,
     ) : AppError(displayMessage)
 
+    data class SessionExpiredError(
+        override val displayMessage: String = "Session expired",
+    ) : AppError(displayMessage)
+
     data class InsufficientBalance(
         val required: String,
         val actual: String,

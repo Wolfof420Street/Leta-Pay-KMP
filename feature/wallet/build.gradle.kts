@@ -24,6 +24,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            implementation(projects.core.designsystem)
         }
     }
 }

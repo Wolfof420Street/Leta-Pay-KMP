@@ -49,6 +49,7 @@ import com.letapay.backend.service.SidecarAgentKitClient
 import com.letapay.backend.service.StubCoinbaseService
 import com.letapay.backend.service.StubContactService
 import com.letapay.backend.service.SwapQuoteCacheService
+import com.letapay.backend.service.TransactionCommandService
 import com.letapay.backend.service.TransactionService
 import com.letapay.backend.service.YieldService
 import io.ktor.client.HttpClient
@@ -143,6 +144,9 @@ fun Application.configureDependencyInjection(overrides: Module? = null) {
             single<ScreeningService> { CoinbaseScreeningService(get()) }
             single<IdempotencyService> { DatabaseIdempotencyService(get()) }
             single<TransactionService> { DatabaseTransactionService() }
+            single<TransactionCommandService> {
+                com.letapay.backend.service.DefaultTransactionCommandService(get(), get())
+            }
             single<AgentKitClient> {
                 val config = get<AppConfig>()
                 SidecarAgentKitClient(
@@ -155,6 +159,7 @@ fun Application.configureDependencyInjection(overrides: Module? = null) {
                 StubCoinbaseService(get(), get(), get(named("coinbaseCircuitBreaker")))
             }
             single { SwapQuoteCacheService() }
+            single<com.letapay.backend.service.SwapService> { com.letapay.backend.service.DefaultSwapService() }
             single<DeviceTokenService> { DatabaseDeviceTokenService() }
             single<PendingNotificationService> { DatabasePendingNotificationService() }
             single<HealthService> { DefaultHealthService(get()) }

@@ -32,6 +32,7 @@ class InMemoryAppDatabase : AppDatabase {
     override val pendingMessageDao: PendingMessageDao = InMemoryPendingMessageDao()
     override val contactDao: ContactDao = InMemoryContactDao()
     override val stakingPositionDao: StakingPositionDao = InMemoryStakingPositionDao()
+    override val portfolioDao: com.letapay.app.core.database.dao.PortfolioDao = InMemoryPortfolioDao()
 }
 
 private class InMemoryDeviceTokenDao : DeviceTokenDao {
@@ -134,5 +135,25 @@ private class InMemoryStakingPositionDao : StakingPositionDao {
     override suspend fun replacePositions(walletAddress: String, positions: List<StakingPositionEntity>) {
         val retained = this.positions.value.filterNot { it.walletAddress == walletAddress }
         this.positions.value = retained + positions
+    }
+}
+
+private class InMemoryPortfolioDao : com.letapay.app.core.database.dao.PortfolioDao {
+    private val balances = kotlinx.coroutines.flow.MutableStateFlow<Map<String, String>>(emptyMap())
+    private val spotPrices = mutableMapOf<String, String>()
+
+    override fun getLatestBalance(walletAddress: String): kotlinx.coroutines.flow.Flow<String?> =
+        balances.map { entries -> entries[walletAddress] }
+
+    override suspend fun upsertBalance(walletAddress: String, serializedData: String, updatedAt: Long) {
+        balances.value = balances.value.toMutableMap().apply {
+            put(walletAddress, serializedData)
+        }
+    }
+
+    override suspend fun getCachedSpotPrice(cacheKey: String): String? = spotPrices[cacheKey]
+
+    override suspend fun upsertSpotPrice(cacheKey: String, price: String, updatedAt: Long) {
+        spotPrices[cacheKey] = price
     }
 }

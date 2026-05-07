@@ -11,13 +11,14 @@ package com.letapay.backend.service
 
 import com.letapay.backend.db.IdempotencyKeys
 import com.letapay.backend.error.IdempotencyConflictError
+import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
 
 data class IdempotencyReplay(
@@ -26,44 +27,56 @@ data class IdempotencyReplay(
 )
 
 interface IdempotencyService {
-    fun checkReplay(key: String, walletAddress: String, endpoint: String, payloadHash: String): IdempotencyReplay?
+    suspend fun checkReplay(
+        key: String,
+        walletAddress: String,
+        endpoint: String,
+        payloadHash: String,
+    ): IdempotencyReplay?
 
-    fun registerKey(key: String, walletAddress: String, endpoint: String, payloadHash: String)
+    suspend fun registerKey(key: String, walletAddress: String, endpoint: String, payloadHash: String)
 
-    fun complete(key: String, walletAddress: String, endpoint: String, statusCode: Int, payload: String)
+    suspend fun complete(
+        key: String,
+        walletAddress: String,
+        endpoint: String,
+        statusCode: Int,
+        payload: String,
+    )
 }
 
 class DatabaseIdempotencyService(
     private val json: Json,
 ) : IdempotencyService {
-    override fun checkReplay(
+    override suspend fun checkReplay(
         key: String,
         walletAddress: String,
         endpoint: String,
         payloadHash: String,
     ): IdempotencyReplay? {
         val now = System.currentTimeMillis()
-        return transaction {
+        return newSuspendedTransaction(Dispatchers.IO) {
             val existing = IdempotencyKeys.selectAll()
                 .where {
                     (IdempotencyKeys.key eq key) and
                         (IdempotencyKeys.walletAddress eq walletAddress) and
                         (IdempotencyKeys.endpoint eq endpoint)
                 }
-                .singleOrNull() ?: return@transaction null
+                .singleOrNull() ?: return@newSuspendedTransaction null
 
             if (existing[IdempotencyKeys.expiresAt] <= now) {
-                return@transaction null
+                return@newSuspendedTransaction null
             }
             val existingHash = existing[IdempotencyKeys.requestHash]
             if (existingHash != null && existingHash != payloadHash) {
                 throw IdempotencyConflictError()
             }
 
-            val payload = existing[IdempotencyKeys.responseSnapshot] ?: return@transaction IdempotencyReplay(
-                statusCode = 202,
-                payload = json.encodeToString(mapOf("status" to "processing")),
-            )
+            val payload = existing[IdempotencyKeys.responseSnapshot]
+                ?: return@newSuspendedTransaction IdempotencyReplay(
+                    statusCode = 202,
+                    payload = json.encodeToString(mapOf("status" to "processing")),
+                )
             IdempotencyReplay(
                 statusCode = existing[IdempotencyKeys.responseStatus] ?: 200,
                 payload = payload,
@@ -71,9 +84,14 @@ class DatabaseIdempotencyService(
         }
     }
 
-    override fun registerKey(key: String, walletAddress: String, endpoint: String, payloadHash: String) {
+    override suspend fun registerKey(
+        key: String,
+        walletAddress: String,
+        endpoint: String,
+        payloadHash: String,
+    ) {
         val now = System.currentTimeMillis()
-        transaction {
+        newSuspendedTransaction(Dispatchers.IO) {
             IdempotencyKeys.insertIgnore {
                 it[IdempotencyKeys.key] = key
                 it[IdempotencyKeys.walletAddress] = walletAddress
@@ -87,8 +105,14 @@ class DatabaseIdempotencyService(
         }
     }
 
-    override fun complete(key: String, walletAddress: String, endpoint: String, statusCode: Int, payload: String) {
-        transaction {
+    override suspend fun complete(
+        key: String,
+        walletAddress: String,
+        endpoint: String,
+        statusCode: Int,
+        payload: String,
+    ) {
+        newSuspendedTransaction(Dispatchers.IO) {
             IdempotencyKeys.update({
                 (IdempotencyKeys.key eq key) and
                     (IdempotencyKeys.walletAddress eq walletAddress) and

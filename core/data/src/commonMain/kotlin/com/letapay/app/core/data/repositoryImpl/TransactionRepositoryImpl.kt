@@ -14,6 +14,7 @@ import com.letapay.app.core.data.repository.SessionRepository
 import com.letapay.app.core.data.repository.TransactionRepository
 import com.letapay.app.core.database.AppDatabase
 import com.letapay.app.core.database.entity.TransactionEntity
+import com.letapay.app.core.model.error.AppError.SessionExpiredError
 import com.letapay.app.core.model.payment.TransactionStatus
 import com.letapay.app.core.model.result.Resource
 import com.letapay.app.core.model.transaction.BuildRequest
@@ -23,6 +24,8 @@ import com.letapay.app.core.network.transaction.TransactionApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.time.Clock
 
 class TransactionRepositoryImpl(
@@ -31,37 +34,41 @@ class TransactionRepositoryImpl(
     private val appDatabase: AppDatabase,
 ) : TransactionRepository {
 
+    private val transactionsMutex = Mutex()
+
     override fun getTransactions(): Flow<Resource<List<Any>>> = flow {
         emit(Resource.Loading())
         val local = appDatabase.transactionDao.getAllTransactions().first().map { it.toFeedRow() }
         emit(Resource.Success(local))
         val sessionToken = sessionRepository.sessionState.value.session?.sessionToken ?: return@flow
-        runCatching {
-            transactionApi.fetchActivity(sessionToken)
-        }.onSuccess { records ->
-            records.forEach { record ->
-                appDatabase.transactionDao.upsertTransaction(
-                    TransactionEntity(
-                        idempotencyKey = record.txHash,
-                        txHash = record.txHash,
-                        assetId = "UNKNOWN",
-                        chainId = 1L,
-                        amount = "0",
-                        status = record.status.toTransactionStatus(),
-                        updatedAt = record.createdAt,
-                    ),
-                )
+        transactionsMutex.withLock {
+            runCatching {
+                transactionApi.fetchActivity(sessionToken)
+            }.onSuccess { records ->
+                records.forEach { record ->
+                    appDatabase.transactionDao.upsertTransaction(
+                        TransactionEntity(
+                            idempotencyKey = record.txHash,
+                            txHash = record.txHash,
+                            assetId = "UNKNOWN",
+                            chainId = 1L,
+                            amount = "0",
+                            status = record.status.toTransactionStatus(),
+                            updatedAt = record.createdAt,
+                        ),
+                    )
+                }
+                emit(Resource.Success(appDatabase.transactionDao.getAllTransactions().first().map { it.toFeedRow() }))
+            }.onFailure { throwable ->
+                emit(Resource.Error(throwable.toAppError()))
             }
-            emit(Resource.Success(appDatabase.transactionDao.getAllTransactions().first().map { it.toFeedRow() }))
-        }.onFailure { throwable ->
-            emit(Resource.Error(throwable.toAppError()))
         }
     }
 
     override suspend fun buildTransaction(request: BuildRequest): Resource<BuildResponse> {
         return try {
             val sessionToken = sessionRepository.sessionState.value.session?.sessionToken
-                ?: throw Exception("Unauthorized")
+                ?: throw SessionExpiredError()
             val result = transactionApi.buildTransaction(sessionToken, request)
             Resource.Success(result)
         } catch (throwable: Throwable) {
@@ -78,7 +85,7 @@ class TransactionRepositoryImpl(
     ): Resource<SendResponse> {
         return try {
             val sessionToken = sessionRepository.sessionState.value.session?.sessionToken
-                ?: throw Exception("Unauthorized")
+                ?: throw SessionExpiredError()
             val idempotencyKey = UUIDGenerator.generateUUID()
             val now = Clock.System.now().toEpochMilliseconds()
             appDatabase.transactionDao.upsertTransaction(

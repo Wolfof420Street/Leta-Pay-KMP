@@ -187,3 +187,23 @@ selectStakingPositionsByWallet:
 SELECT * FROM staking_position
 WHERE wallet_address = ?
 ORDER BY updated_at DESC;
+
+CREATE TABLE portfolio_cache (
+    id TEXT NOT NULL PRIMARY KEY,
+    wallet_address TEXT NOT NULL,
+    serialized_data TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+selectPortfolioCache:
+SELECT * FROM portfolio_cache
+WHERE wallet_address = ?
+LIMIT 1;
+
+upsertPortfolioCache:
+INSERT OR REPLACE INTO portfolio_cache(
+    id,
+    wallet_address,
+    serialized_data,
+    updated_at
+) VALUES (?, ?, ?, ?);
