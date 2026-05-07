@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: letapay
+      POSTGRES_USER: letapay
+      POSTGRES_PASSWORD: letapay
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U letapay -d letapay"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [letapay-internal]
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [letapay-internal]
+
+  agentkit-sidecar:
+    build:
+      context: ./agentkit-sidecar
+      dockerfile: Dockerfile
+    environment:
+      PORT: 3100
+      SIDECAR_SECRET: ${SIDECAR_SECRET:-dev-sidecar-secret}
+      CDP_API_KEY_ID: ${CDP_API_KEY_ID:-}
+      CDP_API_KEY_SECRET: ${CDP_API_KEY_SECRET:-}
+      CDP_WALLET_SECRET: ${CDP_WALLET_SECRET:-}
+      BASE_RPC_URL: ${BASE_RPC_URL:-https://mainnet.base.org}
+      ETHEREUM_RPC_URL: ${ETHEREUM_RPC_URL:-https://ethereum.publicnode.com}
+      POLYGON_RPC_URL: ${POLYGON_RPC_URL:-https://polygon-rpc.com}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [letapay-internal]
+
+  ktor-backend:
+    build:
+      context: .
+      dockerfile: backend-ktor/Dockerfile
+    environment:
+      PORT: 8080
+      DATABASE_URL: jdbc:postgresql://postgres:5432/letapay
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USER: letapay
+      DATABASE_PASSWORD: letapay
+      AGENTKIT_SIDECAR_URL: http://agentkit-sidecar:3100
+      SIDECAR_SECRET: ${SIDECAR_SECRET:-dev-sidecar-secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      agentkit-sidecar:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    networks: [letapay-internal]
+
+networks:
+  letapay-internal:
+    driver: bridge

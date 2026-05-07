@@ -12,8 +12,13 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
+val xcodebuildAvailable = providers.systemProperty("os.name")
+    .map { osName -> osName.contains("mac", ignoreCase = true) && file("/usr/bin/xcrun").exists() }
+    .orElse(false)
+    .get()
+
 android {
-    namespace = "org.mifos.core.common"
+    namespace = "com.letapay.app.core.common"
 }
 
 kotlin {
@@ -22,6 +27,13 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             api(libs.kermit.logging)
             api(libs.kotlinx.datetime)
+            implementation(projects.coreBase.common)
         }
     }
+}
+
+tasks.matching {
+    it.name.startsWith("link") && it.name.contains("Ios") && it.name.contains("Test")
+}.configureEach {
+    enabled = xcodebuildAvailable
 }

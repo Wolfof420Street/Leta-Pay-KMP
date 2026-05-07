@@ -1,0 +1,85 @@
+> Task :build-logic:convention:compileKotlin UP-TO-DATE
+> Task :build-logic:convention:compileJava NO-SOURCE
+compileAppleMainKotlinMetadata - Compiles a klibrary from the 'appleMain' compilation in target 'metadata'.
+compileDemoDebugAndroidTestSources
+compileDemoDebugSources
+compileDemoDebugUnitTestSources
+compileDemoReleaseSources
+compileDemoReleaseUnitTestSources
+compileIosMainKotlinMetadata - Compiles a klibrary from the 'iosMain' compilation in target 'metadata'.
+compileKotlinIosArm64 - Compiles a klibrary from the 'main' compilation in target 'iosArm64'.
+compileKotlinIosSimulatorArm64 - Compiles a klibrary from the 'main' compilation in target 'iosSimulatorArm64'.
+compileKotlinIosX64 - Compiles a klibrary from the 'main' compilation in target 'iosX64'.
+compileNativeMainKotlinMetadata - Compiles a klibrary from the 'nativeMain' compilation in target 'metadata'.
+compileProdDebugAndroidTestSources
+compileProdDebugSources
+compileProdDebugUnitTestSources
+compileProdReleaseSources
+compileProdReleaseUnitTestSources
+compileTestKotlinIosArm64 - Compiles a klibrary from the 'test' compilation in target 'iosArm64'.
+compileTestKotlinIosSimulatorArm64 - Compiles a klibrary from the 'test' compilation in target 'iosSimulatorArm64'.
+compileTestKotlinIosX64 - Compiles a klibrary from the 'test' compilation in target 'iosX64'.
+checkKotlinGradlePluginConfigurationErrors - Checks that Kotlin Gradle Plugin hasn't reported project configuration errors, failing otherwise. This task always runs before compileKotlin* or similar tasks.
+bundleLibCompileToJarDemoDebug
+bundleLibCompileToJarDemoRelease
+bundleLibCompileToJarProdDebug
+bundleLibCompileToJarProdRelease
+compileCommonMainKotlinMetadata - Compiles the kotlin sources in compilation 'commonMain' in target 'metadata' to Metadata.
+compileDemoDebugAndroidTestJavaWithJavac
+compileDemoDebugAndroidTestKotlinAndroid - Compiles the demoDebugAndroidTest kotlin.
+compileDemoDebugJavaWithJavac
+compileDemoDebugKotlinAndroid - Compiles the demoDebug kotlin.
+compileDemoDebugLibraryResources
+compileDemoDebugUnitTestJavaWithJavac
+compileDemoDebugUnitTestKotlinAndroid - Compiles the demoDebugUnitTest kotlin.
+compileDemoReleaseJavaWithJavac
+compileDemoReleaseKotlinAndroid - Compiles the demoRelease kotlin.
+compileDemoReleaseLibraryResources
+compileDemoReleaseUnitTestJavaWithJavac
+compileDemoReleaseUnitTestKotlinAndroid - Compiles the demoReleaseUnitTest kotlin.
+compileDesktopMainJava - Compiles desktop main Java source.
+compileDesktopTestJava - Compiles desktop test Java source.
+compileDevelopmentExecutableKotlinJs
+compileJvmCommonMainKotlinMetadata - Compiles the kotlin sources in compilation 'jvmCommonMain' in target 'metadata' to Metadata.
+compileJvmJsCommonMainKotlinMetadata - Compiles the kotlin sources in compilation 'jvmJsCommonMain' in target 'metadata' to Metadata.
+compileKotlinDesktop - Compiles the compilation 'main' in target 'desktop'.
+compileKotlinJs - Compiles the Kotlin sources in compilation 'main' in target 'js' to JavaScript.
+compileKotlinMetadata - Compiles the kotlin sources in compilation 'main' in target 'metadata' to Metadata.
+compileLint
+compileLintChecks
+compileMobileMainKotlinMetadata - Compiles the kotlin sources in compilation 'mobileMain' in target 'metadata' to Metadata.
+compileNonAndroidMainKotlinMetadata - Compiles the kotlin sources in compilation 'nonAndroidMain' in target 'metadata' to Metadata.
+compileNonJsCommonMainKotlinMetadata - Compiles the kotlin sources in compilation 'nonJsCommonMain' in target 'metadata' to Metadata.
+compileNonJvmCommonMainKotlinMetadata - Compiles the kotlin sources in compilation 'nonJvmCommonMain' in target 'metadata' to Metadata.
+compileNonNativeMainKotlinMetadata - Compiles the kotlin sources in compilation 'nonNativeMain' in target 'metadata' to Metadata.
+compileProdDebugAndroidTestJavaWithJavac
+compileProdDebugAndroidTestKotlinAndroid - Compiles the prodDebugAndroidTest kotlin.
+compileProdDebugJavaWithJavac
+compileProdDebugKotlinAndroid - Compiles the prodDebug kotlin.
+compileProdDebugLibraryResources
+compileProdDebugUnitTestJavaWithJavac
+compileProdDebugUnitTestKotlinAndroid - Compiles the prodDebugUnitTest kotlin.
+compileProdReleaseJavaWithJavac
+compileProdReleaseKotlinAndroid - Compiles the prodRelease kotlin.
+compileProdReleaseLibraryResources
+compileProdReleaseUnitTestJavaWithJavac
+compileProdReleaseUnitTestKotlinAndroid - Compiles the prodReleaseUnitTest kotlin.
+compileProductionExecutableKotlinJs
+compileTestDevelopmentExecutableKotlinJs
+compileTestKotlinDesktop - Compiles the compilation 'test' in target 'desktop'.
+compileTestKotlinJs - Compiles the Kotlin sources in compilation 'test' in target 'js' to JavaScript.
+compileTestProductionExecutableKotlinJs
+javaPreCompileDemoDebug
+javaPreCompileDemoDebugAndroidTest
+javaPreCompileDemoDebugUnitTest
+javaPreCompileDemoRelease
+javaPreCompileDemoReleaseUnitTest
+javaPreCompileProdDebug
+javaPreCompileProdDebugAndroidTest
+javaPreCompileProdDebugUnitTest
+javaPreCompileProdRelease
+javaPreCompileProdReleaseUnitTest
+jsDevelopmentExecutableCompileSync
+jsProductionExecutableCompileSync
+jsTestTestDevelopmentExecutableCompileSync
+jsTestTestProductionExecutableCompileSync

@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainCoroutineDispatcher
 
-interface DispatcherManager {
+interface DispatcherProvider {
     /**
      * The default [CoroutineDispatcher] for the app.
      */
@@ -36,3 +36,5 @@ interface DispatcherManager {
 
     val appScope: CoroutineScope
 }
+
+interface DispatcherManager : DispatcherProvider

@@ -1,0 +1,33 @@
+# Skill Selection — Leta-Pay KMP
+# Controls which skills are active for this KMP repository.
+
+mode: team-standard  # Options: essentials-only | team-standard | full
+
+active_skills:
+  - shared-kmp-core
+  - kmp-platform-specifics
+  - kmp-ui-compose
+  - firebase-and-realtime
+  - kmp-module-architecture
+  - phase-orchestrator
+  - kmp-testing
+  - git_manager
+  - code_review_enforcer
+  - dependency_manager
+  - docs_updater
+
+deferred_skills:
+  - backend-agent
+  - frontend-agent
+  - mobile-agent
+  - debug-agent
+  - api_contract_validator
+  - database_schema_manager
+  - deployment_orchestrator
+
+suppressed_features:
+  - auto_deployment            # Keep production rollouts manual
+
+routing:
+  guide: .agent/skills/KMP_SKILLS_ROUTING.md
+  summary: .agent/skills/KMP_SKILLS_SUMMARY.md

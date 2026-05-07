@@ -29,6 +29,9 @@ import cmp.navigation.splash.navigateToSplash
 import cmp.navigation.splash.splashDestination
 import cmp.navigation.ui.rememberKptNavController
 import cmp.navigation.utils.toObjectNavigationRoute
+import com.letapay.app.feature.auth.AuthRoute
+import com.letapay.app.feature.auth.authDestination
+import com.letapay.app.feature.auth.navigateToAuth
 import org.koin.compose.viewmodel.koinViewModel
 import template.core.base.ui.NonNullEnterTransitionProvider
 import template.core.base.ui.NonNullExitTransitionProvider
@@ -63,29 +66,20 @@ fun RootNavScreen(
         popExitTransition = { toExitTransition()(this) },
     ) {
         splashDestination()
-//        onboardingDestination()
-//        authNavGraph(navController)
-        authenticatedGraph(navController)
-//        userUnlockDestination()
+        authDestination()
+        authenticatedGraph()
     }
 
     val targetRoute = when (state) {
-        // SetLanguageRoute
         RootNavState.ShowOnboarding -> ""
-        // AuthGraphRoute
-        RootNavState.Auth -> ""
-        RootNavState.Splash -> SplashRoute
-        // UserUnlockRoute.Standard
+        RootNavState.Auth -> AuthRoute.toObjectNavigationRoute()
+        RootNavState.Splash -> SplashRoute.toObjectNavigationRoute()
         RootNavState.UserLocked -> ""
-        is RootNavState.UserUnlocked -> AuthenticatedGraphRoute
+        is RootNavState.UserUnlocked -> AuthenticatedGraphRoute.toObjectNavigationRoute()
     }
     val currentRoute = navController.currentDestination?.rootLevelRoute()
 
-    // Don't navigate if we are already at the correct root. This notably happens during process
-    // death. In this case, the NavHost already restores state, so we don't have to navigate.
-    // However, if the route is correct but the underlying state is different, we should still
-    // proceed in order to get a fresh version of that route.
-    if (currentRoute == targetRoute.toObjectNavigationRoute() &&
+    if (currentRoute == targetRoute &&
         previousStateReference.load() == state
     ) {
         previousStateReference.store(state)
@@ -93,13 +87,9 @@ fun RootNavScreen(
     }
     previousStateReference.store(state)
 
-    // In some scenarios on an emulator the Activity can leak when recreated
-    // if we don't first clear focus anytime we change the root destination.
     ClearFocus()
 
-    // When state changes, navigate to different root navigation state
     val rootNavOptions = navOptions {
-        // When changing root navigation state, pop everything else off the back stack:
         popUpTo(navController.graph.id) {
             inclusive = false
             saveState = false
@@ -108,17 +98,11 @@ fun RootNavScreen(
         restoreState = false
     }
 
-    // Use a LaunchedEffect to ensure we don't navigate too soon when the app first opens. This
-    // avoids a bug that first appeared in Compose Material3 1.2.0-rc01 that causes the initial
-    // transition to appear corrupted.
     LaunchedEffect(state) {
         when (state) {
             RootNavState.Splash -> navController.navigateToSplash(rootNavOptions)
-            // navController.navigateToAuthGraph(rootNavOptions)
-            RootNavState.Auth -> {}
-            // navController.navigateToSetLanguage(rootNavOptions)
+            RootNavState.Auth -> navController.navigateToAuth(rootNavOptions)
             RootNavState.ShowOnboarding -> {}
-            // navController.navigateToUserUnlock(rootNavOptions)
             RootNavState.UserLocked -> {}
             is RootNavState.UserUnlocked -> navController.navigateToAuthenticatedGraph(
                 navOptions = rootNavOptions,
@@ -143,7 +127,6 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.toEnterTransition(
 @Suppress("MaxLineLength")
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.toExitTransition(): NonNullExitTransitionProvider {
     return when (initialState.destination.rootLevelRoute()) {
-        // Disable transitions when coming from the splash screen
         SplashRoute.toObjectNavigationRoute() -> RootTransitionProviders.Exit.none
         else -> RootTransitionProviders.Exit.fadeOut
     }

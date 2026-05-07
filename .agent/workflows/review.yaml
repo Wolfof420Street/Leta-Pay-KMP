@@ -1,0 +1,34 @@
+name: review
+description: "KMP multi-dimensional review focused on bugs, regressions, security, and quality gates"
+
+review_dimensions:
+  - correctness
+  - architecture_integrity
+  - platform_consistency
+  - security_compliance
+  - quality_gate_status
+
+required_inputs:
+  - changed_files_or_diff
+  - acceptance_criteria
+
+checks:
+  architecture:
+    - layer_order_preserved
+    - expect_actual_complete
+    - no_cross_feature_shortcuts
+  quality:
+    - spotless_green
+    - detekt_zero_issues
+    - tests_green
+    - dependency_guard_green
+  security:
+    - token_storage_policy_respected
+    - web_refresh_token_not_present
+    - firebase_rules_aligned
+    - idempotency_for_mutations
+
+output:
+  format: findings_first
+  severity_levels: [CRITICAL, HIGH, MEDIUM, LOW]
+  include_residual_risks: true

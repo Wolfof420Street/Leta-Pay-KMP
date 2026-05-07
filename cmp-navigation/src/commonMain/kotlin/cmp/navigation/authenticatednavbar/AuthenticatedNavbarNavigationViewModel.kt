@@ -10,11 +10,11 @@
 package cmp.navigation.authenticatednavbar
 
 import androidx.lifecycle.viewModelScope
+import com.letapay.app.core.data.repository.NetworkMonitor
+import com.letapay.app.core.model.UserData
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.mifos.core.data.repository.NetworkMonitor
-import org.mifos.core.model.UserData
 import template.core.base.ui.BaseViewModel
 
 internal class AuthenticatedNavbarNavigationViewModel(
@@ -33,8 +33,10 @@ internal class AuthenticatedNavbarNavigationViewModel(
 
     override fun handleAction(action: AuthenticatedNavBarAction) {
         when (action) {
-            AuthenticatedNavBarAction.SettingsTabClick -> handleSettingsTabClicked()
-            AuthenticatedNavBarAction.HomeTabClick -> handleHomeTabClicked()
+            AuthenticatedNavBarAction.ChatTabClick -> sendEvent(AuthenticatedNavBarEvent.NavigateToChatScreen)
+            AuthenticatedNavBarAction.WalletTabClick -> sendEvent(AuthenticatedNavBarEvent.NavigateToWalletScreen)
+            AuthenticatedNavBarAction.TradeTabClick -> sendEvent(AuthenticatedNavBarEvent.NavigateToTradeScreen)
+            AuthenticatedNavBarAction.YieldTabClick -> sendEvent(AuthenticatedNavBarEvent.NavigateToYieldScreen)
             is AuthenticatedNavBarAction.Internal -> handleInternalAction(action)
         }
     }
@@ -45,20 +47,13 @@ internal class AuthenticatedNavbarNavigationViewModel(
             }
         }
     }
-
-    private fun handleHomeTabClicked() {
-        sendEvent(AuthenticatedNavBarEvent.NavigateToHomeScreen)
-    }
-
-    private fun handleSettingsTabClicked() {
-        sendEvent(AuthenticatedNavBarEvent.NavigateToProfileScreen)
-    }
 }
 
 internal sealed class AuthenticatedNavBarAction {
-    data object HomeTabClick : AuthenticatedNavBarAction()
-
-    data object SettingsTabClick : AuthenticatedNavBarAction()
+    data object ChatTabClick : AuthenticatedNavBarAction()
+    data object WalletTabClick : AuthenticatedNavBarAction()
+    data object TradeTabClick : AuthenticatedNavBarAction()
+    data object YieldTabClick : AuthenticatedNavBarAction()
 
     sealed class Internal : AuthenticatedNavBarAction() {
         data class UserStateUpdateReceive(val userState: UserData?) : Internal()
@@ -69,11 +64,19 @@ internal sealed class AuthenticatedNavBarEvent {
 
     abstract val tab: AuthenticatedNavBarTabItem
 
-    data object NavigateToHomeScreen : AuthenticatedNavBarEvent() {
-        override val tab: AuthenticatedNavBarTabItem = AuthenticatedNavBarTabItem.HomeTab
+    data object NavigateToChatScreen : AuthenticatedNavBarEvent() {
+        override val tab: AuthenticatedNavBarTabItem = AuthenticatedNavBarTabItem.ChatTab
     }
 
-    data object NavigateToProfileScreen : AuthenticatedNavBarEvent() {
-        override val tab: AuthenticatedNavBarTabItem = AuthenticatedNavBarTabItem.ProfileTab
+    data object NavigateToWalletScreen : AuthenticatedNavBarEvent() {
+        override val tab: AuthenticatedNavBarTabItem = AuthenticatedNavBarTabItem.WalletTab
+    }
+
+    data object NavigateToTradeScreen : AuthenticatedNavBarEvent() {
+        override val tab: AuthenticatedNavBarTabItem = AuthenticatedNavBarTabItem.TradeTab
+    }
+
+    data object NavigateToYieldScreen : AuthenticatedNavBarEvent() {
+        override val tab: AuthenticatedNavBarTabItem = AuthenticatedNavBarTabItem.YieldTab
     }
 }

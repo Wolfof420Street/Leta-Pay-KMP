@@ -1,0 +1,120 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-letapay}
+      POSTGRES_USER: ${POSTGRES_USER:-letapay}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-letapay} -d ${POSTGRES_DB:-letapay}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [letapay-internal]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [letapay-internal]
+
+  agentkit-sidecar:
+    build:
+      context: ./agentkit-sidecar
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 3100
+      SIDECAR_SECRET: ${SIDECAR_SECRET}
+      CDP_API_KEY_ID: ${CDP_API_KEY_ID}
+      CDP_API_KEY_SECRET: ${CDP_API_KEY_SECRET}
+      CDP_WALLET_SECRET: ${CDP_WALLET_SECRET}
+      BASE_RPC_URL: ${BASE_RPC_URL:-https://mainnet.base.org}
+      ETHEREUM_RPC_URL: ${ETHEREUM_RPC_URL:-https://ethereum.publicnode.com}
+      POLYGON_RPC_URL: ${POLYGON_RPC_URL:-https://polygon-rpc.com}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [letapay-internal]
+
+  ktor-backend:
+    build:
+      context: .
+      dockerfile: backend-ktor/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-letapay}
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USER: ${POSTGRES_USER:-letapay}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_MAX_POOL_SIZE: ${DB_MAX_POOL_SIZE:-10}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      REFRESH_TOKEN_PEPPER: ${REFRESH_TOKEN_PEPPER}
+      JWT_ISSUER: ${JWT_ISSUER:-leta-pay-backend}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-leta-pay-clients}
+      FIREBASE_SA_JSON: ${FIREBASE_SA_JSON}
+      COINBASE_API_KEY: ${COINBASE_API_KEY}
+      COINBASE_RISK_KEY: ${COINBASE_RISK_KEY}
+      KILL_SWITCH_VALUE_MOVES: ${KILL_SWITCH_VALUE_MOVES:-false}
+      AGENTKIT_SIDECAR_URL: http://agentkit-sidecar:3100
+      SIDECAR_SECRET: ${SIDECAR_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      agentkit-sidecar:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks: [letapay-internal]
+
+  web-frontend:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      ktor-backend:
+        condition: service_started
+    volumes:
+      - ./cmp-web/build/dist/js/productionExecutable:/usr/share/nginx/html:ro
+      - ./deploy/nginx/web-frontend.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8081}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks: [letapay-internal]
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  letapay-internal:
+    driver: bridge

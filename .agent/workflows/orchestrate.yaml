@@ -1,0 +1,34 @@
+name: orchestrate
+description: "Parallel-wave KMP task execution with gate checks and stop-on-failure control"
+
+execution_model: parallel_waves
+
+preconditions:
+  - approved_plan_exists
+  - dependencies_resolved
+
+task_distribution:
+  strategy: capability_match
+  agents:
+    architecture: architect-agent
+    backend: backend-agent
+    platform_mobile: mobile-agent
+    platform_web: frontend-agent
+    quality: qa-agent
+
+validation:
+  per_wave_checks:
+    - ./gradlew spotlessCheck
+    - ./gradlew detekt
+  final_checks:
+    - ./gradlew commonTest test
+    - ./gradlew dependencyGuard
+
+constraints:
+  - no_concurrent_edits_same_file
+  - preserve_shared_model_contracts
+  - enforce_phase_order
+
+failure_policy:
+  wave_failure: stop_next_waves
+  route_to: debug-agent

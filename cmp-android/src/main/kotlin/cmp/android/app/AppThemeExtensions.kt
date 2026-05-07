@@ -9,7 +9,7 @@
  */
 package cmp.android.app
 
-import org.mifos.core.model.DarkThemeConfig
+import com.letapay.app.core.model.DarkThemeConfig
 
 fun DarkThemeConfig.isDarkMode(
     isSystemDarkMode: Boolean,

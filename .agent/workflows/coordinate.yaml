@@ -1,0 +1,40 @@
+name: coordinate
+description: "KMP multi-agent coordination with Phase 1-9 sequencing and Gradle quality gates"
+
+phases:
+  - name: align
+    agent: pm-agent
+    outputs:
+      - phase_scope
+      - task_matrix
+
+  - name: architecture_check
+    agent: architect-agent
+    validations:
+      - layer_order_enforced
+      - no_circular_dependencies
+      - expect_actual_strategy_defined
+
+  - name: implementation
+    mode: parallel_waves
+    agents:
+      - backend-agent
+      - mobile-agent
+      - frontend-agent
+    constraints:
+      - no_overlapping_file_sets
+      - keep_shared_models_consistent
+
+  - name: quality_validation
+    agent: qa-agent
+    checks:
+      - ./gradlew spotlessCheck
+      - ./gradlew detekt
+      - ./gradlew commonTest test
+      - ./gradlew dependencyGuard
+
+  - name: gate_decision
+    agent: pm-agent
+    gate: all_checks_green
+    on_pass: advance_phase
+    on_fail: route_to_debug

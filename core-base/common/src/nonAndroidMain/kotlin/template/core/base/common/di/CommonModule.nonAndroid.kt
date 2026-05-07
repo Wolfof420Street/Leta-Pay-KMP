@@ -10,11 +10,14 @@
 package template.core.base.common.di
 
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.koin.dsl.bind
 import template.core.base.common.manager.DispatcherManager
 import template.core.base.common.manager.DispatcherManagerImpl
+import template.core.base.common.manager.DispatcherProvider
 
 actual val dispatcherManagerModule: Module
     get() = module {
-        single<DispatcherManager> { DispatcherManagerImpl() }
+        singleOf(::DispatcherManagerImpl) bind DispatcherManager::class bind DispatcherProvider::class
     }

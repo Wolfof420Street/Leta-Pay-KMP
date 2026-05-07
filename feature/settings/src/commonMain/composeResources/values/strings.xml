@@ -33,4 +33,6 @@
     <string name="feature_settings_change_language_text">Change Language</string>
     <string name="feature_settings_change_language_placeholder_text">Change Language</string>
     <string name="feature_settings_language_preference">Language</string>
+    <string name="feature_settings_notification_title">Notification</string>
+    <string name="feature_settings_notification_body">Notification Screen</string>
 </resources>

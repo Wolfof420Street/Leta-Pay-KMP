@@ -1,273 +1,101 @@
-# Architecture Overview
+# Architecture
 
-This document provides a comprehensive overview of the architecture used in the KMP Multi-Module
-Project Generator. Understanding this architecture will help you maintain and extend the project
-effectively.
+## 1. System Topology
 
-## Design Philosophy
+LetaPay is a layered, policy-driven system:
 
-The architecture of this project is designed with the following principles in mind:
+1. KMP Frontend (Android/Web/Desktop): intent capture, chat UX, preview UX, and WalletConnect signing.
+2. Ktor Backend: authentication, validation, idempotency, rate-limit enforcement, kill switch enforcement, and transaction lifecycle recording.
+3. AgentKit Sidecar (Node.js): internal action provider layer that builds unsigned calldata only.
 
-1. **Clean Architecture**: Separation of concerns with distinct layers
-2. **Multi-Module Design**: Modular, reusable components with clear boundaries
-3. **Feature-First Organization**: Independent feature modules that can evolve separately
-4. **Maximum Code Sharing**: Efficient reuse of code across platforms via Kotlin Multiplatform
-5. **Platform-Specific Optimizations**: Native capabilities are leveraged when appropriate
-
-## High-Level Architecture
-
-The project follows a layered architecture pattern, combined with modular organization:
-
-```
-┌───────────────────────────────────────────────────────────────────┐
-│                      Application Layer                            │
-│  ┌────────────┐   ┌──────────┐   ┌────────────┐   ┌──────────┐    │
-│  │cmp-android │   │ cmp-ios  │   │cmp-desktop │   │ cmp-web  │    │
-│  └────────────┘   └──────────┘   └────────────┘   └──────────┘    │
-└───────────────────────────────────────────────────────────────────┘
-                          │
-┌───────────────────────────────────────────────────────────────┐
-│                        Feature Layer                          │
-│     ┌────────┐      ┌─────────┐       ┌──────────┐            │
-│     │  home  │      │ profile │       │ settings │            │
-│     └────────┘      └─────────┘       └──────────┘            │
-└───────────────────────────────────────────────────────────────┘
-                          │
-┌───────────────────────────────────────────────────────────────┐
-│                   Domain & Data Layers                        │
-│  ┌─────────┐  ┌────────┐  ┌─────────┐  ┌─────────┐  ┌───────┐ │
-│  │  domain │  │  data  │  │ network │  │datastore│  │ model │ │
-│  └─────────┘  └────────┘  └─────────┘  └─────────┘  └───────┘ │
-└───────────────────────────────────────────────────────────────┘
-                          │
-┌───────────────────────────────────────────────────────────────┐
-│                      Core Components                          │
-│  ┌────────┐  ┌────────────┐  ┌─────────┐   ┌───────────┐      │
-│  │ common │  │designsystem│  │   ui    │   │ analytics │      │
-│  └────────┘  └────────────┘  └─────────┘   └───────────┘      │
-└───────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    C[KMP Client\nAndroid/Web/Desktop] -->|JWT + Firebase Token| B[Ktor Backend]
+    C -->|WalletConnect Sign| W[External User Wallet]
+    B -->|x-sidecar-secret| S[AgentKit Sidecar]
+    B --> P[(Postgres)]
+    B --> R[(Redis)]
+    B --> F[Firebase]
+    S --> A[Coinbase CDP + AgentKit]
 ```
 
-## Module Structure
+## 2. Non-Custodial Security Model
 
-The project is organized into several types of modules:
+### Why Ktor owns kill switch + idempotency
 
-### Platform Modules
+Ktor is the policy boundary exposed to clients. It must be the only place where value-moving requests are accepted and governed.
 
-These modules contain the platform-specific application entry points and UI implementations:
+- Kill switch (`KILL_SWITCH_VALUE_MOVES`) is checked before executing value-moving routes (`/transactions/build`, `/transactions/send`, `/swap/*`, `/yield/*`).
+- Idempotency keys are enforced and replayed at the backend boundary to prevent duplicate value movement and to preserve deterministic API responses on retry.
+- Request validation and machine-readable error envelopes are normalized in one place (`ErrorResponse`).
 
-- **cmp-android**: Android application using Jetpack Compose
-- **cmp-ios**: iOS application with SwiftUI integration
-- **cmp-desktop**: Desktop application using Compose for Desktop
-- **cmp-web**: Web application using Kotlin/JS and Compose Web
-- **cmp-shared**: Common code shared across all platforms
-- **cmp-navigation**: Navigation components and routing logic
+### Why Sidecar only builds unsigned calldata
 
-### Feature Modules
+The sidecar is intentionally internal and stateless relative to custody.
 
-Feature modules encapsulate specific user-facing functionality:
+- It receives internal requests with `x-sidecar-secret` and should never be internet-exposed.
+- It translates high-level action parameters into unsigned calldata payloads.
+- It does not hold user private keys and does not broadcast signed transactions.
+- This keeps signing authority with the wallet owner and keeps transaction policy enforcement in Ktor.
 
-- **feature/home**: Home screen and related features
-- **feature/profile**: User profile management features
-- **feature/settings**: Application settings and configuration
+## 3. Request Governance Boundaries
 
-### Core Modules
+### Client boundary
 
-Core modules provide the essential infrastructure and shared functionality:
+- User inputs intent and confirms preview.
+- WalletConnect performs signature operation externally.
 
-- **core/analytics**: Analytics and tracking capabilities
-- **core/common**: Common utilities, extensions, and helpers
-- **core/data**: Data repositories and sources
-- **core/datastore**: Local storage management
-- **core/domain**: Business logic and use cases
-- **core/model**: Data models and entities
-- **core/network**: Network communication
-- **core/ui**: Shared UI components
-- **core/designsystem**: Design system components
+### Backend boundary
 
-### Core Base Modules
+- Authenticates session principal.
+- Validates chain/asset/opportunity parameters.
+- Applies global + wallet-scoped rate limits.
+- Applies kill switch and idempotency checks.
+- Persists transaction/yield state.
 
-Foundational components that provide essential infrastructure:
+### Sidecar boundary
 
-- **core-base/database**: Shared database layer
-- **core-base/datastore**: Preference storage
-- **core-base/network**: API communication infrastructure
+- Consumes internal-only traffic.
+- Calls AgentKit/CDP providers.
+- Returns unsigned calldata or sidecar error payload.
 
-### Build Logic
+## 4. Data Flow: AI Intent -> Build -> Sign -> Broadcast
 
-- **build-logic**: Custom Gradle plugins and build configuration
+### End-to-end path
 
-## Clean Architecture Layers
+1. User submits command in chat UI (`send`, `swap`, `stake`).
+2. Client parser/orchestrator derives structured intent and preview plan.
+3. Client requests backend build route (`/transactions/build`, `/swap/execute`, or `/yield/stake`) with idempotency metadata where required.
+4. Ktor validates request, checks kill switch/rate limit/idempotency, and calls sidecar.
+5. Sidecar uses AgentKit/CDP to construct unsigned calldata (`to`, `data`, `value`, gas fields, `chainId`, optional `nonce`).
+6. Ktor returns unsigned payload in normalized backend response.
+7. Client passes unsigned payload to WalletConnect signing flow.
+8. Client submits signed tx to `/transactions/send` with `Idempotency-Key` and context headers.
+9. Ktor records submission, registers pending notification watcher, and responds with `txHash` + status.
+10. Client fetches/streams lifecycle updates and renders summary.
 
-The project implements Clean Architecture with the following layers:
+## 5. Error & Resilience Strategy
 
-### 1. Presentation Layer
+- Backend always returns machine code + message envelope.
+- Sidecar/provider failures are absorbed into controlled backend error states.
+- `AGENTKIT_UNAVAILABLE` is reserved for sidecar/capability outage handling and should disable AI action controls in client UX.
+- Gateway timeout, conflict, validation, and kill-switch states are explicit and parseable by clients.
 
-- **Responsibility**: UI components, user interaction, and view models
-- **Location**: Platform modules and UI-related portions of feature modules
-- **Dependencies**: Domain layer
-- **Technologies**: Jetpack Compose, SwiftUI, Compose for Desktop, Compose Web
+## 6. Deployment Shape
 
-### 2. Domain Layer
+Typical local/prod decomposition:
 
-- **Responsibility**: Business logic and use cases
-- **Location**: core/domain module
-- **Dependencies**: Model entities only (no data layer dependencies)
-- **Technologies**: Pure Kotlin with no external dependencies
+- `ktor-backend`: public API ingress
+- `agentkit-sidecar`: private network only
+- `postgres`: system-of-record state
+- `redis`: ephemeral coordination/cache support
+- Frontend targets consume backend over HTTP(S), never sidecar directly
 
-### 3. Data Layer
+## 7. Data Model and Policy Storage
 
-- **Responsibility**: Data management, repositories, and data sources
-- **Location**: core/data, core/network, core/datastore modules
-- **Dependencies**: Domain models, networking, and storage libraries
-- **Technologies**: Ktor, SQLDelight, Datastore
+- Durable transaction/session/idempotency metadata lives in Postgres.
+- Transient rate-limit and operational coordination state uses Redis.
+- Backend-enforced kill switch (`KILL_SWITCH_VALUE_MOVES`) is evaluated before any value-moving side effects.
+- Idempotency enforcement and replay semantics are backend-owned and must not be delegated to clients or sidecar.
 
-### 4. Model Layer
-
-- **Responsibility**: Data models and entities
-- **Location**: core/model module
-- **Dependencies**: None (or minimal shared utilities)
-- **Technologies**: Pure Kotlin data classes
-
-## Data Flow
-
-The data flows through the architecture in the following way:
-
-1. UI components in **platform modules** or **feature modules** interact with users and trigger
-   actions
-2. These actions are processed by **ViewModels** or **Presenters** that communicate with the domain
-   layer
-3. **Use Cases** in the domain layer execute business logic and interact with repositories
-4. **Repositories** in the data layer coordinate data operations, choosing between remote and local
-   sources
-5. **Data Sources** interact with external systems (APIs) or local storage
-6. Data flows back up through the same layers, transformed at each step to match the layer's
-   requirements
-
-## Source Set Hierarchy
-
-One of the key architectural features is the hierarchical organization of source sets that enables
-efficient code sharing:
-
-```
-common
-  ├── nonAndroid
-  │     ├── jvm
-  │     ├── jsCommon
-  │     └── native
-  ├── jsCommon
-  │     ├── js
-  │     └── wasmJs
-  ├── nonJsCommon
-  │     ├── jvmCommon
-  │     └── native
-  ├── jvmCommon
-  │     ├── android
-  │     └── jvm
-  ├── nonJvmCommon
-  │     ├── jsCommon
-  │     └── native
-  ├── jvmJsCommon
-  │     ├── jvm
-  │     ├── js
-  │     └── wasmJs
-  ├── native
-  │     └── apple
-  │         ├── ios
-  │         └── macos
-  └── nonNative
-        ├── jsCommon
-        └── jvmCommon
-```
-
-For more details on the source set hierarchy, refer to
-the [Source Set Hierarchy](PROJECT_HIERARCHY_TEMPLATE.md) document.
-
-## Dependency Injection
-
-The project uses Koin for dependency injection across all platforms:
-
-- **Module Definition**: Dependencies are defined in Koin modules
-- **Scope Management**: Features can have their own scopes when needed
-- **ViewModels**: Integrated with Koin's ViewModel implementation
-
-Example of a Koin module definition:
-
-```kotlin
-val dataModule = module {
-    single { NetworkClient(get()) }
-    single<UserRepository> { UserRepositoryImpl(get(), get()) }
-}
-```
-
-## Navigation
-
-Navigation is handled through a dedicated module (cmp-navigation) with platform-specific
-implementations:
-
-- **Android**: Jetpack Navigation or Voyager
-- **iOS**: SwiftUI NavigationView
-- **Desktop**: Custom Compose for Desktop navigation
-- **Web**: Custom routing implementation
-
-## Error Handling
-
-The project implements a consistent error handling strategy:
-
-1. **Domain Errors**: Defined in the domain layer and represent business rule violations
-2. **Data Errors**: Represent data access issues, converted to domain errors at the repository
-   boundary
-3. **Presentation Errors**: User-friendly error representations in the UI
-
-## Testing Strategy
-
-The architecture supports multiple testing approaches:
-
-- **Unit Tests**: For business logic and domain use cases
-- **Integration Tests**: For repositories and data sources
-- **UI Tests**: For platform-specific UI components
-- **End-to-End Tests**: For complete feature workflows
-
-## Configuration and Build System
-
-The project uses a custom Gradle plugin system for configuration:
-
-- **Version Catalog**: Central dependency management in `gradle/libs.versions.toml`
-- **Custom Plugins**: Defined in the `build-logic` module
-- **Type-Safe Accessors**: For improved build script maintainability
-
-## Communication Patterns
-
-The project uses several communication patterns:
-
-- **Coroutines and Flow**: For asynchronous operations and reactive data streams
-- **StateFlow/SharedFlow**: For UI state and event management
-- **Use Case Results**: For domain logic outcomes
-
-## Design System
-
-The architecture includes a dedicated design system module:
-
-- **Theme**: Colors, typography, and spacing
-- **Components**: Reusable UI elements
-- **Tokens**: Design constants and values
-
-## Security Considerations
-
-The architecture addresses security through:
-
-- **Secure Storage**: For sensitive data like credentials
-- **Network Security**: HTTPS, certificate pinning
-- **Input Validation**: At domain layer boundaries
-
-## Conclusion
-
-This architecture provides a solid foundation for cross-platform development using Kotlin
-Multiplatform. By following clean architecture principles and organizing the codebase into focused
-modules, the project achieves high maintainability, testability, and scalability.
-
-For more detailed information, refer to:
-
-- [Setup Guide](SETUP.md) for environment configuration
-- [Source Set Hierarchy](PROJECT_HIERARCHY_TEMPLATE.md) for code sharing structure
-- [Code Style Guide](STYLE_GUIDE.md) for coding conventions
+See `DATA_MODEL.md` for the full data model and idempotency behavior contract.

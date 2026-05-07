@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 BOLD='\033[1m'
-NC='\033[0m'    # No Color
+NC='\033[0m'    # No Colora
 CHECKMARK='\xE2\x9C\x94'
 CROSS='\xE2\x9C\x98'
 

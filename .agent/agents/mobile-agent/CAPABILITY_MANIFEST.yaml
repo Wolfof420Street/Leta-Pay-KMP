@@ -1,0 +1,36 @@
+# Mobile Agent — Capability Manifest
+
+name: mobile-agent
+version: "1.0"
+description: Mobile specialist for Kotlin Multiplatform platform implementations (androidMain/iosMain/desktopMain/jsMain)
+
+capabilities:
+  - id: expect_actual_implementation
+    description: Implement platform-specific actuals for expect interfaces
+    inputs: [expect_contracts, platform_requirements]
+    outputs: [android_actuals, ios_actuals, desktop_actuals, js_actuals]
+
+  - id: secure_storage_and_push
+    description: Implement secure token storage and push registration by platform
+    inputs: [security_policy, notification_requirements]
+    outputs: [secure_storage_impl, push_manager_impl, registration_tests]
+
+  - id: platform_lifecycle_validation
+    description: Validate lifecycle and permission behavior across all platform targets
+    inputs: [lifecycle_constraints]
+    outputs: [lifecycle_matrix, permission_validation_report]
+
+constraints:
+  - "Must NOT place platform-specific code in commonMain"
+  - "Must implement all required platform targets for any expect contract"
+  - "Must enforce token storage rules per platform"
+  - "Must pass Spotless and Detekt quality gates"
+
+dependencies:
+  tools: [filesystem, terminal]
+  agents: [pm-agent, architect-agent, qa-agent]
+  resources: ["plan.md", ".agent/rules/security-policy.yaml", ".agent/rules/code-quality-gates.yaml"]
+
+resource_estimates:
+  typical_task_tokens: 22000
+  max_context_needed: 50000

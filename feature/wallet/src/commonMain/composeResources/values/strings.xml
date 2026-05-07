@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
+<resources>
+    <string name="feature_wallet_title">Wallet</string>
+    <string name="feature_wallet_no_session">No active wallet session</string>
+    <string name="feature_wallet_total_prefix">Total USD</string>
+    <string name="feature_wallet_refreshing_button">Refreshing...</string>
+    <string name="feature_wallet_refresh_button">Refresh balance</string>
+    <string name="feature_wallet_disconnect_button">Disconnect wallet</string>
+    <string name="feature_wallet_loading_balances">Loading balances...</string>
+    <string name="feature_wallet_balance_empty">No balances returned from /api/portfolio/balance yet.</string>
+    <string name="feature_wallet_amount_prefix">Amount</string>
+    <string name="feature_wallet_chain_prefix">Chain</string>
+    <string name="feature_wallet_usd_prefix">USD</string>
+    <string name="feature_wallet_assets">Assets</string>
+    <string name="feature_wallet_total_balance">Total Balance</string>
+    <string name="feature_wallet_action_send">Send</string>
+    <string name="feature_wallet_action_swap">Swap</string>
+    <string name="feature_wallet_action_stake">Stake</string>
+    <string name="feature_wallet_action_history">History</string>
+</resources>

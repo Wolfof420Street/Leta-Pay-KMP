@@ -44,7 +44,7 @@ kotlin {
             api(libs.ktor.client.js)
         }
 
-        wasmJsMain.dependencies {
+        findByName("wasmJsMain")?.dependencies {
             api(libs.ktor.client.js)
         }
     }

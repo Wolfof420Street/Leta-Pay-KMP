@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.core.data"
+    namespace = "com.letapay.app.core.data"
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
@@ -29,6 +29,7 @@ kotlin {
             implementation(projects.core.model)
             implementation(projects.core.network)
             implementation(projects.core.analytics)
+            implementation(projects.core.database)
 
             implementation(projects.coreBase.common)
             implementation(projects.coreBase.network)

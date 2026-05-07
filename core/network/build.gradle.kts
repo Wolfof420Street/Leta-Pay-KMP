@@ -15,7 +15,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.core.network"
+    namespace = "com.letapay.app.core.network"
     defaultConfig {
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -33,6 +33,7 @@ kotlin {
             implementation(projects.core.common)
             implementation(projects.core.model)
             implementation(projects.core.datastore)
+            implementation(projects.coreBase.network)
 
             implementation(libs.kotlinx.serialization.json)
 
@@ -61,12 +62,18 @@ kotlin {
 }
 
 dependencies {
-    add("kspCommonMainMetadata", libs.ktorfit.ksp)
-    add("kspAndroid", libs.ktorfit.ksp)
-    add("kspJs", libs.ktorfit.ksp)
-    add("kspWasmJs", libs.ktorfit.ksp)
-    add("kspDesktop", libs.ktorfit.ksp)
-    add("kspIosX64", libs.ktorfit.ksp)
-    add("kspIosArm64", libs.ktorfit.ksp)
-    add("kspIosSimulatorArm64", libs.ktorfit.ksp)
+    listOf(
+        "kspCommonMainMetadata",
+        "kspAndroid",
+        "kspJs",
+        "kspWasmJs",
+        "kspDesktop",
+        "kspIosX64",
+        "kspIosArm64",
+        "kspIosSimulatorArm64",
+    ).forEach { configurationName ->
+        if (configurations.findByName(configurationName) != null) {
+            add(configurationName, libs.ktorfit.ksp)
+        }
+    }
 }

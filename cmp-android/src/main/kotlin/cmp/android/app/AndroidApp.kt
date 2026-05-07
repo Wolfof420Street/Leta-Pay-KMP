@@ -19,13 +19,13 @@ import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.request.CachePolicy
+import com.letapay.app.core.data.repository.UserDataRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.mifos.core.data.repository.UserDataRepository
 import template.core.base.ui.getDefaultImageLoader
 
 /**

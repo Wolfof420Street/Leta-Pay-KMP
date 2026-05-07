@@ -15,8 +15,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cmp.navigation.rootnav.RootNavScreen
+import com.letapay.app.core.designsystem.theme.LetaPayTheme
 import org.koin.compose.viewmodel.koinViewModel
-import org.mifos.core.designsystem.theme.MifosTheme
 import template.core.base.ui.EventsEffect
 
 @Composable
@@ -44,14 +44,14 @@ fun ComposeApp(
         }
     }
 
-    MifosTheme(
+    LetaPayTheme(
         darkTheme = uiState.darkTheme,
         androidTheme = uiState.isAndroidTheme,
         useDynamicColor = uiState.isDynamicColorsEnabled,
     ) {
         RootNavScreen(
-            modifier = modifier,
             onSplashScreenRemoved = onSplashScreenRemoved,
+            modifier = modifier,
         )
     }
 }

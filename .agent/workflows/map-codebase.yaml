@@ -1,0 +1,49 @@
+name: map-codebase
+description: "Map KMP codebase architecture, source sets, quality conventions, and phase readiness"
+
+trigger: "first feature on existing codebase or /gsd:map-codebase"
+
+workflow:
+  - name: stack_detector
+    agent: architect-agent
+    outputs:
+      - languages
+      - platform_targets
+      - build_system
+
+  - name: source_set_mapper
+    actions:
+      - map_commonMain_commonTest
+      - map_androidMain_iosMain_desktopMain_jsMain
+      - map_feature_core_platform_modules
+    outputs:
+      - source_set_map
+      - dependency_graph
+
+  - name: quality_convention_scan
+    actions:
+      - detect_spotless_profile
+      - detect_detekt_config
+      - detect_dependency_guard_usage
+    outputs:
+      - quality_rules_summary
+
+  - name: security_architecture_scan
+    actions:
+      - verify_walletconnect_non_custodial_model
+      - verify_token_storage_per_platform
+      - verify_firebase_realtime_and_auth_patterns
+    outputs:
+      - security_posture_summary
+
+  - name: phase_readiness
+    actions:
+      - map_current_state_to_phase_1_9
+      - identify_phase_blockers
+    outputs:
+      - phase_readiness_report
+
+artifacts:
+  - .planning/research/CODEBASE_MAP.md
+  - .planning/research/QUALITY_MAP.md
+  - .planning/research/PHASE_READINESS.md

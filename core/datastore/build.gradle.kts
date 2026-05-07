@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.core.datastore"
+    namespace = "com.letapay.app.core.datastore"
     defaultConfig {
         consumerProguardFiles("consumer-rules.pro")
     }

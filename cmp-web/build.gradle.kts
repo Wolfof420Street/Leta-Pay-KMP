@@ -6,6 +6,12 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+val enableWasmTarget = providers
+    .gradleProperty("letapay.enableWasm")
+    .map(String::toBoolean)
+    .orElse(false)
+    .get()
+
 kotlin {
     js(IR) {
         outputModuleName = "cmp-web"
@@ -17,15 +23,17 @@ kotlin {
         binaries.executable()
     }
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        outputModuleName = "cmp-wasm"
-        browser {
-            commonWebpackConfig {
-                outputFileName = "cmp-wasm.js"
+    if (enableWasmTarget) {
+        @OptIn(ExperimentalWasmDsl::class)
+        wasmJs {
+            outputModuleName = "cmp-wasm"
+            browser {
+                commonWebpackConfig {
+                    outputFileName = "cmp-wasm.js"
+                }
             }
+            binaries.executable()
         }
-        binaries.executable()
     }
 
     applyDefaultHierarchyTemplate()
@@ -56,7 +64,7 @@ kotlin {
         }
 
         jsMain.get().dependsOn(jsWasmMain)
-        wasmJsMain.get().dependsOn(jsWasmMain)
+        findByName("wasmJsMain")?.dependsOn(jsWasmMain)
     }
 }
 

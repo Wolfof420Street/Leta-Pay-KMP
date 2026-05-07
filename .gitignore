@@ -103,3 +103,19 @@ vendor/
 # Backup files created by scripts
 *.bak
 .claude
+
+# AgentKit sidecar generated/local files
+agentkit-sidecar/node_modules/
+agentkit-sidecar/dist/
+agentkit-sidecar/coverage/
+agentkit-sidecar/.env
+agentkit-sidecar/.env.*
+agentkit-sidecar/*.log
+agentkit-sidecar/npm-debug.log*
+agentkit-sidecar/yarn-debug.log*
+agentkit-sidecar/yarn-error.log*
+
+
+# AI Agent configurations
+.agents/
+.agent/

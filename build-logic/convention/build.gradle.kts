@@ -29,7 +29,7 @@ dependencies {
     compileOnly(libs.ktlint.gradlePlugin)
     compileOnly(libs.spotless.gradle)
     implementation(libs.truth)
-    compileOnly(libs.androidx.room.gradle.plugin)
+    implementation(libs.sqldelight.gradle.plugin)
     compileOnly(libs.firebase.crashlytics.gradlePlugin)
     compileOnly(libs.firebase.performance.gradlePlugin)
 }
@@ -118,11 +118,11 @@ gradlePlugin {
             description = "Installs git hooks for the project"
         }
 
-        //  Room Plugin
-        register("KMPRoom"){
-            id = "mifos.kmp.room"
-            implementationClass = "KMPRoomConventionPlugin"
-            description = "Configures Room for the project"
+        // SQLDelight Plugin
+        register("KMPSQLDelight") {
+            id = "letapay.kmp.sqldelight"
+            implementationClass = "KMPSQLDelightConventionPlugin"
+            description = "Configures SQLDelight for the project"
         }
 
     }

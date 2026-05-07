@@ -14,46 +14,81 @@ import cmp.navigation.generated.resources.Res
 import cmp.navigation.generated.resources.home
 import cmp.navigation.generated.resources.profile
 import cmp.navigation.utils.toObjectNavigationRoute
+import com.letapay.app.core.designsystem.icon.AppIcons
+import com.letapay.app.core.ui.NavigationItem
+import com.letapay.app.feature.chat.ChatRoute
+import com.letapay.app.feature.trade.TradeRoute
+import com.letapay.app.feature.wallet.WalletRoute
+import com.letapay.app.feature.yield.YieldRoute
 import org.jetbrains.compose.resources.StringResource
-import org.mifos.core.designsystem.icon.AppIcons
-import org.mifos.core.ui.NavigationItem
-import org.mifos.feature.home.TasksDestination
-import org.mifos.feature.home.TasksRoute
-import org.mifos.feature.profile.ProfileRoute
 
 sealed class AuthenticatedNavBarTabItem : NavigationItem {
 
-    data object HomeTab : AuthenticatedNavBarTabItem() {
+    data object ChatTab : AuthenticatedNavBarTabItem() {
         override val selectedIcon: ImageVector
-            get() = AppIcons.HomeBoarder
+            get() = AppIcons.OutlinedDoneAll
         override val icon: ImageVector
-            get() = AppIcons.Home
+            get() = AppIcons.Contact
         override val labelRes: StringResource
-            get() = Res.string.home
+            get() = Res.string.home // TODO: Add Chat string resource
         override val contentDescriptionRes: StringResource
             get() = Res.string.home
         override val graphRoute: String
-            get() = TasksDestination.toObjectNavigationRoute()
+            get() = ChatRoute.toObjectNavigationRoute()
         override val startDestinationRoute: String
-            get() = TasksRoute.toObjectNavigationRoute()
+            get() = ChatRoute.toObjectNavigationRoute()
         override val testTag: String
-            get() = "HomeTab"
+            get() = "ChatTab"
     }
 
-    data object ProfileTab : AuthenticatedNavBarTabItem() {
+    data object WalletTab : AuthenticatedNavBarTabItem() {
         override val selectedIcon: ImageVector
-            get() = AppIcons.ProfileBoarder
+            get() = AppIcons.FinanceBoarder
         override val icon: ImageVector
-            get() = AppIcons.Profile
+            get() = AppIcons.Finance
         override val labelRes: StringResource
-            get() = Res.string.profile
+            get() = Res.string.profile // TODO: Add Wallet String resource
         override val contentDescriptionRes: StringResource
             get() = Res.string.profile
         override val graphRoute: String
-            get() = ProfileRoute.toObjectNavigationRoute()
+            get() = WalletRoute.toObjectNavigationRoute()
         override val startDestinationRoute: String
-            get() = ProfileRoute.toObjectNavigationRoute()
+            get() = WalletRoute.toObjectNavigationRoute()
         override val testTag: String
-            get() = "ProfileTab"
+            get() = "WalletTab"
+    }
+
+    data object TradeTab : AuthenticatedNavBarTabItem() {
+        override val selectedIcon: ImageVector
+            get() = AppIcons.Payment
+        override val icon: ImageVector
+            get() = AppIcons.Payment
+        override val labelRes: StringResource
+            get() = Res.string.home // Placeholder
+        override val contentDescriptionRes: StringResource
+            get() = Res.string.home
+        override val graphRoute: String
+            get() = TradeRoute.toObjectNavigationRoute()
+        override val startDestinationRoute: String
+            get() = TradeRoute.toObjectNavigationRoute()
+        override val testTag: String
+            get() = "TradeTab"
+    }
+
+    data object YieldTab : AuthenticatedNavBarTabItem() {
+        override val selectedIcon: ImageVector
+            get() = AppIcons.Bank
+        override val icon: ImageVector
+            get() = AppIcons.Bank
+        override val labelRes: StringResource
+            get() = Res.string.profile // Placeholder
+        override val contentDescriptionRes: StringResource
+            get() = Res.string.profile
+        override val graphRoute: String
+            get() = YieldRoute.toObjectNavigationRoute()
+        override val startDestinationRoute: String
+            get() = YieldRoute.toObjectNavigationRoute()
+        override val testTag: String
+            get() = "YieldTab"
     }
 }

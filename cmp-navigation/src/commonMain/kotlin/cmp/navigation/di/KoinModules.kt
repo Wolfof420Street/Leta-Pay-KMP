@@ -12,12 +12,17 @@ package cmp.navigation.di
 import cmp.navigation.AppViewModel
 import cmp.navigation.authenticatednavbar.AuthenticatedNavbarNavigationViewModel
 import cmp.navigation.rootnav.RootNavViewModel
+import com.letapay.app.core.data.di.DataModule
+import com.letapay.app.core.database.di.DatabaseModule
+import com.letapay.app.core.datastore.di.DatastoreModule
+import com.letapay.app.core.network.di.NetworkModule
+import com.letapay.app.feature.agent.di.AgentModule
+import com.letapay.app.feature.auth.di.AuthModule
+import com.letapay.app.feature.chat.ChatViewModel
+import com.letapay.app.feature.trade.TradeViewModel
+import com.letapay.app.feature.wallet.WalletViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
-import org.mifos.core.data.di.DataModule
-import org.mifos.core.datastore.di.DatastoreModule
-import org.mifos.feature.home.di.HomeModule
-import org.mifos.feature.settings.SettingsModule
 import template.core.base.analytics.di.analyticsModule
 import template.core.base.common.di.CommonModule
 import template.core.base.platform.di.platformModule
@@ -37,18 +42,26 @@ object KoinModules {
         viewModelOf(::AppViewModel)
         viewModelOf(::AuthenticatedNavbarNavigationViewModel)
         viewModelOf(::RootNavViewModel)
+        viewModelOf(::ChatViewModel)
+        viewModelOf(::WalletViewModel)
+        viewModelOf(::TradeViewModel)
+    }
+
+    private val phase1Infrastructure = module {
+        includes(NetworkModule, DatabaseModule)
     }
 
     private val featureModule = module {
         includes(
-            HomeModule,
-            SettingsModule,
+            AgentModule,
+            AuthModule,
         )
     }
 
     val allModules = listOf(
         dataModule,
         dispatcherModule,
+        phase1Infrastructure,
         analyticsModule,
         DatastoreModule,
         featureModule,

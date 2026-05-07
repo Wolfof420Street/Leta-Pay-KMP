@@ -12,15 +12,15 @@ package cmp.navigation
 import androidx.lifecycle.viewModelScope
 import cmp.navigation.AppAction.Internal.DynamicColorsUpdate
 import cmp.navigation.AppAction.Internal.ScreenCaptureUpdate
+import com.letapay.app.core.data.repository.UserDataRepository
+import com.letapay.app.core.model.DarkThemeConfig
+import com.letapay.app.core.model.LanguageConfig
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.mifos.core.data.repository.UserDataRepository
-import org.mifos.core.model.DarkThemeConfig
-import org.mifos.core.model.LanguageConfig
 import template.core.base.platform.garbage.GarbageCollectionManager
 import template.core.base.ui.BaseViewModel
 

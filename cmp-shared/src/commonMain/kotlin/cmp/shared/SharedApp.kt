@@ -12,6 +12,7 @@ package cmp.shared
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import cmp.navigation.ComposeApp
+import cmp.shared.ui.theme.LetaPayTheme
 import coil3.compose.LocalPlatformContext
 import template.core.base.platform.LocalManagerProvider
 import template.core.base.platform.context.LocalContext
@@ -27,16 +28,18 @@ fun SharedApp(
     modifier: Modifier = Modifier,
     onSplashScreenRemoved: () -> Unit,
 ) {
-    LocalManagerProvider(LocalContext.current) {
-        LocalImageLoaderProvider(getDefaultImageLoader(LocalPlatformContext.current)) {
-            ComposeApp(
-                updateScreenCapture = updateScreenCapture,
-                handleRecreate = handleRecreate,
-                handleThemeMode = handleThemeMode,
-                handleAppLocale = handleAppLocale,
-                onSplashScreenRemoved = onSplashScreenRemoved,
-                modifier = modifier,
-            )
+    LetaPayTheme {
+        LocalManagerProvider(LocalContext.current) {
+            LocalImageLoaderProvider(getDefaultImageLoader(LocalPlatformContext.current)) {
+                ComposeApp(
+                    updateScreenCapture = updateScreenCapture,
+                    handleRecreate = handleRecreate,
+                    handleThemeMode = handleThemeMode,
+                    handleAppLocale = handleAppLocale,
+                    onSplashScreenRemoved = onSplashScreenRemoved,
+                    modifier = modifier,
+                )
+            }
         }
     }
 }

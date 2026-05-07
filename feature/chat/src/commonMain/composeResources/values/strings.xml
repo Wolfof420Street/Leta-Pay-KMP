@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
+<resources>
+    <string name="feature_chat_title">Chat</string>
+    <string name="feature_chat_session_prefix">Session</string>
+    <string name="feature_chat_connect_wallet_hint">Connect a wallet to begin.</string>
+    <string name="feature_chat_firebase_ready">Firebase custom auth is active.</string>
+    <string name="feature_chat_firebase_binding_pending">Firebase binding is still establishing.</string>
+    <string name="feature_chat_command_title">Command</string>
+    <string name="feature_chat_agent_state_prefix">Agent</string>
+    <string name="feature_chat_preview_button">Preview</string>
+    <string name="feature_chat_confirm_button">Confirm</string>
+    <string name="feature_chat_agentkit_unavailable">AI actions are temporarily unavailable. You can continue with manual wallet actions and retry shortly.</string>
+    <string name="feature_chat_status_streaming">...</string>
+    <string name="feature_chat_contacts_title">Contacts</string>
+    <string name="feature_chat_contacts_connect_hint">Connect first to manage contacts.</string>
+    <string name="feature_chat_add_contact_wallet_label">Contact wallet</string>
+    <string name="feature_chat_add_contact_alias_label">Alias (optional)</string>
+    <string name="feature_chat_add_contact_button">Save</string>
+    <string name="feature_chat_sync_button">Sync</string>
+    <string name="feature_chat_pending_suffix">• pending</string>
+    <string name="feature_chat_input_placeholder">Send, swap, stake - just ask</string>
+    <string name="feature_chat_send_button">Send</string>
+    <string name="feature_chat_no_execution_result">No execution result available.</string>
+</resources>

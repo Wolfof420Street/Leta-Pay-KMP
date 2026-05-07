@@ -9,38 +9,50 @@
  */
 plugins {
     alias(libs.plugins.kmp.library.convention)
+    alias(libs.plugins.letapay.kmp.sqldelight)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.parcelize)
-    alias(libs.plugins.mifos.kmp.room)
 }
 
+val xcodebuildAvailable = providers.systemProperty("os.name")
+    .map { osName -> osName.contains("mac", ignoreCase = true) && file("/usr/bin/xcrun").exists() }
+    .orElse(false)
+    .get()
+
 android {
-    namespace = "org.mifos.core.database"
+    namespace = "com.letapay.app.core.database"
 }
 
 kotlin {
     sourceSets {
-        val desktopMain by getting
         androidMain.dependencies {
             implementation(libs.koin.android)
-            implementation(libs.androidx.room.runtime)
-        }
-
-        nativeMain.dependencies {
-            implementation(libs.androidx.room.runtime)
-            implementation(libs.androidx.sqlite.bundled)
-        }
-
-        desktopMain.dependencies {
-            implementation(libs.androidx.room.runtime)
-            implementation(libs.androidx.sqlite.bundled)
         }
 
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             api(projects.core.common)
-            api(projects.coreBase.database)
+            api(projects.core.model)
+        }
+
+        nonJsCommonMain.dependencies {
+            implementation(libs.sqldelight.coroutines)
+            implementation(projects.coreBase.database)
         }
     }
+}
+
+sqldelight {
+    databases {
+        create("LetaPayDatabase") {
+            packageName.set("com.letapay.app.core.database")
+        }
+    }
+}
+
+tasks.matching {
+    it.name.startsWith("link") && it.name.contains("Ios") && it.name.contains("Test")
+}.configureEach {
+    enabled = xcodebuildAvailable
 }
