@@ -22,6 +22,7 @@ import io.ktor.server.plugins.statuspages.exception
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
+import org.slf4j.MDC
 
 fun Application.configureStatusPages() {
     install(StatusPages) {
@@ -57,11 +58,13 @@ fun Application.configureStatusPages() {
         exception<Throwable> { call, cause ->
             val durationMs = System.currentTimeMillis() - call.attributes[RequestStartedKey]
             val wallet = call.principal<WalletPrincipal>()?.walletAddress?.take(10) ?: "anonymous"
+            val requestId = MDC.get("requestId") ?: ""
             this@configureStatusPages.environment.log.error(
-                "walletAddress={} route={} errorCode=INTERNAL_ERROR durationMs={}",
+                "walletAddress={} route={} errorCode=INTERNAL_ERROR durationMs={} requestId={}",
                 wallet,
                 "${call.request.httpMethod.value} ${call.request.path()}",
                 durationMs,
+                requestId,
                 cause,
             )
             call.respond(
@@ -69,6 +72,7 @@ fun Application.configureStatusPages() {
                 message = ErrorResponse(
                     code = "INTERNAL_ERROR",
                     message = "An unexpected error occurred",
+                    requestId = requestId,
                 ),
             )
         }

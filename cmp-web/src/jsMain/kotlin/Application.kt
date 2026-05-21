@@ -44,16 +44,6 @@ fun main() {
                         window.location.reload()
                     },
                     handleThemeMode = {},
-                    handleAppLocale = { languageTag ->
-                        if (languageTag != null) {
-                            currentLanguageTag = languageTag
-                            document.documentElement?.setAttribute("lang", languageTag)
-                        } else {
-                            currentLanguageTag = null
-                            val browserLang = window.navigator.language
-                            document.documentElement?.setAttribute("lang", browserLang)
-                        }
-                    },
                     onSplashScreenRemoved = {}
                 )
             }

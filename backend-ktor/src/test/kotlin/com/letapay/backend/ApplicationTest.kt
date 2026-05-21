@@ -19,9 +19,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
-import org.web3j.crypto.Credentials
-import org.web3j.crypto.Sign
-import java.nio.charset.StandardCharsets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -148,77 +145,9 @@ class ApplicationTest {
         assertTrue(response.bodyAsText().contains("INVALID_TX_HASH"))
     }
 
-    @Test
-    fun `verify signature rejects nonce replay`() = testApplication {
-        application {
-            configureApp()
-        }
-
-        val walletAddress = TEST_CREDENTIALS.address
-        val nonceBody = client.post("/auth/request-nonce") {
-            contentType(ContentType.Application.Json)
-            setBody("""{"walletAddress":"$walletAddress"}""")
-        }.bodyAsText()
-        val nonce = Regex(""""nonce":"([^"]+)"""").find(nonceBody)?.groupValues?.get(1)
-            ?: error("Nonce missing from response: $nonceBody")
-
-        val message = """
-            letapay.app wants you to sign in with your Ethereum account:
-            $walletAddress
-
-            Sign in to Leta Pay
-
-            URI: https://letapay.app
-            Version: 1
-            Chain ID: 1
-            Nonce: $nonce
-            Issued At: 2026-04-23T00:00:00Z
-            Expiration Time: 2026-04-23T00:05:00Z
-        """.trimIndent()
-
-        val requestBody = """
-            {"walletAddress":"$walletAddress","message":${message.asJsonString()},"signature":"${sign(message)}"}
-        """.trimIndent()
-
-        val first = client.post("/auth/verify-signature") {
-            contentType(ContentType.Application.Json)
-            setBody(requestBody)
-        }
-        assertEquals(HttpStatusCode.OK, first.status)
-
-        val replay = client.post("/auth/verify-signature") {
-            contentType(ContentType.Application.Json)
-            setBody(requestBody)
-        }
-        assertEquals(HttpStatusCode.Unauthorized, replay.status)
-        assertTrue(replay.bodyAsText().contains("NONCE_ALREADY_USED"))
-    }
-
     private fun testJwt(sessionId: String = "session-test"): String =
         TestAuthSessionFactory.issueToken(
             wallet = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
             sessionId = sessionId,
         )
-
-    private fun sign(message: String): String {
-        val signature = Sign.signPrefixedMessage(
-            message.toByteArray(StandardCharsets.UTF_8),
-            TEST_CREDENTIALS.ecKeyPair,
-        )
-        return buildString {
-            append("0x")
-            append(signature.r.joinToString("") { "%02x".format(it.toInt() and 0xff) })
-            append(signature.s.joinToString("") { "%02x".format(it.toInt() and 0xff) })
-            // Fix: web3j 4.12.2 exposes v as a byte array, so serialize its first recovery byte explicitly.
-            append("%02x".format(signature.v.first().toInt() and 0xff))
-        }
-    }
-
-    private fun String.asJsonString(): String =
-        "\"" + replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\""
-
-    companion object {
-        private val TEST_CREDENTIALS =
-            Credentials.create("0x4c0883a69102937d6231471b5dbb6204fe512961708279da7af81c33a9ad2e16")
-    }
 }

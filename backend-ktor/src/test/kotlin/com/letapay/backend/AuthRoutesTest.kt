@@ -21,6 +21,7 @@ import io.ktor.server.testing.testApplication
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Sign
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -52,19 +53,7 @@ class AuthRoutesTest {
         val nonce = Regex(""""nonce":"([^"]+)"""").find(nonceBody)?.groupValues?.get(1)
             ?: error("Nonce missing from response: $nonceBody")
 
-        val message = """
-            letapay.app wants you to sign in with your Ethereum account:
-            $walletAddress
-
-            Sign in to Leta Pay
-
-            URI: https://letapay.app
-            Version: 1
-            Chain ID: 1
-            Nonce: $nonce
-            Issued At: 2026-04-23T00:00:00Z
-            Expiration Time: 2026-04-23T00:05:00Z
-        """.trimIndent()
+        val message = buildSiweMessage(walletAddress, nonce)
 
         val requestBody = """
             {"walletAddress":"$walletAddress","message":${message.asJsonString()},"signature":"${sign(message)}"}
@@ -107,19 +96,7 @@ class AuthRoutesTest {
         }.bodyAsText()
         val nonce = Regex(""""nonce":"([^"]+)"""").find(nonceBody)?.groupValues?.get(1)
             ?: error("Nonce missing from response: $nonceBody")
-        val message = """
-            letapay.app wants you to sign in with your Ethereum account:
-            $walletAddress
-
-            Sign in to Leta Pay
-
-            URI: https://letapay.app
-            Version: 1
-            Chain ID: 1
-            Nonce: $nonce
-            Issued At: 2026-04-23T00:00:00Z
-            Expiration Time: 2026-04-23T00:05:00Z
-        """.trimIndent()
+        val message = buildSiweMessage(walletAddress, nonce)
         val verifyBody = """
             {"walletAddress":"$walletAddress","message":${message.asJsonString()},"signature":"${sign(message)}"}
         """.trimIndent()
@@ -182,6 +159,24 @@ class AuthRoutesTest {
 
     private fun String.asJsonString(): String =
         "\"" + replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\""
+
+    private fun buildSiweMessage(walletAddress: String, nonce: String): String {
+        val issuedAt = Instant.now()
+        val expirationTime = issuedAt.plusSeconds(5 * 60)
+        return """
+            letapay.app wants you to sign in with your Ethereum account:
+            $walletAddress
+
+            Sign in to Leta Pay
+
+            URI: https://letapay.app
+            Version: 1
+            Chain ID: 1
+            Nonce: $nonce
+            Issued At: $issuedAt
+            Expiration Time: $expirationTime
+        """.trimIndent()
+    }
 
     companion object {
         private val TEST_CREDENTIALS =

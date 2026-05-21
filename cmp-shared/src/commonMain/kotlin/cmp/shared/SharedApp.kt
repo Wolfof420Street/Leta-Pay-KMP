@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import cmp.navigation.ComposeApp
 import cmp.shared.ui.theme.LetaPayTheme
 import coil3.compose.LocalPlatformContext
+import org.koin.compose.koinInject
+import template.core.base.common.LocaleManager
 import template.core.base.platform.LocalManagerProvider
 import template.core.base.platform.context.LocalContext
 import template.core.base.ui.LocalImageLoaderProvider
@@ -24,9 +26,9 @@ fun SharedApp(
     updateScreenCapture: (isScreenCaptureAllowed: Boolean) -> Unit,
     handleRecreate: () -> Unit,
     handleThemeMode: (osValue: Int) -> Unit,
-    handleAppLocale: (locale: String?) -> Unit,
-    modifier: Modifier = Modifier,
     onSplashScreenRemoved: () -> Unit,
+    modifier: Modifier = Modifier,
+    localeManager: LocaleManager = koinInject<LocaleManager>(),
 ) {
     LetaPayTheme {
         LocalManagerProvider(LocalContext.current) {
@@ -35,7 +37,9 @@ fun SharedApp(
                     updateScreenCapture = updateScreenCapture,
                     handleRecreate = handleRecreate,
                     handleThemeMode = handleThemeMode,
-                    handleAppLocale = handleAppLocale,
+                    handleAppLocale = { tag ->
+                        if (tag != null) localeManager.setLocale(tag) else localeManager.resetToSystem()
+                    },
                     onSplashScreenRemoved = onSplashScreenRemoved,
                     modifier = modifier,
                 )

@@ -10,10 +10,15 @@
 package com.letapay.backend.plugins
 
 import com.google.firebase.messaging.FirebaseMessaging
+import com.letapay.app.core.domain.JwtKeyProvider
+import com.letapay.app.core.domain.KeyValueCache
+import com.letapay.app.core.domain.RateLimiter
 import com.letapay.backend.config.AppConfig
 import com.letapay.backend.config.RuntimeState
 import com.letapay.backend.db.DatabaseFactory
+import com.letapay.backend.security.DevJwtKeyProvider
 import com.letapay.backend.security.JwtTokenService
+import com.letapay.backend.security.RsaJwtKeyProvider
 import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.AuthService
 import com.letapay.backend.service.CircuitBreaker
@@ -30,6 +35,7 @@ import com.letapay.backend.service.DefaultAuthService
 import com.letapay.backend.service.DefaultHealthService
 import com.letapay.backend.service.DefaultPricingService
 import com.letapay.backend.service.DefaultYieldService
+import com.letapay.backend.service.DevAgentKitClient
 import com.letapay.backend.service.DeviceTokenService
 import com.letapay.backend.service.FakeFirebaseTokenService
 import com.letapay.backend.service.FirebaseAdminTokenService
@@ -37,6 +43,8 @@ import com.letapay.backend.service.FirebaseMessagingClient
 import com.letapay.backend.service.FirebaseTokenService
 import com.letapay.backend.service.HealthService
 import com.letapay.backend.service.IdempotencyService
+import com.letapay.backend.service.InMemoryKeyValueCache
+import com.letapay.backend.service.InMemoryRateLimiter
 import com.letapay.backend.service.ParseResultCache
 import com.letapay.backend.service.PendingNotificationService
 import com.letapay.backend.service.PriceCache
@@ -75,8 +83,31 @@ fun Application.configureDependencyInjection(overrides: Module? = null) {
         module {
             single { AppConfig.from(environment.config) }
             single<DataSource> { DatabaseFactory.init(environment.config) }
-            single { PriceCache() }
-            single { ParseResultCache() }
+            // TODO: Replace InMemoryKeyValueCache with RedisKeyValueCache before horizontal scaling.
+            single<KeyValueCache<String>>(named("priceCache")) { InMemoryKeyValueCache<String>() }
+            single<KeyValueCache<com.letapay.backend.model.ai.ParseResult>>(named("parseResultCache")) {
+                InMemoryKeyValueCache()
+            }
+            single<KeyValueCache<com.letapay.backend.model.swap.SwapQuote>>(named("swapQuoteCache")) {
+                InMemoryKeyValueCache()
+            }
+
+            single { PriceCache(get(named("priceCache"))) }
+            single { ParseResultCache(get(named("parseResultCache"))) }
+            single { SwapQuoteCacheService(get(named("swapQuoteCache"))) }
+
+            // TODO: Replace InMemoryRateLimiter with RedisRateLimiter before horizontal scaling.
+            single<RateLimiter>(named("rateLimiter")) { InMemoryRateLimiter() }
+            single { RateLimiterService(get(named("rateLimiter"))) }
+
+            single<JwtKeyProvider> {
+                val config = get<AppConfig>()
+                if (config.isDev && (config.jwtPrivateKey == null || config.jwtPublicKey == null)) {
+                    DevJwtKeyProvider()
+                } else {
+                    RsaJwtKeyProvider(config)
+                }
+            }
             single(named("coinbaseCircuitBreaker")) {
                 CircuitBreaker(
                     name = "coinbase",
@@ -119,7 +150,7 @@ fun Application.configureDependencyInjection(overrides: Module? = null) {
                     }
                 }
             }
-            single { JwtTokenService(get()) }
+            single { JwtTokenService(get(), get()) }
             single<FirebaseTokenService> {
                 val hasFirebaseConfig = !System.getenv("FIREBASE_SA_JSON").isNullOrBlank() ||
                     !System.getenv("FIREBASE_SA_PATH").isNullOrBlank()
@@ -137,10 +168,9 @@ fun Application.configureDependencyInjection(overrides: Module? = null) {
                 }
             }
             single<AuthService> { DefaultAuthService(get(), get(), get()) }
-            single<com.letapay.backend.service.AiCommandService> { DefaultAiCommandService() }
+            single<com.letapay.backend.service.AiCommandService> { DefaultAiCommandService(get()) }
             single<PricingService> { DefaultPricingService(get()) }
             single<ContactService> { StubContactService() }
-            single { RateLimiterService() }
             single<ScreeningService> { CoinbaseScreeningService(get()) }
             single<IdempotencyService> { DatabaseIdempotencyService(get()) }
             single<TransactionService> { DatabaseTransactionService() }
@@ -149,16 +179,20 @@ fun Application.configureDependencyInjection(overrides: Module? = null) {
             }
             single<AgentKitClient> {
                 val config = get<AppConfig>()
-                SidecarAgentKitClient(
-                    httpClient = get(),
-                    sidecarUrl = config.agentKitSidecarUrl,
-                    sidecarSecret = config.sidecarSecret,
-                )
+                if (config.isDev && !config.hasExplicitAgentKitSidecarUrl) {
+                    DevAgentKitClient()
+                } else {
+                    SidecarAgentKitClient(
+                        httpClient = get(),
+                        sidecarUrl = config.agentKitSidecarUrl,
+                        sidecarSecret = config.sidecarSecret,
+                        circuitBreaker = get(named("coinbaseCircuitBreaker")),
+                    )
+                }
             }
             single<CoinbaseService> {
                 StubCoinbaseService(get(), get(), get(named("coinbaseCircuitBreaker")))
             }
-            single { SwapQuoteCacheService() }
             single<com.letapay.backend.service.SwapService> { com.letapay.backend.service.DefaultSwapService() }
             single<DeviceTokenService> { DatabaseDeviceTokenService() }
             single<PendingNotificationService> { DatabasePendingNotificationService() }

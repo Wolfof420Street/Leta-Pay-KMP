@@ -27,19 +27,23 @@ import org.jetbrains.compose.resources.decodeToImageBitmap
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.ref.WeakReference
 
 actual object ShareUtils {
 
-    private var activityProvider: () -> Activity = {
-        throw IllegalArgumentException(
-            "You need to implement the 'activityProvider' to provide the required Activity. " +
-                "Just make sure to set a valid activity using " +
-                "the 'setActivityProvider()' method.",
+    private var activityRef: WeakReference<Activity>? = null
+
+    private fun requireActivity(): Activity =
+        activityRef?.get() ?: throw IllegalArgumentException(
+            "You need to set a valid activity using 'setActivityProvider()' method.",
         )
-    }
 
     fun setActivityProvider(provider: () -> Activity) {
-        activityProvider = provider
+        activityRef = WeakReference(provider())
+    }
+
+    fun clearActivityProvider() {
+        activityRef = null
     }
 
     actual suspend fun shareText(text: String) {
@@ -48,11 +52,11 @@ actual object ShareUtils {
             putExtra(Intent.EXTRA_TEXT, text)
         }
         val intentChooser = Intent.createChooser(intent, null)
-        activityProvider.invoke().startActivity(intentChooser)
+        requireActivity().startActivity(intentChooser)
     }
 
     actual suspend fun shareImage(title: String, image: ImageBitmap) {
-        val context = activityProvider.invoke().application.baseContext
+        val context = requireActivity().application.baseContext
 
         val uri = saveImage(image.asAndroidBitmap(), context)
 
@@ -64,12 +68,12 @@ actual object ShareUtils {
         }
 
         val shareIntent = Intent.createChooser(sendIntent, title)
-        activityProvider.invoke().startActivity(shareIntent)
+        requireActivity().startActivity(shareIntent)
     }
 
     @OptIn(ExperimentalResourceApi::class)
     actual suspend fun shareImage(title: String, byte: ByteArray) {
-        val context = activityProvider.invoke().application.baseContext
+        val context = requireActivity().application.baseContext
         val imageBitmap = byte.decodeToImageBitmap()
 
         val uri = saveImage(imageBitmap.asAndroidBitmap(), context)
@@ -82,7 +86,7 @@ actual object ShareUtils {
         }
 
         val shareIntent = Intent.createChooser(sendIntent, title)
-        activityProvider.invoke().startActivity(shareIntent)
+        requireActivity().startActivity(shareIntent)
     }
 
     private suspend fun saveImage(image: Bitmap, context: Context): Uri? {
@@ -106,7 +110,7 @@ actual object ShareUtils {
     }
 
     actual fun openUrl(url: String) {
-        val context = ShareUtils.activityProvider.invoke().application.baseContext
+        val context = requireActivity().application.baseContext
         val uri = url.let { url.toUri() }
         val intent = Intent(Intent.ACTION_VIEW).apply {
             data = uri
@@ -116,7 +120,7 @@ actual object ShareUtils {
     }
 
     actual fun openAppInfo() {
-        val context = activityProvider.invoke().application.baseContext
+        val context = requireActivity().application.baseContext
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.parse("package:${context.packageName}")
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -125,7 +129,7 @@ actual object ShareUtils {
     }
 
     actual fun callPhone(number: String) {
-        val context = activityProvider.invoke().application.baseContext
+        val context = requireActivity().application.baseContext
         val uri = Uri.parse("tel:$number")
         val intent = Intent(Intent.ACTION_DIAL).apply {
             data = uri
@@ -135,7 +139,7 @@ actual object ShareUtils {
     }
 
     actual fun sendEmail(to: String, subject: String?, body: String?) {
-        val context = activityProvider.invoke().application.baseContext
+        val context = requireActivity().application.baseContext
         val uriBuilder = StringBuilder("mailto:").append(to)
         val query = mutableListOf<String>()
         subject?.let { query.add("subject=" + Uri.encode(it)) }
@@ -151,7 +155,7 @@ actual object ShareUtils {
     }
 
     actual fun sendViaSMS(number: String, message: String) {
-        val context = activityProvider.invoke().application.baseContext
+        val context = requireActivity().application.baseContext
         val uri = if (number.isNotEmpty()) {
             Uri.parse("sms:$number")
         } else {
@@ -166,7 +170,7 @@ actual object ShareUtils {
     }
 
     actual fun copyText(text: String) {
-        val context = activityProvider.invoke().application.baseContext
+        val context = requireActivity().application.baseContext
         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
         val clip = android.content.ClipData.newPlainText("Copied Text", text)
         clipboardManager.setPrimaryClip(clip)
@@ -183,6 +187,6 @@ actual object ShareUtils {
             putExtra(Intent.EXTRA_TEXT, shareContent)
         }
         val intentChooser = Intent.createChooser(intent, null)
-        activityProvider.invoke().startActivity(intentChooser)
+        requireActivity().startActivity(intentChooser)
     }
 }

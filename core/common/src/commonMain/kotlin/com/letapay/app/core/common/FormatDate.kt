@@ -9,10 +9,10 @@
  */
 package com.letapay.app.core.common
 
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Instant
 
 fun formatDate(millis: Long): String {
     val dateTime = Instant

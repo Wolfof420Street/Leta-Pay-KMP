@@ -1,0 +1,62 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build Web Frontend
+        run: ./gradlew :cmp-web:jsBrowserDistribution --no-daemon
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            cd /var/www/letapay
+            git pull origin ${{ github.ref_name }}
+            
+            # Ensure static assets are synced (assuming VPS shares the same structure)
+            # The build happened in CI, so we might need to SCP it, but for simplicity here
+            # we assume the VPS has the capacity to build or we use the local build artifacts.
+            # Fix: Since we build in CI, let's use the local build if possible, 
+            # or for a pure git-pull flow, the VPS builds it.
+            # To keep it robust, we'll run the build on the VPS if it has memory, 
+            # otherwise we'd use 'appleboy/scp-action' to move the dist folder.
+            
+            ./gradlew :cmp-web:jsBrowserDistribution --no-daemon
+            
+            docker compose -f docker-compose.prod.yml down --remove-orphans
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            # Run smoke tests
+            chmod +x ./scripts/smoke-test.sh
+            ./scripts/smoke-test.sh http://localhost
+
+# === REPOSITORY SECRETS REQUIRED ===
+# VPS_HOST: The IP address or domain of your VPS
+# VPS_USERNAME: The SSH user (e.g., ubuntu)
+# VPS_SSH_KEY: The private SSH key for the user
+#
+# Note: Ensure your .env file on the VPS is correctly configured 
+# as the pipeline does not overwrite the production secrets.

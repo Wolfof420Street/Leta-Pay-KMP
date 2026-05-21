@@ -75,7 +75,7 @@ fun Route.configureYieldRoutes() {
                     fromAddress = principal.walletAddress,
                     request = request,
                     chainId = opportunity.chain,
-                )
+                ).getOrThrow()
                 val position = yieldService.createStakePosition(
                     opportunityId = request.opportunityId,
                     amount = request.amount,
@@ -125,7 +125,10 @@ fun Route.configureYieldRoutes() {
             get("/positions") {
                 val principal = requireNotNull(call.principal<WalletPrincipal>())
                 call.enforceGlobalAndWalletRateLimit(rateLimiter, principal.walletAddress)
-                call.respond(yieldService.getPositions(principal.walletAddress))
+                val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 20
+                val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
+                val request = com.letapay.app.core.model.PaginatedRequest(limit, offset)
+                call.respond(yieldService.getPositions(principal.walletAddress, request))
             }
         }
     }

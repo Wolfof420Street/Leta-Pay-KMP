@@ -16,4 +16,5 @@ data class ErrorResponse(
     val code: String,
     val message: String,
     val retryAfter: Int? = null,
+    val requestId: String? = null,
 )

@@ -61,7 +61,7 @@ fun Route.configureSwapRoutes() {
                 swapService.validateQuoteRequest(request)
 
                 val quote = withUpstreamTimeout {
-                    agentKitClient.getSwapQuote(principal.walletAddress, request)
+                    agentKitClient.getSwapQuote(principal.walletAddress, request).getOrThrow()
                 }
                 quote.ensureSlippageWithin(request.slippageBps)
 
@@ -101,7 +101,7 @@ fun Route.configureSwapRoutes() {
 
                 val cachedQuote = swapQuoteCacheService.requireActiveQuote(request.quoteId)
                 val unsignedTx = withUpstreamTimeout {
-                    agentKitClient.buildSwap(principal.walletAddress, cachedQuote)
+                    agentKitClient.buildSwap(principal.walletAddress, cachedQuote).getOrThrow()
                 }
                 if (unsignedTx.chainId != cachedQuote.chainId) {
                     throw QuoteMismatchError()

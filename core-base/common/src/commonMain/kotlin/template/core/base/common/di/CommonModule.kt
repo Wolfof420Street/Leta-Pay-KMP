@@ -10,10 +10,15 @@
 package template.core.base.common.di
 
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
+import template.core.base.common.LocaleManager
+import template.core.base.common.PlatformLocaleManager
 
 val CommonModule = module {
     includes(dispatcherManagerModule)
+    singleOf(::PlatformLocaleManager) bind LocaleManager::class
 }
 
 expect val dispatcherManagerModule: Module

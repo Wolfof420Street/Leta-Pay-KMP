@@ -9,6 +9,8 @@
  */
 package com.letapay.backend.service
 
+import com.letapay.app.core.domain.SiweConfig
+import com.letapay.app.core.domain.SiweMessageValidator
 import com.letapay.backend.config.AppConfig
 import com.letapay.backend.db.Nonces
 import com.letapay.backend.db.Sessions
@@ -58,6 +60,7 @@ class DefaultAuthService(
     private val jwtTokenService: JwtTokenService,
     private val firebaseTokenService: FirebaseTokenService,
 ) : AuthService {
+    private val siweValidator = SiweMessageValidator()
     private val argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id)
     private suspend fun <T> db(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) { block() }
 
@@ -79,7 +82,9 @@ class DefaultAuthService(
     }
 
     override suspend fun verify(request: VerifyRequest): AuthTokens {
-        val nonce = extractNonce(request.message)
+        val parsedMessage = siweValidator.parse(request.message).getOrNull()
+            ?: throw com.letapay.backend.error.InvalidRequestError("Invalid SIWE message format")
+        val nonce = parsedMessage.nonce
         val now = System.currentTimeMillis()
 
         db {
@@ -89,6 +94,15 @@ class DefaultAuthService(
             if (nonceRow[Nonces.expiresAt] <= now) {
                 throw NonceExpiredError()
             }
+
+            siweValidator.validate(
+                message = parsedMessage,
+                expectedNonce = nonceRow[Nonces.nonce],
+                config = SiweConfig(
+                    appDomain = config.appDomain,
+                    appOrigin = config.appOrigin,
+                ),
+            ).getOrElse { throw com.letapay.backend.error.InvalidRequestError(it.message ?: "invalid_siwe") }
 
             // Fix: atomically consume the nonce inside the transaction before token issuance so replays lose the race.
             val updatedRows = Nonces.update({
@@ -106,7 +120,7 @@ class DefaultAuthService(
         }
 
         return issueTokens(
-            walletAddress = request.walletAddress,
+            walletAddress = parsedMessage.address,
             familyId = UUID.randomUUID().toString(),
             deviceFingerprint = null,
         )
@@ -186,7 +200,7 @@ class DefaultAuthService(
     override suspend fun mintFirebaseToken(walletAddress: String, sessionId: String): String =
         try {
             firebaseTokenService.createCustomToken(walletAddress, sessionId)
-        } catch (e: TimeoutCancellationException) {
+        } catch (_: TimeoutCancellationException) {
             throw UpstreamTimeoutError()
         }
 
@@ -242,11 +256,6 @@ class DefaultAuthService(
         }
     }
 
-    private fun extractNonce(message: String): String {
-        val match = NONCE_REGEX.find(message) ?: throw NonceMissingError()
-        return match.groupValues[1]
-    }
-
     private fun hashRefreshToken(rawToken: String): String =
         // Fix: hash refresh tokens as Argon2id PHC strings using the configured pepper and phase-spec work factors.
         argon2.hash(3, 65536, 4, "$rawToken${config.refreshTokenPepper}")
@@ -290,7 +299,6 @@ class DefaultAuthService(
     companion object {
         private const val FIVE_MINUTES_MS = 5 * 60 * 1000L
         private const val SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000L
-        private val NONCE_REGEX = Regex("""Nonce:\s*([A-Za-z0-9-]+)""")
     }
 }
 

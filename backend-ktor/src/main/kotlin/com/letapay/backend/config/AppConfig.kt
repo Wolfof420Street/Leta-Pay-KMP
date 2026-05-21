@@ -20,11 +20,22 @@ data class AppConfig(
     val planModel: String,
     val chatModel: String,
     val agentKitSidecarUrl: String,
+    val hasExplicitAgentKitSidecarUrl: Boolean,
     val sidecarSecret: String,
+    val jwtPrivateKey: String?,
+    val jwtPublicKey: String?,
+    val isDev: Boolean,
+    val appDomain: String,
+    val appOrigin: String,
 ) {
     companion object {
-        fun from(config: ApplicationConfig): AppConfig =
-            AppConfig(
+        fun from(config: ApplicationConfig): AppConfig {
+            EnvLoader.load()
+            val explicitSidecarUrl = config.stringOrNull(
+                path = "agentkit.sidecarUrl",
+                env = "AGENTKIT_SIDECAR_URL",
+            )
+            return AppConfig(
                 // Fix: testApplication starts with an empty in-memory config, so fall back to env/defaults.
                 jwtIssuer = config.string(
                     path = "security.jwt.issuer",
@@ -61,22 +72,41 @@ data class AppConfig(
                     env = "AI_CHAT_MODEL",
                     default = "gpt-4o-mini",
                 ),
-                agentKitSidecarUrl = config.string(
-                    path = "agentkit.sidecarUrl",
-                    env = "AGENTKIT_SIDECAR_URL",
-                    default = "http://agentkit-sidecar:3100",
-                ),
+                agentKitSidecarUrl = explicitSidecarUrl ?: "http://agentkit-sidecar:3100",
+                hasExplicitAgentKitSidecarUrl = explicitSidecarUrl != null,
                 sidecarSecret = config.string(
                     path = "agentkit.sidecarSecret",
                     env = "SIDECAR_SECRET",
                     default = "dev-sidecar-secret",
                 ),
+                jwtPrivateKey = config.stringOrNull(
+                    path = "security.jwt.privateKey",
+                    env = "JWT_PRIVATE_KEY",
+                ),
+                jwtPublicKey = config.stringOrNull(
+                    path = "security.jwt.publicKey",
+                    env = "JWT_PUBLIC_KEY",
+                ),
+                isDev = config.propertyOrNull("ktor.development")?.getString()?.toBoolean() ?: true,
+                appDomain = config.string(
+                    path = "security.siwe.domain",
+                    env = "APP_DOMAIN",
+                    default = "letapay.app",
+                ),
+                appOrigin = config.string(
+                    path = "security.siwe.origin",
+                    env = "APP_ORIGIN",
+                    default = "https://letapay.app",
+                ),
             )
+        }
 
-        private fun ApplicationConfig.string(path: String, env: String, default: String): String =
+        private fun ApplicationConfig.stringOrNull(path: String, env: String): String? =
             propertyOrNull(path)?.getString()
                 ?.takeIf(String::isNotBlank)
-                ?: System.getenv(env)?.takeIf(String::isNotBlank)
-                ?: default
+                ?: EnvLoader.get(env)?.takeIf(String::isNotBlank)
+
+        private fun ApplicationConfig.string(path: String, env: String, default: String): String =
+            stringOrNull(path, env) ?: default
     }
 }

@@ -17,6 +17,7 @@ import com.letapay.backend.model.auth.NonceRequest
 import com.letapay.backend.model.auth.NonceResponse
 import com.letapay.backend.model.auth.RefreshRequest
 import com.letapay.backend.model.auth.VerifyRequest
+import com.letapay.backend.security.JwtTokenService
 import com.letapay.backend.security.WalletPrincipal
 import com.letapay.backend.service.AuthService
 import com.letapay.backend.service.RateLimiterService
@@ -26,6 +27,7 @@ import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import kotlinx.coroutines.TimeoutCancellationException
@@ -35,6 +37,13 @@ import org.koin.ktor.ext.inject
 fun Route.configureAuthRoutes() {
     val authService by inject<AuthService>()
     val rateLimiter by inject<RateLimiterService>()
+    val tokenService by inject<JwtTokenService>()
+
+    route("/.well-known") {
+        get("/jwks.json") {
+            call.respond(tokenService.getJwks())
+        }
+    }
 
     route("/auth") {
         post("/request-nonce") {

@@ -9,6 +9,8 @@
  */
 package com.letapay.backend.service
 
+import com.letapay.app.core.model.PaginatedRequest
+import com.letapay.app.core.model.PaginatedResponse
 import com.letapay.backend.db.Transactions
 import com.letapay.backend.model.transaction.TransactionRecord
 import com.letapay.backend.model.transaction.TransactionStatusResponse
@@ -30,7 +32,10 @@ interface TransactionService {
         chainId: Long = 1L,
     ): TransactionStatusResponse
 
-    suspend fun history(walletAddress: String): List<TransactionRecord>
+    suspend fun history(
+        walletAddress: String,
+        request: PaginatedRequest = PaginatedRequest(),
+    ): PaginatedResponse<TransactionRecord>
 
     suspend fun status(walletAddress: String, txHash: String): TransactionStatusResponse
 }
@@ -63,10 +68,18 @@ class DatabaseTransactionService : TransactionService {
         return TransactionStatusResponse(txHash = txHash, status = "submitted")
     }
 
-    override suspend fun history(walletAddress: String): List<TransactionRecord> =
+    override suspend fun history(
+        walletAddress: String,
+        request: PaginatedRequest,
+    ): PaginatedResponse<TransactionRecord> =
         newSuspendedTransaction(Dispatchers.IO) {
-            Transactions.selectAll()
+            val query = Transactions.selectAll()
                 .where { Transactions.walletAddress eq walletAddress }
+
+            val total = query.count().toInt()
+            val items = query
+                .orderBy(Transactions.createdAt to org.jetbrains.exposed.sql.SortOrder.DESC)
+                .limit(request.clampedLimit, offset = request.offset.toLong())
                 .map { row ->
                     TransactionRecord(
                         txHash = row[Transactions.txHash],
@@ -76,7 +89,13 @@ class DatabaseTransactionService : TransactionService {
                         createdAt = row[Transactions.createdAt],
                     )
                 }
-                .sortedByDescending(TransactionRecord::createdAt)
+
+            PaginatedResponse(
+                items = items,
+                total = total,
+                offset = request.offset,
+                limit = request.clampedLimit,
+            )
         }
 
     override suspend fun status(walletAddress: String, txHash: String): TransactionStatusResponse =

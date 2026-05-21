@@ -38,6 +38,9 @@ application {
 }
 
 dependencies {
+    implementation(projects.core.common)
+    implementation(projects.core.domain)
+    implementation(projects.core.model)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.call.logging)

@@ -20,6 +20,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 class AuthApi(
     private val client: HttpClient,
@@ -140,5 +141,9 @@ private fun buildSignInMessage(
     appendLine()
     appendLine("Sign in to Leta Pay")
     appendLine()
+    appendLine("URI: https://letapay.app")
+    appendLine("Version: 1")
+    appendLine("Chain ID: 1")
     appendLine("Nonce: $nonce")
+    appendLine("Issued At: ${Clock.System.now()}")
 }

@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    env_file:
+      - .env.dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-letapay}
+      POSTGRES_USER: ${POSTGRES_USER:-letapay}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-letapay}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-letapay} -d ${POSTGRES_DB:-letapay}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [letapay-internal]
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [letapay-internal]
+
+  agentkit-sidecar:
+    build:
+      context: ./agentkit-sidecar
+      dockerfile: Dockerfile
+    env_file:
+      - .env.dev
+    environment:
+      PORT: ${AGENTKIT_PORT:-3100}
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "3100:${AGENTKIT_PORT:-3100}"
+    networks: [letapay-internal]
+
+  ktor-backend:
+    build:
+      context: .
+      dockerfile: backend-ktor/Dockerfile
+    env_file:
+      - .env.dev
+    environment:
+      ENV: dev
+      PORT: ${PORT:-8080}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      agentkit-sidecar:
+        condition: service_started
+    ports:
+      - "8080:${PORT:-8080}"
+    networks: [letapay-internal]
+
+networks:
+  letapay-internal:
+    driver: bridge

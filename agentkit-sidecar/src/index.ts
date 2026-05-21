@@ -1,5 +1,10 @@
 import "dotenv/config";
 import express from "express";
+
+if (!process.env.SIDECAR_INTERNAL_TOKEN && !process.env.SIDECAR_SECRET) {
+  throw new Error("SIDECAR_INTERNAL_TOKEN env var is required");
+}
+
 import { errorHandler } from "./middleware/errorHandler";
 import { internalOnly } from "./middleware/internalOnly";
 import balanceRouter from "./routes/balance";

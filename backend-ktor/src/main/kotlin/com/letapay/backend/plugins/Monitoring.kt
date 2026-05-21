@@ -29,6 +29,8 @@ val PrometheusRegistryKey = io.ktor.util.AttributeKey<PrometheusMeterRegistry>("
 
 private val RequestHardeningPlugin = createApplicationPlugin(name = "RequestHardeningPlugin") {
     onCall { call ->
+        val requestId = call.request.headers["X-Request-ID"] ?: java.util.UUID.randomUUID().toString()
+        MDC.put("requestId", requestId)
         call.attributes.put(RequestStartedKey, System.currentTimeMillis())
         val principal = call.principal<WalletPrincipal>()
         principal?.walletAddress?.take(16)?.let { MDC.put("walletAddress", it) }
@@ -45,6 +47,7 @@ private val RequestHardeningPlugin = createApplicationPlugin(name = "RequestHard
         MDC.remove("walletAddress")
         MDC.remove("sessionId")
         MDC.remove("txHash")
+        MDC.remove("requestId")
     }
 }
 

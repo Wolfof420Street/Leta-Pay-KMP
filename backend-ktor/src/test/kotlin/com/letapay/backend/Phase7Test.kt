@@ -164,7 +164,7 @@ class Phase7Test {
                             override suspend fun getSwapQuote(
                                 fromAddress: String,
                                 request: com.letapay.backend.model.swap.SwapQuoteRequest,
-                            ): com.letapay.backend.model.swap.SwapQuote {
+                            ): Result<com.letapay.backend.model.swap.SwapQuote> = runCatching {
                                 delay(9_000L)
                                 error("timeout")
                             }

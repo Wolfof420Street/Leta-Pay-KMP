@@ -19,7 +19,7 @@ fun ApplicationCall.attachPreAuthWallet(walletAddress: String) {
     attributes.put(preAuthWalletAddressKey, walletAddress.lowercase())
 }
 
-fun ApplicationCall.enforcePreAuthRateLimit(rateLimiter: RateLimiterService) {
+suspend fun ApplicationCall.enforcePreAuthRateLimit(rateLimiter: RateLimiterService) {
     val ip = request.local.remoteHost
         .trim()
         .ifBlank { "unknown-ip" }
@@ -28,7 +28,10 @@ fun ApplicationCall.enforcePreAuthRateLimit(rateLimiter: RateLimiterService) {
     rateLimiter.enforce("preauth:wallet:$wallet", limit = 10, windowMs = 60_000)
 }
 
-fun ApplicationCall.enforceGlobalAndWalletRateLimit(rateLimiter: RateLimiterService, walletAddress: String) {
+suspend fun ApplicationCall.enforceGlobalAndWalletRateLimit(
+    rateLimiter: RateLimiterService,
+    walletAddress: String,
+) {
     rateLimiter.enforce("global:all", limit = 10, windowMs = 1_000)
     rateLimiter.enforce("wallet:${walletAddress.lowercase()}", limit = 100, windowMs = 60_000)
 }

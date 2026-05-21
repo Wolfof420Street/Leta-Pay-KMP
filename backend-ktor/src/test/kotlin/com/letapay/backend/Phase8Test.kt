@@ -13,6 +13,8 @@ import com.letapay.backend.service.CircuitBreaker
 import com.letapay.backend.service.CircuitBreaker.State
 import com.letapay.backend.service.DefaultAiCommandService
 import com.letapay.backend.service.HealthService
+import com.letapay.backend.service.InMemoryKeyValueCache
+import com.letapay.backend.service.ParseResultCache
 import com.letapay.backend.service.PriceCache
 import com.letapay.backend.service.StubCoinbaseService
 import io.ktor.client.HttpClient
@@ -32,7 +34,11 @@ import org.koin.dsl.module as koinModule
 class Phase8Test {
     @Test
     fun `price cache returns cached value on second call`() = runTest {
-        val service = StubCoinbaseService(HttpClient(CIO), PriceCache(), CircuitBreaker("coinbase"))
+        val service = StubCoinbaseService(
+            HttpClient(CIO),
+            PriceCache(InMemoryKeyValueCache()),
+            CircuitBreaker("coinbase"),
+        )
 
         service.getSpotPrice("ETH", "USD", 1)
         service.getSpotPrice("ETH", "USD", 1)
@@ -42,7 +48,11 @@ class Phase8Test {
 
     @Test
     fun `price cache returns stale value when coinbase throws`() = runTest {
-        val service = StubCoinbaseService(HttpClient(CIO), PriceCache(), CircuitBreaker("coinbase"))
+        val service = StubCoinbaseService(
+            HttpClient(CIO),
+            PriceCache(InMemoryKeyValueCache()),
+            CircuitBreaker("coinbase"),
+        )
 
         val fresh = service.getSpotPrice("ETH", "USD", 1)
         service.failSpotPrice = true
@@ -54,7 +64,7 @@ class Phase8Test {
 
     @Test
     fun `parse result cache hits on identical deterministic message`() = runTest {
-        val service = DefaultAiCommandService()
+        val service = DefaultAiCommandService(ParseResultCache(InMemoryKeyValueCache()))
 
         service.parse("check my balance")
         service.parse("check my balance")

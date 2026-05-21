@@ -3,18 +3,28 @@ import { z } from "zod";
 
 const router = Router();
 
+const MAX_TRANSACTION_VALUE_ETH = process.env.MAX_TRANSACTION_VALUE_ETH || "10";
+
 const TransferBuildSchema = z.object({
   fromAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   toAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   asset: z.enum(["ETH", "USDC", "USDT", "DAI", "MATIC"]),
   amount: z.string(),
   networkId: z.enum(["ethereum-mainnet", "polygon-mainnet", "base-mainnet"]),
-});
+}).strict();
 
 router.post("/build", async (req, res, next) => {
   try {
     const body = TransferBuildSchema.parse(req.body);
     const amountWei = toWeiAmount(body.amount, body.asset);
+
+    if (body.asset === "ETH") {
+        const maxWei = toWeiAmount(MAX_TRANSACTION_VALUE_ETH, "ETH");
+        if (amountWei > maxWei) {
+            console.warn(`Transaction refused: value ${body.amount} ETH exceeds maximum allowed ${MAX_TRANSACTION_VALUE_ETH}. Wallet truncated: ${body.fromAddress.slice(0, 6)}...${body.fromAddress.slice(-4)}`);
+            return res.status(403).json({ error: "value_too_high", requestId: req.headers["x-request-id"] || "" });
+        }
+    }
     const calldata = {
       from: body.fromAddress,
       to: tokenAddress(body.asset, body.networkId),

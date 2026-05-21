@@ -39,7 +39,7 @@ class DefaultTransactionCommandService(
             asset = request.asset ?: "ETH",
             amount = request.amount ?: "0",
             chainId = chainId,
-        )
+        ).getOrThrow()
         return BuildResponse(
             status = "prepared",
             preview = "Prepared unsigned transaction for ${request.to}.",

@@ -25,7 +25,9 @@ interface AiCommandService {
     fun streamSummary(event: String, txHash: String?): Flow<String>
 }
 
-class DefaultAiCommandService : AiCommandService {
+class DefaultAiCommandService(
+    private val parseCache: ParseResultCache,
+) : AiCommandService {
     var fallbackPlanInvocations = 0
     var parseComputationCount = 0
     private val parseAgent = ParseAgent(StubIntentLlmClient())
@@ -51,10 +53,6 @@ class DefaultAiCommandService : AiCommandService {
         emit("Event type: $event.")
         emit("Transaction reference: ${txHash ?: "pending"}.")
         emit("Policy checks are complete. Ready for confirmation.")
-    }
-
-    private companion object {
-        private val parseCache = ParseResultCache()
     }
 }
 

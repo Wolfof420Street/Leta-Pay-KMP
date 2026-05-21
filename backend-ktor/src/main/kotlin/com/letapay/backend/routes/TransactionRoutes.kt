@@ -65,7 +65,10 @@ fun Route.configureTransactionRoutes() {
 
             get("/history") {
                 val principal = requireNotNull(call.principal<WalletPrincipal>())
-                call.respond(transactionService.history(principal.walletAddress))
+                val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 20
+                val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
+                val request = com.letapay.app.core.model.PaginatedRequest(limit, offset)
+                call.respond(transactionService.history(principal.walletAddress, request))
             }
 
             get("/status/{txHash}") {

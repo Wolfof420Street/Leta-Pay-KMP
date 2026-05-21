@@ -9,26 +9,17 @@
  */
 package com.letapay.backend.service
 
+import com.letapay.app.core.domain.RateLimiter
 import com.letapay.backend.error.RateLimitExceededError
-import java.util.ArrayDeque
-import java.util.concurrent.ConcurrentHashMap
 
-class RateLimiterService {
-    private val windows = ConcurrentHashMap<String, ArrayDeque<Long>>()
-
-    fun enforce(key: String, limit: Int, windowMs: Long) {
-        val now = System.currentTimeMillis()
-        val timestamps = windows.computeIfAbsent(key) { ArrayDeque() }
-        synchronized(timestamps) {
-            while (timestamps.isNotEmpty() && now - timestamps.first() >= windowMs) {
-                timestamps.removeFirst()
-            }
-            if (timestamps.size >= limit) {
-                val retryAfterSeconds = ((windowMs - (now - timestamps.first())) / 1000).toInt()
-                    .coerceAtLeast(1)
-                throw RateLimitExceededError(retryAfterSeconds)
-            }
-            timestamps.addLast(now)
+class RateLimiterService(
+    private val rateLimiter: RateLimiter,
+) {
+    suspend fun enforce(key: String, limit: Int, windowMs: Long) {
+        val allowed = rateLimiter.isAllowed(key, limit, windowMs / 1000)
+        if (!allowed) {
+            // Approximation for retry after
+            throw RateLimitExceededError(retryAfterSeconds = (windowMs / 1000).toInt())
         }
     }
 }
