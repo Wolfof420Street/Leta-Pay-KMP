@@ -2,8 +2,6 @@
 
 **Tagline:** A Kotlin Multiplatform DeFi wallet with integrated AI agents and sidecar execution.
 
-Hardening pass: runtime TODOs and platform shim placeholders cleaned (verified 2026-05-27).
-Backend startup note: long-running reconciliation and watcher jobs are production-only so test boots can shut down cleanly.
 
 - Kotlin | KMP | Ktor | Compose Multiplatform | License: MPL-2.0 | Build: Gradle
 - Platform support: Android | iOS | Desktop | Web
