@@ -257,7 +257,7 @@ private fun <T : PaneScaffoldItem<*>> ListContent(
     ) {
         itemsIndexed(
             items = items,
-            key = { _, item -> item.id!! },
+            key = { _, item -> requireNotNull(item.id) { "PaneScaffoldItem.id must not be null." } },
         ) { index, item ->
 
             val interactionModifier = when (selectionState) {

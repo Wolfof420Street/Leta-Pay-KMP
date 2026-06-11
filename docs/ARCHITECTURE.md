@@ -1,101 +1,113 @@
-# Architecture
+# Architecture Overview
 
-## 1. System Topology
+This document describes the high-level architecture of the Leta Pay project, including data flow, dependency injection, and state management.
 
-LetaPay is a layered, policy-driven system:
+## Module Graph
 
-1. KMP Frontend (Android/Web/Desktop): intent capture, chat UX, preview UX, and WalletConnect signing.
-2. Ktor Backend: authentication, validation, idempotency, rate-limit enforcement, kill switch enforcement, and transaction lifecycle recording.
-3. AgentKit Sidecar (Node.js): internal action provider layer that builds unsigned calldata only.
+The project follows a modular structure to separate concerns and enable multiplatform support.
 
 ```mermaid
-flowchart LR
-    C[KMP Client\nAndroid/Web/Desktop] -->|JWT + Firebase Token| B[Ktor Backend]
-    C -->|WalletConnect Sign| W[External User Wallet]
-    B -->|x-sidecar-secret| S[AgentKit Sidecar]
-    B --> P[(Postgres)]
-    B --> R[(Redis)]
-    B --> F[Firebase]
-    S --> A[Coinbase CDP + AgentKit]
+graph TD
+    subgraph Clients
+        Android[cmp-android]
+        iOS[cmp-ios]
+        Desktop[cmp-desktop]
+        Web[cmp-web]
+    end
+
+    Shared[cmp-shared]
+    Nav[cmp-navigation]
+    
+    subgraph Features
+        Auth[feature:auth]
+        Wallet[feature:wallet]
+        Trade[feature:trade]
+        Chat[feature:chat]
+        Agent[feature:agent]
+        Profile[feature:profile]
+        Settings[feature:settings]
+        Yield[feature:yield]
+        Home[feature:home]
+    end
+
+    subgraph Core
+        Model[core:model]
+        Domain[core:domain]
+        Data[core:data]
+        Network[core:network]
+        Database[core:database]
+        DataStore[core:datastore]
+        Common[core:common]
+        Analytics[core:analytics]
+        AI[core:ai]
+        DesignSystem[core:designsystem]
+        UI[core:ui]
+    end
+
+    Backend[backend-ktor]
+    Sidecar[agentkit-sidecar]
+
+    Android --> Shared
+    iOS --> Shared
+    Desktop --> Shared
+    Web --> Shared
+
+    Shared --> Nav
+    Shared --> Features
+    Features --> Domain
+    Domain --> Data
+    Data --> Network
+    Data --> Database
+    Data --> DataStore
+    Network --> Model
+    Database --> Model
+    
+    Backend --> Sidecar
+    Network -.-> Backend
 ```
 
-## 2. Non-Custodial Security Model
+## Data Flow
 
-### Why Ktor owns kill switch + idempotency
+The project adheres to **Unidirectional Data Flow (UDF)** principles.
 
-Ktor is the policy boundary exposed to clients. It must be the only place where value-moving requests are accepted and governed.
+1.  **UI**: Compose Multiplatform components observe state from ViewModels.
+2.  **ViewModel**: Manages UI state and handles user actions by calling UseCases or Repositories.
+3.  **Domain**: Contains business logic and UseCases.
+4.  **Data**: Repositories manage data from local (Room/SQLDelight) and remote (Ktor) sources.
+5.  **Network**: Ktor client handles communication with the backend.
 
-- Kill switch (`KILL_SWITCH_VALUE_MOVES`) is checked before executing value-moving routes (`/transactions/build`, `/transactions/send`, `/swap/*`, `/yield/*`).
-- Idempotency keys are enforced and replayed at the backend boundary to prevent duplicate value movement and to preserve deterministic API responses on retry.
-- Request validation and machine-readable error envelopes are normalized in one place (`ErrorResponse`).
+## Dependency Injection
 
-### Why Sidecar only builds unsigned calldata
+**Koin** is used as the DI framework across all platforms, including the backend.
 
-The sidecar is intentionally internal and stateless relative to custody.
+-   **Client**: Initialized in `cmp-shared/src/commonMain/kotlin/cmp/shared/utils/KoinExt.kt`.
+-   **Backend**: Configured in `backend-ktor/src/main/kotlin/com/letapay/backend/plugins/DependencyInjection.kt`.
 
-- It receives internal requests with `x-sidecar-secret` and should never be internet-exposed.
-- It translates high-level action parameters into unsigned calldata payloads.
-- It does not hold user private keys and does not broadcast signed transactions.
-- This keeps signing authority with the wallet owner and keeps transaction policy enforcement in Ktor.
+### Key Modules
+-   `DataModule`: Repositories and local data sources.
+-   `NetworkModule`: Ktor client and API services.
+-   `DatabaseModule`: SQLDelight database instance.
+-   `FeatureModule`: Feature-specific ViewModels and logic.
+-   `PlatformModule`: Platform-specific implementations (e.g., File system, Bluetooth).
 
-## 3. Request Governance Boundaries
+## State Management
 
-### Client boundary
+-   **ViewModels**: Utilize `StateFlow` to expose immutable state to the UI.
+-   **Actions**: User interactions are passed to ViewModels via functions or sealed classes.
+-   **Side Effects**: Managed using `LaunchedEffect` or custom effect flows in ViewModels.
 
-- User inputs intent and confirms preview.
-- WalletConnect performs signature operation externally.
+## Networking
 
-### Backend boundary
+-   **Framework**: Ktor Client.
+-   **Serialization**: Kotlinx Serialization.
+-   **Error Handling**: Custom `AppError` and `Resource` wrappers for handling network results.
 
-- Authenticates session principal.
-- Validates chain/asset/opportunity parameters.
-- Applies global + wallet-scoped rate limits.
-- Applies kill switch and idempotency checks.
-- Persists transaction/yield state.
+## Backend Architecture
 
-### Sidecar boundary
+The backend is built with **Ktor Server** and follows a Service-Repository pattern.
 
-- Consumes internal-only traffic.
-- Calls AgentKit/CDP providers.
-- Returns unsigned calldata or sidecar error payload.
-
-## 4. Data Flow: AI Intent -> Build -> Sign -> Broadcast
-
-### End-to-end path
-
-1. User submits command in chat UI (`send`, `swap`, `stake`).
-2. Client parser/orchestrator derives structured intent and preview plan.
-3. Client requests backend build route (`/transactions/build`, `/swap/execute`, or `/yield/stake`) with idempotency metadata where required.
-4. Ktor validates request, checks kill switch/rate limit/idempotency, and calls sidecar.
-5. Sidecar uses AgentKit/CDP to construct unsigned calldata (`to`, `data`, `value`, gas fields, `chainId`, optional `nonce`).
-6. Ktor returns unsigned payload in normalized backend response.
-7. Client passes unsigned payload to WalletConnect signing flow.
-8. Client submits signed tx to `/transactions/send` with `Idempotency-Key` and context headers.
-9. Ktor records submission, registers pending notification watcher, and responds with `txHash` + status.
-10. Client fetches/streams lifecycle updates and renders summary.
-
-## 5. Error & Resilience Strategy
-
-- Backend always returns machine code + message envelope.
-- Sidecar/provider failures are absorbed into controlled backend error states.
-- `AGENTKIT_UNAVAILABLE` is reserved for sidecar/capability outage handling and should disable AI action controls in client UX.
-- Gateway timeout, conflict, validation, and kill-switch states are explicit and parseable by clients.
-
-## 6. Deployment Shape
-
-Typical local/prod decomposition:
-
-- `ktor-backend`: public API ingress
-- `agentkit-sidecar`: private network only
-- `postgres`: system-of-record state
-- `redis`: ephemeral coordination/cache support
-- Frontend targets consume backend over HTTP(S), never sidecar directly
-
-## 7. Data Model and Policy Storage
-
-- Durable transaction/session/idempotency metadata lives in Postgres.
-- Transient rate-limit and operational coordination state uses Redis.
-- Backend-enforced kill switch (`KILL_SWITCH_VALUE_MOVES`) is evaluated before any value-moving side effects.
-- Idempotency enforcement and replay semantics are backend-owned and must not be delegated to clients or sidecar.
-
-See `DATA_MODEL.md` for the full data model and idempotency behavior contract.
+-   **Routing**: Defined in `com.letapay.backend.routes`.
+-   **Services**: Encapsulate business logic (e.g., `SwapService`, `AuthService`).
+-   **Security**: JWT-based authentication with SIWE (Sign-In with Ethereum) support.
+-   **Database**: JetBrains Exposed ORM with PostgreSQL.
+-   **AI Integration**: Interacts with the `agentkit-sidecar` for CDP AgentKit operations.

@@ -27,6 +27,7 @@ interface ScreeningService {
 
 class CoinbaseScreeningService(
     private val httpClient: HttpClient,
+    private val circuitBreaker: CircuitBreaker,
     private val baseUrl: String = "https://api.coinbase.com",
 ) : ScreeningService {
     private val riskKey: String = System.getenv("COINBASE_RISK_KEY").orEmpty()
@@ -36,13 +37,15 @@ class CoinbaseScreeningService(
             return true
         }
         val response = runCatching {
-            httpClient.post("$baseUrl/api/v1/risk/address") {
-                header("Authorization", "Bearer $riskKey")
-                contentType(ContentType.Application.Json)
-                setBody(CoinbaseRiskRequest(address = address))
-            }.body<CoinbaseRiskResponse>()
-        }.getOrElse { cause ->
-            throw CoinbaseApiError(message = "Risk screening request failed: ${cause.message}")
+            circuitBreaker.execute {
+                httpClient.post("$baseUrl/api/v1/risk/address") {
+                    header("Authorization", "Bearer $riskKey")
+                    contentType(ContentType.Application.Json)
+                    setBody(CoinbaseRiskRequest(address = address))
+                }.body<CoinbaseRiskResponse>()
+            }
+        }.getOrElse {
+            throw CoinbaseApiError(message = "Risk screening request failed.")
         }
 
         val flagged = response.flagged || response.riskLevel.equals("high", ignoreCase = true)
@@ -50,13 +53,6 @@ class CoinbaseScreeningService(
             throw AddressRejectedError()
         }
         return true
-    }
-}
-
-class StubScreeningService : ScreeningService {
-    override suspend fun check(address: String): Boolean {
-        // Fix: keep screening explicit in tests and local runs without making network calls.
-        return !address.endsWith("bad", ignoreCase = true)
     }
 }
 

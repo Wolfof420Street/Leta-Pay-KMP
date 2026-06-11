@@ -9,6 +9,7 @@
  */
 package com.letapay.backend.db
 
+import com.letapay.backend.config.AppConfig
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.config.ApplicationConfig
@@ -20,6 +21,7 @@ import javax.sql.DataSource
 
 object DatabaseFactory {
     fun init(config: ApplicationConfig): DataSource {
+        val appConfig = AppConfig.from(config, allowMissingJwtKeys = true)
         val defaultJdbcUrl = buildString {
             append("jdbc:h2:mem:letapay-")
             append(UUID.randomUUID())
@@ -28,8 +30,7 @@ object DatabaseFactory {
         val pool = HikariDataSource(
             HikariConfig().apply {
                 // Fix: Ktor tests boot without application.conf, so default to isolated in-memory H2.
-                jdbcUrl = config.propertyOrNull("database.url")?.getString()
-                    ?: System.getenv("DATABASE_URL")
+                jdbcUrl = appConfig.databaseUrl
                     ?: defaultJdbcUrl
                 driverClassName = config.propertyOrNull("database.driver")?.getString()
                     ?: if (jdbcUrl.startsWith("jdbc:h2:")) "org.h2.Driver" else null
@@ -37,14 +38,10 @@ object DatabaseFactory {
                     ?: if (jdbcUrl.startsWith("jdbc:h2:")) "sa" else null
                 password = config.propertyOrNull("database.password")?.getString()
                     ?: if (jdbcUrl.startsWith("jdbc:h2:")) "" else null
-                maximumPoolSize = config.propertyOrNull("database.maxPoolSize")
-                    ?.getString()
-                    ?.toInt()
-                    ?: System.getenv("DB_MAX_POOL_SIZE")?.toIntOrNull()
-                    ?: 10
-                minimumIdle = 2
+                maximumPoolSize = appConfig.dbMaxPoolSize
+                minimumIdle = appConfig.dbMinPoolSize
                 idleTimeout = 600_000L
-                connectionTimeout = 30_000L
+                connectionTimeout = appConfig.dbConnectionTimeoutMs
                 maxLifetime = 1_800_000L
                 validationTimeout = 5_000L
                 connectionTestQuery = "SELECT 1"

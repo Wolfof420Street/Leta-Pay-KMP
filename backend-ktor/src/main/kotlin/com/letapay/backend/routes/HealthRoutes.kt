@@ -12,30 +12,39 @@ package com.letapay.backend.routes
 import com.letapay.backend.config.RuntimeState
 import com.letapay.backend.model.HealthResponse
 import com.letapay.backend.service.HealthService
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.ktor.ext.inject
 
 fun Route.configureHealthRoutes() {
     val healthService by inject<HealthService>()
 
     get("/health") {
-        val dbStatus = withTimeoutOrNull(1_000L) {
-            healthService.dbStatus()
-        } ?: "degraded"
-
-        val firebaseStatus = withTimeoutOrNull(1_000L) {
-            healthService.firebaseStatus()
-        } ?: "degraded"
+        val snapshot = runCatching { healthService.status() }.getOrElse {
+            com.letapay.backend.service.HealthSnapshot(
+                status = "degraded",
+                db = "degraded",
+                redis = "degraded",
+                sidecar = "degraded",
+                firebase = if (RuntimeState.isFirebaseHealthy()) "ok" else "degraded",
+            )
+        }
 
         call.respond(
+            if (snapshot.status == "ok" && !RuntimeState.isMisconfigured()) {
+                HttpStatusCode.OK
+            } else {
+                HttpStatusCode.ServiceUnavailable
+            },
             HealthResponse(
-                status = if (RuntimeState.isMisconfigured()) "misconfigured" else "ok",
+                status = if (RuntimeState.isMisconfigured()) "misconfigured" else snapshot.status,
                 version = "1.0.0",
-                db = dbStatus,
-                firebase = firebaseStatus,
+                db = snapshot.db,
+                redis = snapshot.redis,
+                sidecar = snapshot.sidecar,
+                firebase = snapshot.firebase,
                 timestamp = System.currentTimeMillis(),
             ),
         )

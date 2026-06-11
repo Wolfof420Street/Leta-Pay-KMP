@@ -11,15 +11,15 @@ package com.letapay.app.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.letapay.app.core.data.repository.UserDataRepository
+import com.letapay.app.core.model.DarkThemeConfig
+import com.letapay.app.core.model.LanguageConfig
+import com.letapay.app.core.model.ThemeBrand
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.letapay.app.core.data.repository.UserDataRepository
-import com.letapay.app.core.model.DarkThemeConfig
-import com.letapay.app.core.model.LanguageConfig
-import com.letapay.app.core.model.ThemeBrand
 import template.core.base.analytics.AnalyticsHelper
 
 class SettingsViewmodel(

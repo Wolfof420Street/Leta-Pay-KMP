@@ -13,5 +13,9 @@
     <string name="home">Startseite</string>
     <string name="profile">Profil</string>
     <string name="settings">Einstellungen</string>
+    <string name="chat_tab">Chat</string>
+    <string name="wallet_tab">Wallet</string>
+    <string name="trade_tab">Handel</string>
+    <string name="yield_tab">Ertrag</string>
     <string name="not_connected">⚠️ Sie sind nicht mit dem Internet verbunden</string>
 </resources>

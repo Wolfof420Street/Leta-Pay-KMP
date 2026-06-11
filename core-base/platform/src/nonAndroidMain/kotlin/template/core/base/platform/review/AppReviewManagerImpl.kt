@@ -14,9 +14,10 @@ package template.core.base.platform.review
  */
 class AppReviewManagerImpl : AppReviewManager {
     override fun promptForReview() {
+        println("AppReviewManagerImpl.promptForReview is not supported on this platform")
     }
 
     override fun promptForCustomReview() {
-        // TODO:: Implement custom review flow
+        println("AppReviewManagerImpl.promptForCustomReview is not supported on this platform")
     }
 }

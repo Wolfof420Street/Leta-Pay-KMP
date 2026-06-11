@@ -39,6 +39,7 @@ services:
       CDP_API_KEY_ID: ${CDP_API_KEY_ID}
       CDP_API_KEY_SECRET: ${CDP_API_KEY_SECRET}
       CDP_WALLET_SECRET: ${CDP_WALLET_SECRET}
+      MAX_TRANSACTION_VALUE_ETH: ${MAX_TRANSACTION_VALUE_ETH}
       BASE_RPC_URL: ${BASE_RPC_URL:-https://mainnet.base.org}
       ETHEREUM_RPC_URL: ${ETHEREUM_RPC_URL:-https://ethereum.publicnode.com}
       POLYGON_RPC_URL: ${POLYGON_RPC_URL:-https://polygon-rpc.com}
@@ -46,7 +47,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3100/health"]
+      test: ["CMD", "wget", "--header=X-Internal-Token: ${SIDECAR_SECRET}", "-qO-", "http://localhost:3100/health"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -76,6 +77,10 @@ services:
       KILL_SWITCH_VALUE_MOVES: ${KILL_SWITCH_VALUE_MOVES:-false}
       AGENTKIT_SIDECAR_URL: http://agentkit-sidecar:3100
       SIDECAR_SECRET: ${SIDECAR_SECRET}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DB_MIN_POOL_SIZE: ${DB_MIN_POOL_SIZE:-4}
+      DB_CONNECTION_TIMEOUT_MS: ${DB_CONNECTION_TIMEOUT_MS:-30000}
+      MAX_TRANSACTION_VALUE_ETH: ${MAX_TRANSACTION_VALUE_ETH}
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,9 +116,45 @@ services:
       retries: 10
     networks: [letapay-internal]
 
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    restart: unless-stopped
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "127.0.0.1:9090:9090"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks: [letapay-internal]
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD must be set}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks: [letapay-internal]
+
 volumes:
   postgres_data:
   redis_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   letapay-internal:

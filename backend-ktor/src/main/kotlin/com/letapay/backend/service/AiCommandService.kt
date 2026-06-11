@@ -11,7 +11,7 @@ package com.letapay.backend.service
 
 import com.letapay.backend.ai.ParseAgent
 import com.letapay.backend.ai.PlanAgent
-import com.letapay.backend.ai.StubIntentLlmClient
+import com.letapay.backend.ai.SafeIntentFallbackClient
 import com.letapay.backend.model.ai.ExecutionPlan
 import com.letapay.backend.model.ai.ParseResult
 import kotlinx.coroutines.flow.Flow
@@ -25,10 +25,12 @@ interface AiCommandService {
     fun streamSummary(event: String, txHash: String?): Flow<String>
 }
 
-class DefaultAiCommandService : AiCommandService {
+class DefaultAiCommandService(
+    private val parseCache: ParseResultCache,
+) : AiCommandService {
     var fallbackPlanInvocations = 0
     var parseComputationCount = 0
-    private val parseAgent = ParseAgent(StubIntentLlmClient())
+    private val parseAgent = ParseAgent(SafeIntentFallbackClient())
     private val planAgent = PlanAgent()
 
     override suspend fun parse(message: String): ParseResult =
@@ -51,10 +53,6 @@ class DefaultAiCommandService : AiCommandService {
         emit("Event type: $event.")
         emit("Transaction reference: ${txHash ?: "pending"}.")
         emit("Policy checks are complete. Ready for confirmation.")
-    }
-
-    private companion object {
-        private val parseCache = ParseResultCache()
     }
 }
 

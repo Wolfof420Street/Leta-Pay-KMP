@@ -10,8 +10,8 @@
 plugins {
     alias(libs.plugins.kmp.library.convention)
     alias(libs.plugins.ktrofit)
-    id("kotlinx-serialization")
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -36,6 +36,7 @@ kotlin {
             implementation(projects.coreBase.network)
 
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.datetime)
 
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.json)

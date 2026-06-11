@@ -9,6 +9,7 @@
  */
 package com.letapay.backend.routes
 
+import com.letapay.backend.config.AppConfig
 import com.letapay.backend.error.QuoteMismatchError
 import com.letapay.backend.error.SlippageExceededError
 import com.letapay.backend.error.UpstreamTimeoutError
@@ -24,6 +25,7 @@ import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.IdempotencyService
 import com.letapay.backend.service.RateLimiterService
 import com.letapay.backend.service.SwapQuoteCacheService
+import com.letapay.backend.service.enforceTransactionLimit
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -50,6 +52,7 @@ fun Route.configureSwapRoutes() {
     val swapQuoteCacheService by inject<SwapQuoteCacheService>()
     val rateLimiter by inject<RateLimiterService>()
     val swapService by inject<com.letapay.backend.service.SwapService>()
+    val appConfig by inject<AppConfig>()
 
     authenticate("session-auth") {
         route("/swap") {
@@ -58,10 +61,11 @@ fun Route.configureSwapRoutes() {
                 val principal = requireNotNull(call.principal<WalletPrincipal>())
                 call.enforceGlobalAndWalletRateLimit(rateLimiter, principal.walletAddress)
                 val request = call.receive<SwapQuoteRequest>()
+                enforceTransactionLimit(request.amount, appConfig)
                 swapService.validateQuoteRequest(request)
 
                 val quote = withUpstreamTimeout {
-                    agentKitClient.getSwapQuote(principal.walletAddress, request)
+                    agentKitClient.getSwapQuote(principal.walletAddress, request).getOrThrow()
                 }
                 quote.ensureSlippageWithin(request.slippageBps)
 
@@ -101,7 +105,7 @@ fun Route.configureSwapRoutes() {
 
                 val cachedQuote = swapQuoteCacheService.requireActiveQuote(request.quoteId)
                 val unsignedTx = withUpstreamTimeout {
-                    agentKitClient.buildSwap(principal.walletAddress, cachedQuote)
+                    agentKitClient.buildSwap(principal.walletAddress, cachedQuote).getOrThrow()
                 }
                 if (unsignedTx.chainId != cachedQuote.chainId) {
                     throw QuoteMismatchError()

@@ -4,6 +4,8 @@ Welcome to the KMP Project Template contributing guide. This comprehensive docum
 contribute effectively to improve the Self Service Android Application, from reporting issues to
 submitting code changes.
 
+Note: A repository hardening pass was performed on 2026-05-27; runtime `TODO` placeholders and crashing stubs were replaced with safe no-op implementations where appropriate.
+
 The [Open Source Guides](https://opensource.guide/) website has a collection of resources for
 individuals, communities, and companies who want to learn how to run and contribute to an open
 source project. Contributors and people new to open source alike will find the following guides

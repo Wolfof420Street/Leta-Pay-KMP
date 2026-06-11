@@ -33,12 +33,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.letapay.app.core.designsystem.theme.LetaSpacing
 import kmp_project_template.feature.trade.generated.resources.Res
+import kmp_project_template.feature.trade.generated.resources.feature_trade_amount_hint
 import kmp_project_template.feature.trade.generated.resources.feature_trade_describe_hint
 import kmp_project_template.feature.trade.generated.resources.feature_trade_fee_label
 import kmp_project_template.feature.trade.generated.resources.feature_trade_from_label
 import kmp_project_template.feature.trade.generated.resources.feature_trade_get_quote_button
 import kmp_project_template.feature.trade.generated.resources.feature_trade_getting_quote_button
-import kmp_project_template.feature.trade.generated.resources.feature_trade_placeholder_amount
 import kmp_project_template.feature.trade.generated.resources.feature_trade_swap_label
 import kmp_project_template.feature.trade.generated.resources.feature_trade_title
 import kmp_project_template.feature.trade.generated.resources.feature_trade_to_estimated_label
@@ -125,8 +125,24 @@ fun TradeScreen(
                     }
                 }
 
+                if (uiState.errorMessage != null) {
+                    Text(
+                        text = uiState.errorMessage ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+
+                if (uiState.executionMessage != null) {
+                    Text(
+                        text = uiState.executionMessage ?: "",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+
                 Surface(
-                    onClick = viewModel::toggleLoading,
+                    onClick = viewModel::requestQuote,
                     shape = Pill,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -147,6 +163,26 @@ fun TradeScreen(
                             fontWeight = FontWeight.Medium,
                         )
                     }
+                }
+            }
+
+            Surface(
+                onClick = viewModel::executeQuote,
+                shape = Pill,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Build swap tx",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
             }
         }
@@ -193,7 +229,7 @@ private fun TokenAmountField(
                     decorationBox = { inner ->
                         if (value.isEmpty()) {
                             Text(
-                                stringResource(Res.string.feature_trade_placeholder_amount),
+                                stringResource(Res.string.feature_trade_amount_hint),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Light),
                             )

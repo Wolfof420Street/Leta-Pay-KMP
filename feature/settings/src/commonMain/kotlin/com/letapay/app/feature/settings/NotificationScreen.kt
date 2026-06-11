@@ -17,11 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import org.jetbrains.compose.resources.stringResource
 import com.letapay.app.core.ui.scaffold.KptScaffold
 import com.letapay.app.feature.settings.generated.resources.Res
 import com.letapay.app.feature.settings.generated.resources.feature_settings_notification_body
 import com.letapay.app.feature.settings.generated.resources.feature_settings_notification_title
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun NotificationScreen(

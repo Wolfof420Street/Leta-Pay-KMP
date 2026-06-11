@@ -168,7 +168,7 @@ class TasksViewModel(
             val date = LocalDate(selectedYear, selectedMonthIndex + 1, day)
             val weekday = shortWeekdayNames[date.dayOfWeek]
 
-            weekdaysAndDaysInSelectedMonth.add(weekday!! to day.toString())
+            weekdaysAndDaysInSelectedMonth.add(requireNotNull(weekday) { "weekday name missing for date $date" } to day.toString())
         }
 
         _tasksUiState.value =

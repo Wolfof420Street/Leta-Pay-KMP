@@ -29,9 +29,11 @@ val PrometheusRegistryKey = io.ktor.util.AttributeKey<PrometheusMeterRegistry>("
 
 private val RequestHardeningPlugin = createApplicationPlugin(name = "RequestHardeningPlugin") {
     onCall { call ->
+        val requestId = call.request.headers["X-Request-ID"].toSafeRequestId()
+        MDC.put("requestId", requestId)
         call.attributes.put(RequestStartedKey, System.currentTimeMillis())
         val principal = call.principal<WalletPrincipal>()
-        principal?.walletAddress?.take(16)?.let { MDC.put("walletAddress", it) }
+        principal?.walletAddress?.truncatedWallet()?.let { MDC.put("walletAddress", it) }
         principal?.sessionId?.let { MDC.put("sessionId", it) }
         call.extractTxHash()?.let { MDC.put("txHash", it) }
         val contentLength = call.request.contentLength()
@@ -45,6 +47,7 @@ private val RequestHardeningPlugin = createApplicationPlugin(name = "RequestHard
         MDC.remove("walletAddress")
         MDC.remove("sessionId")
         MDC.remove("txHash")
+        MDC.remove("requestId")
     }
 }
 
@@ -64,3 +67,22 @@ private fun ApplicationCall.extractTxHash(): String? =
     parameters["txHash"]
         ?: request.queryParameters["txHash"]
         ?: request.headers["X-Tx-Hash"]
+
+private val REQUEST_ID_REGEX = Regex("^[A-Za-z0-9_-]{1,64}$")
+
+private fun String?.toSafeRequestId(): String {
+    val candidate = this?.trim().orEmpty()
+    return if (candidate.isValidRequestId()) {
+        candidate
+    } else {
+        java.util.UUID.randomUUID().toString()
+    }
+}
+
+private fun String.isValidRequestId(): Boolean =
+    isNotBlank() &&
+        none { it == '\r' || it == '\n' || it.isISOControl() } &&
+        REQUEST_ID_REGEX.matches(this)
+
+private fun String.truncatedWallet(): String =
+    if (length <= 12) this else "${take(6)}...${takeLast(4)}"

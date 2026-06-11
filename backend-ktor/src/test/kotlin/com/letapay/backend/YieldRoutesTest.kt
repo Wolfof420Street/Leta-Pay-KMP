@@ -18,7 +18,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -26,7 +25,7 @@ import kotlin.test.assertTrue
 class YieldRoutesTest {
     @Test
     fun `yield opportunities returns lido and aave`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.get("/yield/opportunities") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -40,7 +39,7 @@ class YieldRoutesTest {
 
     @Test
     fun `yield opportunities can be filtered by chain`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.get("/yield/opportunities?chain=1") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -54,7 +53,7 @@ class YieldRoutesTest {
 
     @Test
     fun `yield stake returns unsigned lido tx`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/yield/stake") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -71,7 +70,7 @@ class YieldRoutesTest {
 
     @Test
     fun `yield stake below minimum returns 400`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/yield/stake") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -86,7 +85,7 @@ class YieldRoutesTest {
     @Test
     fun `yield stake with kill switch returns 503`() = testApplication {
         System.setProperty("KILL_SWITCH_VALUE_MOVES", "true")
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/yield/stake") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -102,7 +101,7 @@ class YieldRoutesTest {
 
     @Test
     fun `yield unstake rejects positions owned by another wallet`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val stakeResponse = client.post("/yield/stake") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt(wallet = WALLET_A)}")
@@ -125,7 +124,7 @@ class YieldRoutesTest {
 
     @Test
     fun `yield unstake rejects non active positions`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val stakeResponse = client.post("/yield/stake") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt(wallet = WALLET_A)}")
@@ -156,7 +155,7 @@ class YieldRoutesTest {
 
     @Test
     fun `yield positions only returns authenticated wallet positions`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         client.post("/yield/stake") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt(wallet = WALLET_A)}")
@@ -185,7 +184,7 @@ class YieldRoutesTest {
     fun `yield stake rejects disabled base opportunities`() = testApplication {
         System.setProperty("BASE_STAKING_ENABLED", "false")
         try {
-            application { configureApp() }
+            application { configureApp(backendTestOverrides()) }
 
             val response = client.post("/yield/stake") {
                 header(HttpHeaders.Authorization, "Bearer ${testJwt()}")

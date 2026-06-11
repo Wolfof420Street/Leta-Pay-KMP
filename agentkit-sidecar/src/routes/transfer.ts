@@ -1,19 +1,28 @@
 import { Router } from "express";
 import { z } from "zod";
+import { readMaxTransactionValue } from "../transactionGuard";
 
 const router = Router();
 
 const TransferBuildSchema = z.object({
   fromAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   toAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  asset: z.enum(["ETH", "USDC", "USDT", "DAI", "MATIC"]),
+  asset: z.enum(["USDC", "USDT", "DAI", "MATIC"]),
   amount: z.string(),
   networkId: z.enum(["ethereum-mainnet", "polygon-mainnet", "base-mainnet"]),
-});
+}).strict();
 
 router.post("/build", async (req, res, next) => {
   try {
     const body = TransferBuildSchema.parse(req.body);
+    const amount = Number(body.amount);
+    if (isNaN(amount)) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+    const maxTxValue = readMaxTransactionValue();
+    if (amount > maxTxValue) {
+      return res.status(400).json({ error: "Exceeds max transaction value" });
+    }
     const amountWei = toWeiAmount(body.amount, body.asset);
     const calldata = {
       from: body.fromAddress,
@@ -45,7 +54,7 @@ function toChainId(networkId: "ethereum-mainnet" | "polygon-mainnet" | "base-mai
 }
 
 function tokenAddress(
-  asset: "ETH" | "USDC" | "USDT" | "DAI" | "MATIC",
+  asset: "USDC" | "USDT" | "DAI" | "MATIC",
   networkId: "ethereum-mainnet" | "polygon-mainnet" | "base-mainnet",
 ): string {
   if (asset === "USDC") {
@@ -67,7 +76,7 @@ function tokenAddress(
     if (networkId === "polygon-mainnet") return "0x0000000000000000000000000000000000001010";
     throw new Error("MATIC is only available on polygon-mainnet");
   }
-  throw new Error("Native ETH transfer is not supported in this build endpoint");
+  throw new Error("Unsupported asset");
 }
 
 function padAddress(address: string): string {

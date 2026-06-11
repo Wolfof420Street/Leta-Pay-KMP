@@ -16,7 +16,7 @@ interface IntentLlmClient {
     suspend fun parseIntent(message: String): ParseResult?
 }
 
-class StubIntentLlmClient : IntentLlmClient {
+class SafeIntentFallbackClient : IntentLlmClient {
     override suspend fun parseIntent(message: String): ParseResult? =
         ParseResult(
             intent = IntentType.Unknown,
@@ -24,7 +24,7 @@ class StubIntentLlmClient : IntentLlmClient {
             missingRequired = listOf("intent"),
             safetyFlags = listOf("llm-fallback"),
             normalizedCommand = message.trim(),
-            parserVersion = "koog-llm-fallback-v1",
+            parserVersion = "safe-fallback-v1",
         )
 }
 

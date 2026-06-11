@@ -17,5 +17,5 @@
     <string name="feature_trade_getting_quote_button">Getting quote...</string>
     <string name="feature_trade_get_quote_button">Get Quote</string>
     <string name="feature_trade_describe_hint">Or describe your trade in chat →</string>
-    <string name="feature_trade_placeholder_amount">0.00</string>
+    <string name="feature_trade_amount_hint">0.00</string>
 </resources>

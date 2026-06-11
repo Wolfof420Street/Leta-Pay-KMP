@@ -86,7 +86,7 @@ fun AnalyticsEvent.formEvent(
     fieldName: String? = null,
 ): AnalyticsEvent {
     val params = mutableListOf(Param(ParamKeys.FORM_NAME, formName))
-    completionTime?.let { params.add(Param(ParamKeys.COMPLETION_TIME, "${it.toDouble(DurationUnit.SECONDS)}s")) }
+    completionTime?.let { params.add(Param(ParamKeys.COMPLETION_TIME, "${it.inWholeMilliseconds / 1000.0}s")) }
     fieldName?.let { params.add(Param(ParamKeys.FIELD_NAME, it)) }
     return AnalyticsEvent(eventType, params)
 }

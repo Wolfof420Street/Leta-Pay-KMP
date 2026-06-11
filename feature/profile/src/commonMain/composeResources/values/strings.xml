@@ -16,5 +16,5 @@
     <string name="feature_profile_security_privacy">Security &amp; Privacy</string>
     <string name="feature_profile_notifications">Notifications</string>
     <string name="feature_profile_network_preferences">Network Preferences</string>
-    <string name="feature_profile_wallet_placeholder">0x7a3...9b24</string>
+    <string name="feature_profile_no_active_session">No active wallet session</string>
 </resources>

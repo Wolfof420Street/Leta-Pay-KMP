@@ -9,7 +9,6 @@
  */
 package cmp.android.app
 
-import android.content.res.Resources
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -17,7 +16,6 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.getValue
-import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cmp.shared.SharedApp
@@ -31,7 +29,6 @@ import template.core.base.analytics.lifecycleTracker
 import template.core.base.platform.update.AppUpdateManager
 import template.core.base.platform.update.AppUpdateManagerImpl
 import template.core.base.ui.ShareUtils
-import java.util.Locale
 
 /**
  * Main activity class. This class is used to set the content view of the
@@ -63,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 
         setupEdgeToEdge(darkThemeConfigFlow)
 
-        ShareUtils.setActivityProvider { return@setActivityProvider this }
+        ShareUtils.setActivityProvider { this@MainActivity }
         FileKit.init(this)
 
         analyticsHelper.setUserId(deviceData)
@@ -83,30 +80,6 @@ class MainActivity : AppCompatActivity() {
                 handleThemeMode = {
                     AppCompatDelegate.setDefaultNightMode(it)
                 },
-                handleAppLocale = { localeTag ->
-                    val currentLocales = AppCompatDelegate.getApplicationLocales()
-                    val newLocales = if (localeTag != null) {
-                        LocaleListCompat.forLanguageTags(localeTag)
-                    } else {
-                        // System Default: clear app-specific locale
-                        LocaleListCompat.getEmptyLocaleList()
-                    }
-
-                    // Only update if the locale has actually changed
-                    if (currentLocales != newLocales) {
-                        AppCompatDelegate.setApplicationLocales(newLocales)
-                        // Update Locale.setDefault for non-UI formatting
-                        if (localeTag != null) {
-                            // Use forLanguageTag to properly parse locales like "en-GB", "pt-BR"
-                            Locale.setDefault(Locale.forLanguageTag(localeTag))
-                        } else {
-                            // Reset to true system default locale from device configuration
-                            // Use Resources.getSystem() to get device locale unaffected by app overrides
-                            val systemLocale = Resources.getSystem().configuration.locales[0]
-                            Locale.setDefault(systemLocale)
-                        }
-                    }
-                },
                 onSplashScreenRemoved = {
                     shouldShowSplashScreen = false
                 },
@@ -123,6 +96,11 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         lifecycleTracker.markAppLaunchStart()
+    }
+
+    override fun onDestroy() {
+        ShareUtils.clearActivityProvider()
+        super.onDestroy()
     }
 
     private fun handleRecreate() {

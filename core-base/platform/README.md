@@ -43,13 +43,13 @@ commonMain
 ├── Interfaces (expect)
 ├── Models
 └── Utilities
-    
+
 androidMain
 ├── Concrete implementations
 └── Android-specific utilities
 
 desktopMain/jsMain/nativeMain/wasmJsMain
-└── Placeholder implementations
+└── Explicit no-op implementations with platform warnings where the capability is unavailable
 ```
 
 ## Common Interfaces and Types
@@ -148,7 +148,7 @@ interface AppReviewManager {
 The `AppReviewManager` abstracts in-app review functionality:
 
 - On Android: Uses Google Play In-App Review API
-- On other platforms: Provides placeholder implementations for future extension
+- On other platforms: Provides explicit no-op implementations with warnings for unsupported review flows
 
 ### AppUpdateManager
 
@@ -165,7 +165,7 @@ interface AppUpdateManager {
 The `AppUpdateManager` handles update checking and flow management:
 
 - On Android: Implements Google Play In-App Update API
-- On other platforms: Provides placeholder implementations
+- On other platforms: Provides explicit no-op implementations with warnings for unsupported update flows
 
 ### MimeType
 
@@ -198,6 +198,10 @@ enum class MimeType(val value: String, vararg val extensions: String) {
         // Get MimeType from filename
         fun fromFileName(fileName: String): MimeType
     }
+
+    ## Notes
+
+    - Non-Android manager implementations now use explicit no-op behavior with warnings for capabilities that do not exist on those targets; see DONE-006 in KNOWN_ISSUES.md.
 }
 ```
 
@@ -287,7 +291,8 @@ class AppReviewManagerImpl(private val activity: Activity) : AppReviewManager {
     }
 
     override fun promptForCustomReview() {
-        // TODO:: Implement custom review flow
+        // Deferred: custom review flow implementation intentionally omitted in template.
+        // See KNOWN_ISSUES.md -> DEFER-005 for follow-up.
     }
 }
 ```
@@ -379,10 +384,9 @@ The non-Android implementations:
 ```kotlin
 class IntentManagerImpl : IntentManager {
     override fun startActivity(intent: Any) {
-        // TODO("Not yet implemented")
+        // Deferred: platform-specific startActivity behavior is left as a placeholder in template.
+        // See KNOWN_ISSUES.md -> DEFER-005 for follow-up tasks and rationale.
     }
-
-    // Other methods with TODO placeholders
 }
 
 class AppReviewManagerImpl : AppReviewManager {
@@ -391,7 +395,8 @@ class AppReviewManagerImpl : AppReviewManager {
     }
 
     override fun promptForCustomReview() {
-        // TODO:: Implement custom review flow
+        // Deferred: custom review flow not implemented in non-Android template shim.
+        // See KNOWN_ISSUES.md -> DEFER-005 for details.
     }
 }
 
@@ -409,7 +414,7 @@ class AppUpdateManagerImpl : AppUpdateManager {
 These implementations:
 
 - Provide empty or placeholder implementations
-- Use TODO comments to mark future implementation points
+- Use explicit no-op/logging placeholders to signal deferred implementations (avoid TODO comments)
 - Return default values for required return types
 
 ## Advanced Usage Examples

@@ -22,24 +22,36 @@ import io.ktor.server.plugins.statuspages.exception
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
+import org.slf4j.MDC
 
 fun Application.configureStatusPages() {
     install(StatusPages) {
         exception<BadRequestException> { call, cause ->
+            val requestId = MDC.get("requestId") ?: ""
             this@configureStatusPages.logWarn(call, "BAD_REQUEST")
             call.respond(
                 status = io.ktor.http.HttpStatusCode.BadRequest,
-                message = ErrorResponse("BAD_REQUEST", cause.message ?: "Malformed request body."),
+                message = ErrorResponse(
+                    "BAD_REQUEST",
+                    if (cause.cause == null) "Malformed request body." else "Request body could not be parsed.",
+                    requestId = requestId,
+                ),
             )
         }
         exception<RequestValidationException> { call, cause ->
+            val requestId = MDC.get("requestId") ?: ""
             this@configureStatusPages.logWarn(call, "VALIDATION_FAILED")
             call.respond(
                 status = io.ktor.http.HttpStatusCode.BadRequest,
-                message = ErrorResponse("VALIDATION_FAILED", cause.reasons.joinToString("; ")),
+                message = ErrorResponse(
+                    "VALIDATION_FAILED",
+                    cause.reasons.joinToString("; "),
+                    requestId = requestId,
+                ),
             )
         }
         exception<BackendException> { call, cause ->
+            val requestId = MDC.get("requestId") ?: ""
             // Fix: every domain error now resolves through one envelope so new Phase 5/6 codes stay consistent.
             cause.retryAfterSeconds?.let { retryAfter ->
                 call.response.headers.append("Retry-After", retryAfter.toString())
@@ -51,17 +63,20 @@ fun Application.configureStatusPages() {
                     code = cause.code,
                     message = cause.message ?: "Request failed.",
                     retryAfter = cause.retryAfterSeconds,
+                    requestId = requestId,
                 ),
             )
         }
         exception<Throwable> { call, cause ->
             val durationMs = System.currentTimeMillis() - call.attributes[RequestStartedKey]
             val wallet = call.principal<WalletPrincipal>()?.walletAddress?.take(10) ?: "anonymous"
+            val requestId = MDC.get("requestId") ?: ""
             this@configureStatusPages.environment.log.error(
-                "walletAddress={} route={} errorCode=INTERNAL_ERROR durationMs={}",
+                "walletAddress={} route={} errorCode=INTERNAL_ERROR durationMs={} requestId={}",
                 wallet,
                 "${call.request.httpMethod.value} ${call.request.path()}",
                 durationMs,
+                requestId,
                 cause,
             )
             call.respond(
@@ -69,6 +84,7 @@ fun Application.configureStatusPages() {
                 message = ErrorResponse(
                     code = "INTERNAL_ERROR",
                     message = "An unexpected error occurred",
+                    requestId = requestId,
                 ),
             )
         }
@@ -78,11 +94,13 @@ fun Application.configureStatusPages() {
 private fun Application.logWarn(call: io.ktor.server.application.ApplicationCall, errorCode: String) {
     val durationMs = System.currentTimeMillis() - call.attributes[RequestStartedKey]
     val wallet = call.principal<WalletPrincipal>()?.walletAddress?.take(10) ?: "anonymous"
+    val requestId = MDC.get("requestId") ?: ""
     environment.log.warn(
-        "walletAddress={} route={} errorCode={} durationMs={}",
+        "walletAddress={} route={} errorCode={} durationMs={} requestId={}",
         wallet,
         "${call.request.httpMethod.value} ${call.request.path()}",
         errorCode,
         durationMs,
+        requestId,
     )
 }

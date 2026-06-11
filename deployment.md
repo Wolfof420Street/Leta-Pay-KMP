@@ -8,6 +8,27 @@ This runbook deploys Leta Pay in a self-hosted VPS setup with these containers:
 - `agentkit-sidecar`
 - `web-frontend` (Nginx serving `:cmp-web:jsBrowserDistribution` output)
 
+## 0. Server Prep (Fresh Ubuntu)
+
+Before starting, prepare your fresh Ubuntu 22.04/24.04 server with these commands:
+
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install essential tools
+sudo apt install -y curl git unzip zip openjdk-21-jdk
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Setup project directory
+sudo mkdir -p /var/www/letapay
+sudo chown $USER:$USER /var/www/letapay
+```
+
 ## 1. Prerequisites
 
 - Ubuntu 22.04 or 24.04 VPS

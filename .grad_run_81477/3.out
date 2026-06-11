@@ -1,0 +1,25 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: :core-base:common:compileKotlinMetadata
+Type-safe project accessors is an incubating feature.
+
+> Configure project :
+Reckoned version: 0.0.1-beta.0.8+20260521T165701Z
+
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors UP-TO-DATE
+> Task :build-logic:convention:processResources UP-TO-DATE
+> Task :build-logic:convention:classes UP-TO-DATE
+> Task :build-logic:convention:jar UP-TO-DATE
+
+> Configure project :core:network
+The 'ksp' configuration is deprecated in Kotlin Multiplatform projects. Please use target-specific configurations like 'kspJvm' instead.
+
+> Task :core-base:common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core-base:common:compileKotlinMetadata SKIPPED
+
+BUILD SUCCESSFUL in 9m 42s
+4 actionable tasks: 1 from cache, 3 up-to-date
+Configuration cache entry stored.

@@ -61,19 +61,8 @@ class AppReviewManagerImpl(
         }
     }
 
-    /**
-     * Provides infrastructure for a custom application-defined review experience.
-     *
-     * This method is intended for scenarios where the standard Google Play review flow
-     * is insufficient for application requirements. Custom implementations might include:
-     * - Multi-stage feedback collection
-     * - Conditional review flows based on user satisfaction
-     * - Alternative review destinations
-     *
-     * Note: This method currently contains a placeholder implementation and requires
-     * further development to implement the custom review logic.
-     */
     override fun promptForCustomReview() {
-        // TODO:: Implement custom review flow
+        Log.d("ReviewManager", "Prompting for custom review via the standard review flow")
+        promptForReview()
     }
 }

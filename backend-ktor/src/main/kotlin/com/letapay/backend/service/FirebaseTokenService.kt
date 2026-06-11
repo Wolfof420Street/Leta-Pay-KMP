@@ -13,6 +13,7 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.letapay.backend.error.FirebaseUnavailableError
 import java.io.ByteArrayInputStream
 import java.io.FileInputStream
 
@@ -55,7 +56,7 @@ class FirebaseAdminTokenService : FirebaseTokenService {
     }
 }
 
-class FakeFirebaseTokenService : FirebaseTokenService {
+class DisabledFirebaseTokenService : FirebaseTokenService {
     override fun createCustomToken(walletAddress: String, sessionId: String): String =
-        "firebase-$walletAddress-$sessionId"
+        throw FirebaseUnavailableError()
 }

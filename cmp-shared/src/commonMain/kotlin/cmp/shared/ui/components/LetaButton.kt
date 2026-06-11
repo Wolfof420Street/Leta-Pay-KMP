@@ -24,8 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
-import cmp.shared.ui.theme.LetaColors
 import cmp.shared.ui.theme.LetaShapes
+import com.letapay.app.core.designsystem.theme.LetaColors
 
 @Composable
 fun LetaPrimaryButton(

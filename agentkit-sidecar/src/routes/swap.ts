@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { buildAgentKit } from "../agentkit";
+import { readMaxTransactionValue } from "../transactionGuard";
 
 const router = Router();
 
@@ -29,6 +30,14 @@ const SwapQuoteResponseSchema = z.object({
 router.post("/quote", async (req, res, next) => {
   try {
     const body = SwapSchema.parse(req.body);
+    const amount = Number(body.amount);
+    if (isNaN(amount)) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+    const maxTxValue = readMaxTransactionValue();
+    if (amount > maxTxValue) {
+      return res.status(400).json({ error: "Exceeds max transaction value" });
+    }
     const agentKit = await buildAgentKit(body.fromAddress);
     const action = agentKit.getActions().find((a) => a.name === "get_swap_price");
     if (!action) throw new Error("Swap quote action not available");
@@ -60,7 +69,14 @@ router.post("/quote", async (req, res, next) => {
 router.post("/build", async (req, res, next) => {
   try {
     const body = SwapSchema.parse(req.body);
-    // Build-only response. Route execution stays in client wallet + backend orchestration layers.
+    const amount = Number(body.amount);
+    if (isNaN(amount)) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+    const maxTxValue = readMaxTransactionValue();
+    if (amount > maxTxValue) {
+      return res.status(400).json({ error: "Exceeds max transaction value" });
+    }
     const calldata = {
       from: body.fromAddress,
       to: null,
@@ -87,9 +103,7 @@ function parseAgentKitJson(raw: string): Record<string, unknown> {
   try {
     return JSON.parse(raw);
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("AgentKit JSON parse failure", { raw, error: String(err) });
-    throw new Error(`Malformed AgentKit JSON payload (${raw.length} bytes): ${String(err)}`);
+    throw new Error(`Malformed AgentKit JSON payload (${raw.length} bytes)`);
   }
 }
 

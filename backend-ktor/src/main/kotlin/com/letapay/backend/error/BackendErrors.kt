@@ -109,6 +109,9 @@ class OpportunityDisabledError :
 class UnauthorizedSessionError :
     BackendException("UNAUTHORIZED_SESSION", HttpStatusCode.Unauthorized, "Session token is invalid or expired.")
 
+class FirebaseUnavailableError :
+    BackendException("FIREBASE_UNAVAILABLE", HttpStatusCode.ServiceUnavailable, "Firebase auth is unavailable.")
+
 class UpstreamTimeoutError :
     BackendException("UPSTREAM_TIMEOUT", HttpStatusCode.GatewayTimeout, "Upstream service timed out.")
 
@@ -120,3 +123,10 @@ class PayloadTooLargeError :
 
 class InvalidRequestError(message: String) :
     BackendException("INVALID_REQUEST", HttpStatusCode.BadRequest, message)
+
+class TransactionValueExceededError(maxTransactionValueEth: String) :
+    BackendException(
+        "MAX_TRANSACTION_VALUE_EXCEEDED",
+        HttpStatusCode.BadRequest,
+        "Transaction amount exceeds MAX_TRANSACTION_VALUE_ETH ($maxTransactionValueEth).",
+    )

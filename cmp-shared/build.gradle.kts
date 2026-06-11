@@ -41,6 +41,7 @@ kotlin {
             implementation(projects.cmpNavigation)
             implementation(compose.material3)
             implementation(compose.components.resources)
+            implementation(projects.coreBase.common)
             implementation(projects.coreBase.platform)
             implementation(projects.coreBase.ui)
 

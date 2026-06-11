@@ -9,6 +9,8 @@
  */
 package com.letapay.backend.service
 
+import com.letapay.app.core.model.PaginatedRequest
+import com.letapay.app.core.model.PaginatedResponse
 import com.letapay.backend.db.StakingPositions
 import com.letapay.backend.error.InvalidRequestError
 import com.letapay.backend.error.OpportunityDisabledError
@@ -55,7 +57,10 @@ interface YieldService {
         walletAddress: String,
     ): UnsignedTx
 
-    suspend fun getPositions(walletAddress: String): List<StakingPosition>
+    suspend fun getPositions(
+        walletAddress: String,
+        request: PaginatedRequest = PaginatedRequest(),
+    ): PaginatedResponse<StakingPosition>
 
     suspend fun createStakePosition(
         opportunityId: String,
@@ -117,14 +122,23 @@ class DefaultYieldService(
         }
     }
 
-    override suspend fun getPositions(walletAddress: String): List<StakingPosition> {
-        val rows = db {
-            StakingPositions.selectAll()
+    override suspend fun getPositions(
+        walletAddress: String,
+        request: PaginatedRequest,
+    ): PaginatedResponse<StakingPosition> {
+        val (rows, total) = db {
+            val query = StakingPositions.selectAll()
                 .where { StakingPositions.walletAddress eq walletAddress }
-                .sortedByDescending { it[StakingPositions.createdAt] }
+
+            val totalCount = query.count().toInt()
+            val resultRows = query
+                .orderBy(StakingPositions.createdAt to org.jetbrains.exposed.sql.SortOrder.DESC)
+                .limit(request.clampedLimit, offset = request.clampedOffset.toLong())
+                .toList()
+            resultRows to totalCount
         }
 
-        return rows.map { row ->
+        val items = rows.map { row ->
             val opportunity = findOpportunity(row[StakingPositions.opportunityId])
             row.toStakingPosition(
                 currentValueUsd = pricePosition(
@@ -134,6 +148,13 @@ class DefaultYieldService(
                 ),
             )
         }
+
+        return PaginatedResponse(
+            items = items,
+            total = total,
+            offset = request.clampedOffset,
+            limit = request.clampedLimit,
+        )
     }
 
     override suspend fun createStakePosition(

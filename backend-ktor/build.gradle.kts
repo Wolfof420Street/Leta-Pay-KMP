@@ -38,6 +38,9 @@ application {
 }
 
 dependencies {
+    implementation(projects.core.common)
+    implementation(projects.core.domain)
+    implementation(projects.core.model)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.call.logging)
@@ -71,6 +74,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.hikari)
     implementation(libs.postgresql)
+    implementation("io.lettuce:lettuce-core:6.5.5.RELEASE")
 
     implementation(libs.firebase.admin)
     implementation(libs.web3j)

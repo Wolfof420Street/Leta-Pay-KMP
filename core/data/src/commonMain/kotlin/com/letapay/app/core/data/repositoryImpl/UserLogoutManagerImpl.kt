@@ -36,11 +36,10 @@ class UserLogoutManagerImpl(
      * Completely logs out the given [userId], removing all data. The [reason] indicates why the
      * user is being logged out.
      */
-    // TODO:: Currently, both methods (logout and softLogout) perform the same action.
     override fun logout(userId: Long, reason: LogoutReason) {
         Logger.d { "User Logout - $userId, $reason" }
 
-        clearUserData()
+        clearSessionState()
         mutableLogoutEventFlow.tryEmit(LogoutEvent(userId))
     }
 
@@ -51,13 +50,13 @@ class UserLogoutManagerImpl(
     override fun softLogout(userId: Long, reason: LogoutReason) {
         Logger.d { "User Logout - $userId, $reason" }
 
-        clearUserData()
+        // A dedicated account-preserving clear path is not available in the current datastore contract.
+        clearSessionState()
         mutableLogoutEventFlow.tryEmit(LogoutEvent(userId))
     }
 
-    private fun clearUserData() {
+    private fun clearSessionState() {
         scope.launch {
-            // repository.clearAccountData()
             repository.clearUserData()
         }
     }

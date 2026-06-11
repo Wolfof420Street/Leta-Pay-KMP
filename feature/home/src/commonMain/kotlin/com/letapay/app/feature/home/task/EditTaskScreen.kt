@@ -58,8 +58,8 @@ import com.letapay.app.feature.home.generated.resources.feature_home_confirm
 import com.letapay.app.feature.home.generated.resources.feature_home_create_task_button
 import com.letapay.app.feature.home.generated.resources.feature_home_create_task_screen_name
 import com.letapay.app.feature.home.generated.resources.feature_home_create_task_title
-import com.letapay.app.feature.home.generated.resources.feature_home_date_placeholder
-import com.letapay.app.feature.home.generated.resources.feature_home_description_placeholder
+import com.letapay.app.feature.home.generated.resources.feature_home_date_hint
+import com.letapay.app.feature.home.generated.resources.feature_home_description_hint
 import com.letapay.app.feature.home.generated.resources.feature_home_edit_task_button
 import com.letapay.app.feature.home.generated.resources.feature_home_edit_task_screen_name
 import com.letapay.app.feature.home.generated.resources.feature_home_edit_task_title
@@ -70,8 +70,8 @@ import com.letapay.app.feature.home.generated.resources.feature_home_priority_me
 import com.letapay.app.feature.home.generated.resources.feature_home_select_date_description
 import com.letapay.app.feature.home.generated.resources.feature_home_select_time_description
 import com.letapay.app.feature.home.generated.resources.feature_home_selected
-import com.letapay.app.feature.home.generated.resources.feature_home_time_placeholder
-import com.letapay.app.feature.home.generated.resources.feature_home_title_placeholder
+import com.letapay.app.feature.home.generated.resources.feature_home_time_hint
+import com.letapay.app.feature.home.generated.resources.feature_home_title_hint
 import template.core.base.analytics.TrackScreenView
 
 /**
@@ -182,7 +182,7 @@ fun EditTaskScreenContent(
                 readOnly = true,
                 placeholder = {
                     Text(
-                        text = stringResource(Res.string.feature_home_date_placeholder),
+                        text = stringResource(Res.string.feature_home_date_hint),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 },
@@ -209,7 +209,7 @@ fun EditTaskScreenContent(
                 readOnly = true,
                 placeholder = {
                     Text(
-                        text = stringResource(Res.string.feature_home_time_placeholder),
+                        text = stringResource(Res.string.feature_home_time_hint),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 },
@@ -291,7 +291,7 @@ fun DateSelectionDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onConfirmClicked(datePickerState.selectedDateMillis!!)
+                    onConfirmClicked(requireNotNull(datePickerState.selectedDateMillis) { "Date must be selected before confirming" })
                 },
                 enabled = datePickerState.selectedDateMillis != null,
             ) {
@@ -406,7 +406,7 @@ fun TaskTitleAndDescription(
             maxLines = 2,
             placeholder = {
                 Text(
-                    text = stringResource(Res.string.feature_home_title_placeholder),
+                    text = stringResource(Res.string.feature_home_title_hint),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
@@ -417,7 +417,7 @@ fun TaskTitleAndDescription(
             onValueChange = onDescriptionChange,
             placeholder = {
                 Text(
-                    text = stringResource(Res.string.feature_home_description_placeholder),
+                    text = stringResource(Res.string.feature_home_description_hint),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },

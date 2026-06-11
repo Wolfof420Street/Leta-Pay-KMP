@@ -9,6 +9,7 @@
  */
 package com.letapay.backend.routes
 
+import com.letapay.app.core.model.PaginatedRequest
 import com.letapay.backend.error.InvalidTxHashError
 import com.letapay.backend.middleware.enforceGlobalAndWalletRateLimit
 import com.letapay.backend.middleware.idempotencyGuard
@@ -65,7 +66,10 @@ fun Route.configureTransactionRoutes() {
 
             get("/history") {
                 val principal = requireNotNull(call.principal<WalletPrincipal>())
-                call.respond(transactionService.history(principal.walletAddress))
+                val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 20
+                val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
+                val request = PaginatedRequest(limit, offset)
+                call.respond(transactionService.history(principal.walletAddress, request))
             }
 
             get("/status/{txHash}") {

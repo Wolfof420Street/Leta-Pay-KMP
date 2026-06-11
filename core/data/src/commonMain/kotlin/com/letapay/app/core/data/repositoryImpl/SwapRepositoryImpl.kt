@@ -13,6 +13,7 @@ import com.letapay.app.core.common.UUIDGenerator
 import com.letapay.app.core.data.repository.SessionRepository
 import com.letapay.app.core.data.repository.SwapRepository
 import com.letapay.app.core.database.AppDatabase
+import com.letapay.app.core.model.error.AppError
 import com.letapay.app.core.model.result.Resource
 import com.letapay.app.core.model.swap.SpotPrice
 import com.letapay.app.core.model.swap.SwapExecuteResponse
@@ -30,7 +31,11 @@ class SwapRepositoryImpl(
 
     override fun getSpotPrice(fromAsset: String, toAsset: String, chainId: Long): Flow<Resource<SpotPrice>> = flow {
         emit(Resource.Loading())
-        val sessionToken = sessionRepository.sessionState.value.session?.sessionToken ?: throw Exception("Unauthorized")
+        val sessionToken = sessionRepository.sessionState.value.session?.sessionToken
+            ?: run {
+                emit(Resource.Error(AppError.Unauthorized("session_missing")))
+                return@flow
+            }
         val cacheKey = "$chainId:${fromAsset.uppercase()}:${toAsset.uppercase()}"
         appDatabase.portfolioDao.getCachedSpotPrice(cacheKey)?.let { cachedPrice ->
             emit(
@@ -60,7 +65,7 @@ class SwapRepositoryImpl(
     override suspend fun quote(request: SwapQuoteRequest): Resource<SwapQuoteResponse> {
         return try {
             val sessionToken = sessionRepository.sessionState.value.session?.sessionToken
-                ?: throw Exception("Unauthorized")
+                ?: return Resource.Error(AppError.Unauthorized("session_missing"))
             val result = swapApi.quote(sessionToken, request)
             Resource.Success(result)
         } catch (throwable: Throwable) {
@@ -71,7 +76,7 @@ class SwapRepositoryImpl(
     override suspend fun execute(quoteId: String): Resource<SwapExecuteResponse> {
         return try {
             val sessionToken = sessionRepository.sessionState.value.session?.sessionToken
-                ?: throw Exception("Unauthorized")
+                ?: return Resource.Error(AppError.Unauthorized("session_missing"))
             val result = swapApi.execute(sessionToken, quoteId, UUIDGenerator.generateUUID())
             Resource.Success(result)
         } catch (throwable: Throwable) {

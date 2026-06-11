@@ -130,10 +130,10 @@ class AuthViewModel(
             viewModelScope.launch {
                 sessionRepository.authenticate(
                     ConnectWalletRequest(
-                        walletAddress = walletAddress!!,
+                        walletAddress = requireNotNull(walletAddress) { "wallet address missing after validation" },
                         signature = currentState.signature.trim(),
-                        nonce = challenge!!.nonce,
-                        message = challenge.message,
+                        nonce = requireNotNull(challenge) { "nonce missing after validation" }.nonce,
+                        message = requireNotNull(challenge) { "challenge missing after validation" }.message,
                         deviceToken = currentState.deviceToken.ifBlank { null },
                     ),
                 )

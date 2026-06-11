@@ -17,10 +17,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.testing.testApplication
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Sign
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
 class AuthRoutesTest {
     @Test
     fun `POST auth request-nonce returns nonce and expiry`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/auth/request-nonce") {
             contentType(ContentType.Application.Json)
@@ -42,7 +42,7 @@ class AuthRoutesTest {
 
     @Test
     fun `POST auth verify-signature replay attack returns NONCE_ALREADY_USED`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val walletAddress = TEST_CREDENTIALS.address
         val nonceBody = client.post("/auth/request-nonce") {
@@ -52,19 +52,7 @@ class AuthRoutesTest {
         val nonce = Regex(""""nonce":"([^"]+)"""").find(nonceBody)?.groupValues?.get(1)
             ?: error("Nonce missing from response: $nonceBody")
 
-        val message = """
-            letapay.app wants you to sign in with your Ethereum account:
-            $walletAddress
-
-            Sign in to Leta Pay
-
-            URI: https://letapay.app
-            Version: 1
-            Chain ID: 1
-            Nonce: $nonce
-            Issued At: 2026-04-23T00:00:00Z
-            Expiration Time: 2026-04-23T00:05:00Z
-        """.trimIndent()
+        val message = buildSiweMessage(walletAddress, nonce)
 
         val requestBody = """
             {"walletAddress":"$walletAddress","message":${message.asJsonString()},"signature":"${sign(message)}"}
@@ -86,7 +74,7 @@ class AuthRoutesTest {
 
     @Test
     fun `POST auth refresh-token with invalid token returns INVALID_REFRESH_TOKEN`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/auth/refresh-token") {
             contentType(ContentType.Application.Json)
@@ -99,7 +87,7 @@ class AuthRoutesTest {
 
     @Test
     fun `revoked session cannot reuse same jwt after revoke-session`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
         val walletAddress = TEST_CREDENTIALS.address
         val nonceBody = client.post("/auth/request-nonce") {
             contentType(ContentType.Application.Json)
@@ -107,19 +95,7 @@ class AuthRoutesTest {
         }.bodyAsText()
         val nonce = Regex(""""nonce":"([^"]+)"""").find(nonceBody)?.groupValues?.get(1)
             ?: error("Nonce missing from response: $nonceBody")
-        val message = """
-            letapay.app wants you to sign in with your Ethereum account:
-            $walletAddress
-
-            Sign in to Leta Pay
-
-            URI: https://letapay.app
-            Version: 1
-            Chain ID: 1
-            Nonce: $nonce
-            Issued At: 2026-04-23T00:00:00Z
-            Expiration Time: 2026-04-23T00:05:00Z
-        """.trimIndent()
+        val message = buildSiweMessage(walletAddress, nonce)
         val verifyBody = """
             {"walletAddress":"$walletAddress","message":${message.asJsonString()},"signature":"${sign(message)}"}
         """.trimIndent()
@@ -147,7 +123,7 @@ class AuthRoutesTest {
 
     @Test
     fun `request-nonce cannot evade pre-auth rate limit by rotating forwarded for header`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
         val wallet = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         repeat(10) { attempt ->
             val response = client.post("/auth/request-nonce") {
@@ -182,6 +158,24 @@ class AuthRoutesTest {
 
     private fun String.asJsonString(): String =
         "\"" + replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\""
+
+    private fun buildSiweMessage(walletAddress: String, nonce: String): String {
+        val issuedAt = Instant.now()
+        val expirationTime = issuedAt.plusSeconds(5 * 60)
+        return """
+            letapay.app wants you to sign in with your Ethereum account:
+            $walletAddress
+
+            Sign in to Leta Pay
+
+            URI: https://letapay.app
+            Version: 1
+            Chain ID: 1
+            Nonce: $nonce
+            Issued At: $issuedAt
+            Expiration Time: $expirationTime
+        """.trimIndent()
+    }
 
     companion object {
         private val TEST_CREDENTIALS =

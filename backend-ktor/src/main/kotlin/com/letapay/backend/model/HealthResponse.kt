@@ -16,6 +16,8 @@ data class HealthResponse(
     val status: String,
     val version: String,
     val db: String,
+    val redis: String,
+    val sidecar: String,
     val firebase: String,
     val timestamp: Long,
 )

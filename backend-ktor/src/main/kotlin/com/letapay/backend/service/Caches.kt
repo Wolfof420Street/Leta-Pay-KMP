@@ -9,37 +9,29 @@
  */
 package com.letapay.backend.service
 
+import com.letapay.app.core.domain.KeyValueCache
 import com.letapay.backend.model.ai.ParseResult
-import java.util.concurrent.ConcurrentHashMap
 
-class PriceCache {
+class PriceCache(
+    private val cache: KeyValueCache<String>,
+) {
+    suspend fun get(key: String): String? = cache.get(key)
+
+    suspend fun getEntry(key: String): Entry? = cache.getEntry(key)?.let { Entry(it.value, it.expiresAt) }
+
+    suspend fun put(key: String, price: String, ttlSeconds: Long = 45L) {
+        cache.put(key, price, ttlSeconds)
+    }
+
     data class Entry(val price: String, val expiresAt: Long)
-
-    private val cache = ConcurrentHashMap<String, Entry>()
-
-    fun get(key: String, now: Long = System.currentTimeMillis()): String? {
-        val entry = cache[key] ?: return null
-        return if (now < entry.expiresAt) entry.price else null
-    }
-
-    fun getEntry(key: String): Entry? = cache[key]
-
-    fun put(key: String, price: String, ttlMs: Long = 45_000L) {
-        cache[key] = Entry(price = price, expiresAt = System.currentTimeMillis() + ttlMs)
-    }
 }
 
-class ParseResultCache {
-    data class Entry(val result: ParseResult, val expiresAt: Long)
+class ParseResultCache(
+    private val cache: KeyValueCache<ParseResult>,
+) {
+    suspend fun get(key: String): ParseResult? = cache.get(key)
 
-    private val cache = ConcurrentHashMap<String, Entry>()
-
-    fun get(key: String, now: Long = System.currentTimeMillis()): ParseResult? {
-        val entry = cache[key] ?: return null
-        return if (now < entry.expiresAt) entry.result else null
-    }
-
-    fun put(key: String, result: ParseResult, ttlMs: Long = 60_000L) {
-        cache[key] = Entry(result = result, expiresAt = System.currentTimeMillis() + ttlMs)
+    suspend fun put(key: String, result: ParseResult, ttlSeconds: Long = 60L) {
+        cache.put(key, result, ttlSeconds)
     }
 }

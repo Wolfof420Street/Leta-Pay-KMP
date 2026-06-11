@@ -1,0 +1,200 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: :backend-ktor:compileKotlin
+Type-safe project accessors is an incubating feature.
+
+> Configure project :
+Reckoned version: 0.0.1-beta.0.8+20260521T163119Z
+
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors UP-TO-DATE
+> Task :build-logic:convention:processResources UP-TO-DATE
+> Task :build-logic:convention:classes UP-TO-DATE
+> Task :build-logic:convention:jar UP-TO-DATE
+
+> Configure project :core:network
+The 'ksp' configuration is deprecated in Kotlin Multiplatform projects. Please use target-specific configurations like 'kspJvm' instead.
+
+> Task :core:common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :backend-ktor:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core-base:common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core-base:common:kspKotlinDesktop SKIPPED
+> Task :core:analytics:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:analytics:convertXmlValueResourcesForDesktopMain NO-SOURCE
+> Task :core:analytics:copyNonXmlValueResourcesForCommonMain NO-SOURCE
+> Task :core:analytics:copyNonXmlValueResourcesForDesktopMain NO-SOURCE
+> Task :core:analytics:convertXmlValueResourcesForCommonMain NO-SOURCE
+> Task :core:analytics:prepareComposeResourcesTaskForCommonMain NO-SOURCE
+> Task :core:analytics:prepareComposeResourcesTaskForDesktopMain NO-SOURCE
+> Task :core:analytics:generateResourceAccessorsForCommonMain SKIPPED
+> Task :core:analytics:generateResourceAccessorsForDesktopMain SKIPPED
+> Task :core:analytics:convertXmlValueResourcesForJvmCommonMain NO-SOURCE
+> Task :core:analytics:copyNonXmlValueResourcesForJvmCommonMain NO-SOURCE
+> Task :core:analytics:convertXmlValueResourcesForJvmJsCommonMain NO-SOURCE
+> Task :core-base:common:desktopProcessResources NO-SOURCE
+> Task :core-base:common:processDesktopMainResources SKIPPED
+> Task :core:analytics:copyNonXmlValueResourcesForJvmJsCommonMain NO-SOURCE
+> Task :core:analytics:prepareComposeResourcesTaskForJvmCommonMain NO-SOURCE
+> Task :core:analytics:generateResourceAccessorsForJvmCommonMain SKIPPED
+> Task :core:analytics:convertXmlValueResourcesForNonAndroidMain NO-SOURCE
+> Task :core:analytics:convertXmlValueResourcesForNonJsCommonMain NO-SOURCE
+> Task :core:analytics:copyNonXmlValueResourcesForNonAndroidMain NO-SOURCE
+> Task :core:analytics:copyNonXmlValueResourcesForNonJsCommonMain NO-SOURCE
+> Task :core:analytics:prepareComposeResourcesTaskForJvmJsCommonMain NO-SOURCE
+> Task :core:analytics:prepareComposeResourcesTaskForNonAndroidMain NO-SOURCE
+> Task :core:analytics:generateResourceAccessorsForNonAndroidMain SKIPPED
+> Task :core:analytics:generateResourceAccessorsForJvmJsCommonMain SKIPPED
+> Task :core:analytics:convertXmlValueResourcesForNonNativeMain NO-SOURCE
+> Task :core:analytics:prepareComposeResourcesTaskForNonJsCommonMain NO-SOURCE
+> Task :core:analytics:copyNonXmlValueResourcesForNonNativeMain NO-SOURCE
+> Task :core:analytics:generateResourceAccessorsForNonJsCommonMain SKIPPED
+> Task :core:analytics:generateComposeResClass SKIPPED
+> Task :core:analytics:generateExpectResourceCollectorsForCommonMain SKIPPED
+> Task :core-base:analytics:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:analytics:prepareComposeResourcesTaskForNonNativeMain NO-SOURCE
+> Task :core-base:analytics:copyNonXmlValueResourcesForCommonMain NO-SOURCE
+> Task :core:analytics:generateResourceAccessorsForNonNativeMain SKIPPED
+> Task :core-base:analytics:convertXmlValueResourcesForCommonMain NO-SOURCE
+> Task :core:analytics:generateActualResourceCollectorsForDesktopMain SKIPPED
+> Task :core-base:analytics:convertXmlValueResourcesForDesktopMain NO-SOURCE
+> Task :core-base:analytics:convertXmlValueResourcesForJvmCommonMain NO-SOURCE
+> Task :core-base:analytics:copyNonXmlValueResourcesForDesktopMain NO-SOURCE
+> Task :core-base:analytics:copyNonXmlValueResourcesForJvmCommonMain NO-SOURCE
+> Task :core-base:analytics:prepareComposeResourcesTaskForDesktopMain NO-SOURCE
+> Task :core-base:analytics:generateResourceAccessorsForDesktopMain SKIPPED
+> Task :core-base:analytics:convertXmlValueResourcesForJvmJsCommonMain NO-SOURCE
+> Task :core-base:analytics:copyNonXmlValueResourcesForJvmJsCommonMain NO-SOURCE
+> Task :core-base:analytics:prepareComposeResourcesTaskForJvmJsCommonMain NO-SOURCE
+> Task :core-base:analytics:generateResourceAccessorsForJvmJsCommonMain SKIPPED
+> Task :core-base:analytics:convertXmlValueResourcesForNonAndroidMain NO-SOURCE
+> Task :core-base:analytics:copyNonXmlValueResourcesForNonAndroidMain NO-SOURCE
+> Task :core-base:analytics:prepareComposeResourcesTaskForNonAndroidMain NO-SOURCE
+> Task :core-base:analytics:generateResourceAccessorsForNonAndroidMain SKIPPED
+> Task :core-base:analytics:convertXmlValueResourcesForNonJsCommonMain NO-SOURCE
+> Task :core-base:analytics:copyNonXmlValueResourcesForNonJsCommonMain NO-SOURCE
+> Task :core-base:analytics:prepareComposeResourcesTaskForCommonMain NO-SOURCE
+> Task :core-base:analytics:prepareComposeResourcesTaskForNonJsCommonMain NO-SOURCE
+> Task :core-base:analytics:generateResourceAccessorsForNonJsCommonMain SKIPPED
+> Task :core-base:analytics:convertXmlValueResourcesForNonNativeMain NO-SOURCE
+> Task :core-base:analytics:generateResourceAccessorsForCommonMain SKIPPED
+> Task :core-base:analytics:copyNonXmlValueResourcesForNonNativeMain NO-SOURCE
+> Task :core-base:analytics:generateComposeResClass SKIPPED
+> Task :core-base:analytics:prepareComposeResourcesTaskForNonNativeMain NO-SOURCE
+> Task :core-base:analytics:generateResourceAccessorsForNonNativeMain SKIPPED
+> Task :core-base:analytics:generateExpectResourceCollectorsForCommonMain SKIPPED
+> Task :core:data:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:database:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core-base:analytics:prepareComposeResourcesTaskForJvmCommonMain NO-SOURCE
+> Task :core-base:analytics:generateResourceAccessorsForJvmCommonMain SKIPPED
+> Task :core-base:analytics:generateActualResourceCollectorsForDesktopMain SKIPPED
+> Task :core-base:analytics:kspKotlinDesktop SKIPPED
+> Task :core-base:analytics:assembleDesktopMainResources UP-TO-DATE
+> Task :core-base:analytics:desktopProcessResources UP-TO-DATE
+> Task :core-base:analytics:processDesktopMainResources SKIPPED
+> Task :core:analytics:assembleDesktopMainResources UP-TO-DATE
+> Task :core:model:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core-base:database:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core-base:database:kspKotlinDesktop SKIPPED
+> Task :core:database:generateCommonMainLetaPayDatabaseInterface UP-TO-DATE
+> Task :core-base:database:desktopProcessResources NO-SOURCE
+> Task :core-base:database:processDesktopMainResources SKIPPED
+> Task :core:datastore:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:network:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core-base:common:transformCommonMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:kspCommonMainKotlinMetadata SKIPPED
+> Task :core-base:common:compileCommonMainKotlinMetadata UP-TO-DATE
+> Task :core-base:common:metadataCommonMainProcessResources NO-SOURCE
+> Task :core-base:common:metadataCommonMainClasses UP-TO-DATE
+> Task :core-base:common:transformNonJsCommonMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:kspNonJsCommonMainKotlinMetadata SKIPPED
+> Task :core-base:common:compileNonJsCommonMainKotlinMetadata NO-SOURCE
+> Task :core-base:common:transformNonNativeMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:kspNonNativeMainKotlinMetadata SKIPPED
+> Task :core-base:common:compileNonNativeMainKotlinMetadata NO-SOURCE
+> Task :core-base:common:metadataNonJsCommonMainProcessResources NO-SOURCE
+> Task :core-base:common:metadataNonJsCommonMainClasses UP-TO-DATE
+> Task :core-base:common:metadataNonNativeMainProcessResources NO-SOURCE
+> Task :core-base:common:metadataNonNativeMainClasses UP-TO-DATE
+> Task :core-base:common:transformJvmCommonMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:kspJvmCommonMainKotlinMetadata SKIPPED
+> Task :core-base:common:compileJvmCommonMainKotlinMetadata SKIPPED
+> Task :core-base:common:transformJvmJsCommonMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:kspJvmJsCommonMainKotlinMetadata SKIPPED
+> Task :core-base:common:compileJvmJsCommonMainKotlinMetadata NO-SOURCE
+> Task :core-base:common:transformMobileMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:kspMobileMainKotlinMetadata SKIPPED
+> Task :core-base:common:compileMobileMainKotlinMetadata NO-SOURCE
+> Task :core-base:database:compileKotlinDesktop FROM-CACHE
+> Task :core-base:common:transformNonAndroidMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:kspNonAndroidMainKotlinMetadata SKIPPED
+> Task :core-base:database:compileDesktopMainJava NO-SOURCE
+> Task :core-base:database:desktopMainClasses UP-TO-DATE
+> Task :core-base:common:compileNonAndroidMainKotlinMetadata UP-TO-DATE
+> Task :core-base:common:transformNonJvmCommonMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:kspNonJvmCommonMainKotlinMetadata SKIPPED
+> Task :core-base:common:compileNonJvmCommonMainKotlinMetadata NO-SOURCE
+> Task :core-base:common:generateProjectStructureMetadata UP-TO-DATE
+> Task :core-base:common:metadataJvmCommonMainProcessResources NO-SOURCE
+> Task :core-base:common:metadataJvmCommonMainClasses UP-TO-DATE
+> Task :core-base:common:metadataJvmJsCommonMainProcessResources NO-SOURCE
+> Task :core-base:common:metadataJvmJsCommonMainClasses UP-TO-DATE
+> Task :core-base:common:metadataMobileMainProcessResources NO-SOURCE
+> Task :core-base:common:metadataMobileMainClasses UP-TO-DATE
+> Task :core-base:common:metadataNonAndroidMainProcessResources NO-SOURCE
+> Task :core-base:common:metadataNonAndroidMainClasses UP-TO-DATE
+> Task :core-base:common:metadataNonJvmCommonMainProcessResources NO-SOURCE
+> Task :core-base:common:metadataNonJvmCommonMainClasses UP-TO-DATE
+> Task :core-base:common:allMetadataJar
+> Task :core-base:database:desktopJar
+> Task :core-base:analytics:compileKotlinDesktop FROM-CACHE
+> Task :core-base:common:transformNativeMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:metadataNativeMainProcessResources NO-SOURCE
+> Task :core-base:analytics:compileDesktopMainJava NO-SOURCE
+> Task :core-base:analytics:desktopMainClasses UP-TO-DATE
+> Task :core-base:common:transformAppleMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:metadataAppleMainProcessResources NO-SOURCE
+> Task :core-base:common:transformIosMainDependenciesMetadata UP-TO-DATE
+> Task :core-base:common:metadataIosMainProcessResources NO-SOURCE
+> Task :core:common:metadataCommonMainProcessResources NO-SOURCE
+> Task :core:common:metadataNonJsCommonMainProcessResources NO-SOURCE
+> Task :core:common:metadataNonNativeMainProcessResources NO-SOURCE
+> Task :core-base:common:exportRootPublicationCoordinatesForMetadataApiElements UP-TO-DATE
+> Task :core:common:generateProjectStructureMetadata UP-TO-DATE
+> Task :core:common:metadataJvmCommonMainProcessResources NO-SOURCE
+> Task :core:common:metadataJvmJsCommonMainProcessResources NO-SOURCE
+> Task :core:common:metadataMobileMainProcessResources NO-SOURCE
+> Task :core:common:metadataNonAndroidMainProcessResources NO-SOURCE
+> Task :core:common:metadataNonJvmCommonMainProcessResources NO-SOURCE
+> Task :core-base:analytics:desktopJar
+> Task :core:analytics:kspKotlinDesktop SKIPPED
+> Task :core-base:common:compileKotlinDesktop
+e: file:///Users/wolfof420street/StudioProjects/Leta-Pay-KMP/core-base/common/src/desktopMain/kotlin/template/core/base/common/PlatformLocaleManager.desktop.kt:14:35 Declaration must be marked with 'actual'.
+e: file:///Users/wolfof420street/StudioProjects/Leta-Pay-KMP/core-base/common/src/desktopMain/kotlin/template/core/base/common/PlatformLocaleManager.desktop.kt:17:18 Declaration must be marked with 'actual'.
+e: file:///Users/wolfof420street/StudioProjects/Leta-Pay-KMP/core-base/common/src/desktopMain/kotlin/template/core/base/common/PlatformLocaleManager.desktop.kt:22:18 Declaration must be marked with 'actual'.
+e: file:///Users/wolfof420street/StudioProjects/Leta-Pay-KMP/core-base/common/src/desktopMain/kotlin/template/core/base/common/PlatformLocaleManager.desktop.kt:26:18 Declaration must be marked with 'actual'.
+
+> Task :core-base:common:compileKotlinDesktop FAILED
+> Task :core-base:common:commonizeNativeDistribution
+> Task :core:common:commonizeNativeDistribution
+> Task :core:analytics:compileKotlinDesktop
+> Task :core:common:commonizeNativeDistribution UP-TO-DATE
+> Task :core-base:common:commonizeNativeDistribution UP-TO-DATE
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':core-base:common:compileKotlinDesktop'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 14m 28s
+33 actionable tasks: 5 executed, 3 from cache, 25 up-to-date
+Configuration cache entry stored.

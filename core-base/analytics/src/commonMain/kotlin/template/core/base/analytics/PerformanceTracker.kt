@@ -26,8 +26,9 @@ class PerformanceTracker(
 
     /** Start timing an operation */
     fun startTimer(operationName: String, context: Map<String, String> = emptyMap()): String {
-        val timerId = "${operationName}_$currentTime"
-        activeTimers[timerId] = currentTime
+        val now = Clock.System.now().toEpochMilliseconds()
+        val timerId = "${operationName}_$now"
+        activeTimers[timerId] = now
 
         if (enableAutomaticLogging) {
             analytics.logEvent(
@@ -46,7 +47,8 @@ class PerformanceTracker(
         additionalContext: Map<String, String> = emptyMap(),
     ): Long? {
         val startTime = activeTimers.remove(timerId) ?: return null
-        val duration = currentTime - startTime
+        val now = Clock.System.now().toEpochMilliseconds()
+        val duration = now - startTime
 
         // Extract operation name from timer ID
         val operationName = timerId.substringBeforeLast("_")
@@ -187,17 +189,19 @@ class AppLifecycleTracker(private val analytics: AnalyticsHelper) {
 
     /** Mark app launch start */
     fun markAppLaunchStart() {
-        appStartTime = currentTime
+        val now = Clock.System.now().toEpochMilliseconds()
+        appStartTime = now
         analytics.logEvent(
             Types.APP_LAUNCH,
-            mapOf("launch_start_time" to appStartTime.toString()),
+            mapOf("launch_start_time" to now.toString()),
         )
     }
 
     /** Mark app launch complete */
     fun markAppLaunchComplete() {
         val startTime = appStartTime ?: return
-        val launchDuration = currentTime - startTime
+        val now = Clock.System.now().toEpochMilliseconds()
+        val launchDuration = now - startTime
 
         analytics.logEvent(
             "app_launch_completed",
@@ -214,13 +218,14 @@ class AppLifecycleTracker(private val analytics: AnalyticsHelper) {
 
     /** Mark app going to background */
     fun markAppBackground() {
-        backgroundTime = currentTime
+        val now = Clock.System.now().toEpochMilliseconds()
+        backgroundTime = now
         val foregroundTime = lastForegroundTime
 
         analytics.logEvent(
             Types.APP_BACKGROUND,
             if (foregroundTime != null) {
-                mapOf("foreground_duration_ms" to (backgroundTime!! - foregroundTime).toString())
+                mapOf("foreground_duration_ms" to (now - foregroundTime).toString())
             } else {
                 emptyMap()
             },
@@ -229,14 +234,14 @@ class AppLifecycleTracker(private val analytics: AnalyticsHelper) {
 
     /** Mark app coming to foreground */
     fun markAppForeground() {
-        val currentTime = currentTime
-        lastForegroundTime = currentTime
+        val now = Clock.System.now().toEpochMilliseconds()
+        lastForegroundTime = now
         val bgTime = backgroundTime
 
         analytics.logEvent(
             Types.APP_FOREGROUND,
             if (bgTime != null) {
-                mapOf("background_duration_ms" to (currentTime - bgTime).toString())
+                mapOf("background_duration_ms" to (now - bgTime).toString())
             } else {
                 emptyMap()
             },
@@ -261,8 +266,6 @@ fun AnalyticsHelper.performanceTracker(
 
 /** Create an app lifecycle tracker */
 fun AnalyticsHelper.lifecycleTracker(): AppLifecycleTracker = AppLifecycleTracker(this)
-
-private val currentTime = Clock.System.now().toEpochMilliseconds()
 
 /** Quick performance timing for suspend functions */
 suspend inline fun <T> AnalyticsHelper.timePerformance(

@@ -2057,6 +2057,7 @@
 |    |    |    |    +--- io.insert-koin:koin-annotations:2.1.0 (*)
 |    |    |    |    +--- org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0 (*)
 |    |    |    |    \--- org.jetbrains.kotlin:kotlin-parcelize-runtime:2.2.21 (*)
+|    |    |    +--- org.jetbrains.kotlinx:kotlinx-datetime:0.7.1 (*)
 |    |    |    +--- io.ktor:ktor-client-core:3.3.3 (*)
 |    |    |    +--- io.ktor:ktor-client-json:3.3.3
 |    |    |    |    \--- io.ktor:ktor-client-json-jvm:3.3.3
@@ -2448,6 +2449,7 @@
 |    |    \--- org.jetbrains.kotlin:kotlin-parcelize-runtime:2.2.21 (*)
 |    +--- org.jetbrains.compose.material3:material3:1.9.0 (*)
 |    +--- org.jetbrains.compose.components:components-resources:1.9.3 (*)
+|    +--- project :core-base:common (*)
 |    +--- project :core-base:platform (*)
 |    +--- io.coil-kt.coil3:coil-compose-core:3.3.0 (*)
 |    \--- org.jetbrains.kotlin:kotlin-parcelize-runtime:2.2.21 (*)

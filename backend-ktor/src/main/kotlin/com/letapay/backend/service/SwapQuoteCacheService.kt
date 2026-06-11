@@ -9,29 +9,18 @@
  */
 package com.letapay.backend.service
 
+import com.letapay.app.core.domain.KeyValueCache
 import com.letapay.backend.error.QuoteExpiredError
 import com.letapay.backend.model.swap.SwapQuote
-import java.util.concurrent.ConcurrentHashMap
 
-class SwapQuoteCacheService {
-    private val quotes = ConcurrentHashMap<String, SwapQuote>()
-
-    fun putQuote(quote: SwapQuote) {
-        pruneExpiredEntries(System.currentTimeMillis())
-        quotes[quote.quoteId] = quote
+class SwapQuoteCacheService(
+    private val cache: KeyValueCache<SwapQuote>,
+) {
+    suspend fun putQuote(quote: SwapQuote) {
+        cache.put(quote.quoteId, quote, (quote.expiresAt - System.currentTimeMillis()) / 1000)
     }
 
-    fun requireActiveQuote(quoteId: String, now: Long = System.currentTimeMillis()): SwapQuote {
-        pruneExpiredEntries(now)
-        val quote = quotes[quoteId] ?: throw QuoteExpiredError()
-        if (quote.expiresAt <= now) {
-            quotes.remove(quoteId)
-            throw QuoteExpiredError()
-        }
-        return quote
-    }
-
-    private fun pruneExpiredEntries(now: Long) {
-        quotes.entries.removeIf { (_, quote) -> quote.expiresAt <= now }
+    suspend fun requireActiveQuote(quoteId: String): SwapQuote {
+        return cache.get(quoteId) ?: throw QuoteExpiredError()
     }
 }

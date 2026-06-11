@@ -32,21 +32,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kmp_project_template.feature.profile.generated.resources.Res
-import kmp_project_template.feature.profile.generated.resources.feature_profile_account
-import kmp_project_template.feature.profile.generated.resources.feature_profile_connected_wallet
-import kmp_project_template.feature.profile.generated.resources.feature_profile_disconnect_wallet
-import kmp_project_template.feature.profile.generated.resources.feature_profile_network_preferences
-import kmp_project_template.feature.profile.generated.resources.feature_profile_notifications
-import kmp_project_template.feature.profile.generated.resources.feature_profile_security_privacy
-import kmp_project_template.feature.profile.generated.resources.feature_profile_settings
-import kmp_project_template.feature.profile.generated.resources.feature_profile_wallet_placeholder
+import com.letapay.app.feature.profile.generated.resources.Res
+import com.letapay.app.feature.profile.generated.resources.feature_profile_account
+import com.letapay.app.feature.profile.generated.resources.feature_profile_connected_wallet
+import com.letapay.app.feature.profile.generated.resources.feature_profile_disconnect_wallet
+import com.letapay.app.feature.profile.generated.resources.feature_profile_network_preferences
+import com.letapay.app.feature.profile.generated.resources.feature_profile_no_active_session
+import com.letapay.app.feature.profile.generated.resources.feature_profile_notifications
+import com.letapay.app.feature.profile.generated.resources.feature_profile_security_privacy
+import com.letapay.app.feature.profile.generated.resources.feature_profile_settings
 import org.jetbrains.compose.resources.stringResource
+
 private val CardMedium = RoundedCornerShape(16.dp)
 
 @Composable
-internal fun ProfileScreen(modifier: Modifier = Modifier) {
-    val walletAddress = stringResource(Res.string.feature_profile_wallet_placeholder)
+internal fun ProfileScreen(
+    uiState: ProfileUiState,
+    modifier: Modifier = Modifier,
+) {
+    val walletAddress = uiState.walletAddress ?: stringResource(Res.string.feature_profile_no_active_session)
 
     Column(
         modifier = modifier
@@ -72,7 +76,6 @@ internal fun ProfileScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Avatar placeholder
                 Box(
                     modifier = Modifier
                         .size(60.dp)
@@ -117,7 +120,7 @@ internal fun ProfileScreen(modifier: Modifier = Modifier) {
         Spacer(Modifier.weight(1f))
 
         Surface(
-            onClick = { /* Handle logout */ },
+            onClick = { },
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shape = CardMedium,
             modifier = Modifier.fillMaxWidth(),

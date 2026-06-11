@@ -61,25 +61,6 @@ fun main() {
                         localeVersion++
                     },
                     handleThemeMode = {},
-                    handleAppLocale = { languageTag ->
-                        if (languageTag != null) {
-                            // Parse language tag and set as default locale
-                            val locale = when {
-                                languageTag.contains("-") -> {
-                                    val parts = languageTag.split("-")
-                                    Locale(parts[0], parts[1])
-                                }
-                                else -> Locale(languageTag)
-                            }
-                            Locale.setDefault(locale)
-                        } else {
-                            // System Default: reset to system locale
-                            val systemLocale = Locale.getDefault(Locale.Category.DISPLAY)
-                            Locale.setDefault(systemLocale)
-                        }
-                        // Trigger recomposition with new locale
-                        localeVersion++
-                    },
                     onSplashScreenRemoved = {}
                 )
             }

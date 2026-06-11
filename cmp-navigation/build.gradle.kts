@@ -33,6 +33,7 @@ kotlin {
             implementation(projects.feature.wallet)
             implementation(projects.feature.chat)
             implementation(projects.feature.trade)
+            implementation(projects.feature.profile)
             implementation(projects.feature.yield)
             implementation(projects.feature.agent)
 
