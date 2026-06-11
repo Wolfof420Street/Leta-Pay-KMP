@@ -15,12 +15,6 @@ interface ContactService {
     suspend fun list(ownerWallet: String): List<ContactRecord>
 }
 
-class StubContactService : ContactService {
-    override suspend fun list(ownerWallet: String): List<ContactRecord> = listOf(
-        ContactRecord(
-            id = "contact_demo_1",
-            displayName = "Satoshi Demo",
-            walletAddress = "0x000000000000000000000000000000000000dEaD",
-        ),
-    )
+class EmptyContactService : ContactService {
+    override suspend fun list(ownerWallet: String): List<ContactRecord> = emptyList()
 }

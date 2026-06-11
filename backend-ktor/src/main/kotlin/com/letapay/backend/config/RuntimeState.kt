@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 object RuntimeState {
     private val misconfigured = AtomicBoolean(false)
     private val firebaseHealthy = AtomicBoolean(false)
+    private val firebaseConfigured = AtomicBoolean(false)
 
     fun markMisconfigured(value: Boolean) {
         misconfigured.set(value)
@@ -30,6 +31,12 @@ object RuntimeState {
     }
 
     fun isFirebaseHealthy(): Boolean = firebaseHealthy.get()
+
+    fun markFirebaseConfigured(value: Boolean) {
+        firebaseConfigured.set(value)
+    }
+
+    fun isFirebaseConfigured(): Boolean = firebaseConfigured.get()
 }
 
 fun initFirebase(config: ApplicationConfig) {
@@ -43,8 +50,13 @@ fun initFirebase(config: ApplicationConfig) {
             ?.getString()
             ?.takeIf(String::isNotBlank)
             ?.let(::FileInputStream)
-        ?: error("Firebase service account credentials are missing.")
+        ?: run {
+            RuntimeState.markFirebaseConfigured(false)
+            RuntimeState.markFirebaseHealthy(false)
+            return
+        }
 
+    RuntimeState.markFirebaseConfigured(true)
     val options = com.google.firebase.FirebaseOptions.builder()
         .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
         .build()

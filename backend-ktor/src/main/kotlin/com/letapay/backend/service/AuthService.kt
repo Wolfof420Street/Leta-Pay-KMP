@@ -106,7 +106,9 @@ class DefaultAuthService(
 
             // Fix: atomically consume the nonce inside the transaction before token issuance so replays lose the race.
             val updatedRows = Nonces.update({
-                (Nonces.nonce eq nonce) and (Nonces.usedAt.isNull())
+                (Nonces.nonce eq nonce) and
+                    (Nonces.walletAddress eq parsedMessage.address) and
+                    (Nonces.usedAt.isNull())
             }) {
                 it[usedAt] = now
             }
@@ -114,7 +116,7 @@ class DefaultAuthService(
                 throw NonceAlreadyUsedError()
             }
 
-            if (!verifySignature(request.walletAddress, request.message, request.signature)) {
+            if (!verifySignature(parsedMessage.address, request.message, request.signature)) {
                 throw InvalidWalletSignatureError()
             }
         }

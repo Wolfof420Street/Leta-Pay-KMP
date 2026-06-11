@@ -79,7 +79,7 @@ class DatabaseTransactionService : TransactionService {
             val total = query.count().toInt()
             val items = query
                 .orderBy(Transactions.createdAt to org.jetbrains.exposed.sql.SortOrder.DESC)
-                .limit(request.clampedLimit, offset = request.offset.toLong())
+                .limit(request.clampedLimit, offset = request.clampedOffset.toLong())
                 .map { row ->
                     TransactionRecord(
                         txHash = row[Transactions.txHash],
@@ -93,7 +93,7 @@ class DatabaseTransactionService : TransactionService {
             PaginatedResponse(
                 items = items,
                 total = total,
-                offset = request.offset,
+                offset = request.clampedOffset,
                 limit = request.clampedLimit,
             )
         }

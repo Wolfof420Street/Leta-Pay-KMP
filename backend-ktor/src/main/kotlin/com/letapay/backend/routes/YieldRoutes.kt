@@ -9,6 +9,7 @@
  */
 package com.letapay.backend.routes
 
+import com.letapay.backend.config.AppConfig
 import com.letapay.backend.error.InvalidRequestError
 import com.letapay.backend.middleware.enforceGlobalAndWalletRateLimit
 import com.letapay.backend.middleware.idempotencyGuard
@@ -20,6 +21,7 @@ import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.IdempotencyService
 import com.letapay.backend.service.RateLimiterService
 import com.letapay.backend.service.YieldService
+import com.letapay.backend.service.enforceTransactionLimit
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -43,6 +45,7 @@ fun Route.configureYieldRoutes() {
     val agentKitClient by inject<AgentKitClient>()
     val json by inject<Json>()
     val rateLimiter by inject<RateLimiterService>()
+    val appConfig by inject<AppConfig>()
 
     authenticate("session-auth") {
         route("/yield") {
@@ -69,6 +72,7 @@ fun Route.configureYieldRoutes() {
                     return@post
                 }
                 val request = call.receive<StakeRequest>()
+                enforceTransactionLimit(request.amount, appConfig)
                 call.requireMatchingIdempotencyKey(request.idempotencyKey)
                 val opportunity = yieldService.requireOpportunity(request.opportunityId)
                 val unsignedTx = agentKitClient.buildStake(
@@ -106,6 +110,7 @@ fun Route.configureYieldRoutes() {
                     return@post
                 }
                 val request = call.receive<UnstakeRequest>()
+                enforceTransactionLimit(request.amount, appConfig)
                 call.requireMatchingIdempotencyKey(request.idempotencyKey)
                 val response = yieldService.prepareUnstake(
                     positionId = request.positionId,

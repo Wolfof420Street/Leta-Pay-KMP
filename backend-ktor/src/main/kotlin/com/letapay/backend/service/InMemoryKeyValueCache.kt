@@ -10,6 +10,7 @@
 package com.letapay.backend.service
 
 import com.letapay.app.core.domain.KeyValueCache
+import com.letapay.app.core.domain.KeyValueEntry
 import java.util.concurrent.ConcurrentHashMap
 
 class InMemoryKeyValueCache<V : Any> : KeyValueCache<V> {
@@ -18,10 +19,20 @@ class InMemoryKeyValueCache<V : Any> : KeyValueCache<V> {
     override suspend fun get(key: String): V? {
         val entry = store[key] ?: return null
         return if (System.currentTimeMillis() > entry.expiresAt) {
-            store.remove(key)
+            store.remove(key, entry)
             null
         } else {
             entry.value
+        }
+    }
+
+    override suspend fun getEntry(key: String): KeyValueEntry<V>? {
+        val entry = store[key] ?: return null
+        return if (System.currentTimeMillis() > entry.expiresAt) {
+            store.remove(key, entry)
+            null
+        } else {
+            KeyValueEntry(value = entry.value, expiresAt = entry.expiresAt)
         }
     }
 

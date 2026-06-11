@@ -47,12 +47,17 @@ class LetaPayAnalyticsTracker(private val analyticsHelper: AnalyticsHelper) {
     }
 
     fun trackTransaction(txHash: String, chainId: String, status: String) {
+        val eventType = when (status.lowercase()) {
+            "confirmed" -> LetaPayEventTypes.TRANSACTION_CONFIRMED
+            "failed" -> LetaPayEventTypes.TRANSACTION_FAILED
+            else -> LetaPayEventTypes.TRANSACTION_SENT
+        }
         analyticsHelper.logEvent(
-            LetaPayEventTypes.TRANSACTION_SENT,
+            eventType,
             mapOf(
                 LetaPayParamKeys.TRANSACTION_HASH to txHash,
                 LetaPayParamKeys.CHAIN_ID to chainId,
-                "status" to status,
+                LetaPayParamKeys.STATUS to status,
             ),
         )
     }

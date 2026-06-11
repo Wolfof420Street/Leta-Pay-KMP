@@ -19,7 +19,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -31,7 +30,7 @@ class TransactionRoutesTest {
 
     @Test
     fun `transactions build requires idempotency key`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/transactions/build") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt(walletA, "tx-session-1")}")
@@ -48,6 +47,7 @@ class TransactionRoutesTest {
         application {
             configureApp(
                 koinModule {
+                    includes(backendTestOverrides())
                     single<ScreeningService> {
                         object : ScreeningService {
                             override suspend fun check(address: String): Boolean = false
@@ -70,7 +70,7 @@ class TransactionRoutesTest {
 
     @Test
     fun `transactions send stores and returns status plus history`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val sendResponse = client.post("/transactions/send") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt(walletA, "tx-session-3")}")
@@ -102,7 +102,7 @@ class TransactionRoutesTest {
 
     @Test
     fun `idempotency key is wallet-scoped and cannot be poisoned cross-wallet`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
         val key = "cross-wallet-key-1"
 
         val attacker = client.post("/transactions/build") {

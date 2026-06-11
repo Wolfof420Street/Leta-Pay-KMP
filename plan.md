@@ -1,6 +1,6 @@
 # Plan: Leta Pay Reality-Synced Roadmap (Phase 15)
 
-Last updated: 2026-05-04
+Last updated: 2026-05-27
 
 ## 1. Product State
 
@@ -95,18 +95,23 @@ Managed-host-specific assumptions (Fly.io, Vercel defaults) are not canonical fo
 - Environment contracts documented for backend and sidecar
 - CI workflows rewritten to native repository commands
 - VPS production compose topology defined
+- Production observability baseline (Prometheus + Grafana)
+- Database backup and restore verification scripts
+- Deployment smoke-test suite integrated into CI/CD
 
 ### Active
 
-- Production VPS rollout hardening (secrets injection, backups, monitoring)
-- Documentation reality sync and template cruft removal
 - AI workflow prompt and rule synchronization under `.agent/`
+- Temporary build-stability fallback: Kotlin compilation runs in-process to avoid daemon handshake failures during long backend test runs.
+- Production-only background jobs: reconciliation and watcher coroutines are disabled outside production to keep backend tests leak-free.
+- Production-only Redis rate limiting: tests use in-memory limiting so request counts do not leak across backend test cases.
 
 ### Next
 
-- Add production observability baseline (metrics + alert thresholds)
-- Add automated backup and restore verification for Postgres volumes
-- Add deployment smoke-test script for post-upgrade checks
+- Add automated Postgres backup cron job to VPS provisioning guide
+- Implement centralized logging (Loki or similar)
+- Stress test the AgentKit sidecar under high concurrent chat load
+- Hardening pass: runtime TODOs and platform shim placeholders cleaned (verified 2026-05-27)
 
 ## 6. Engineering Rules (Canonical)
 

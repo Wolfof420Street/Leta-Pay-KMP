@@ -13,6 +13,7 @@ import com.letapay.backend.service.AgentKitClient
 import com.letapay.backend.service.DeviceTokenRecord
 import com.letapay.backend.service.DeviceTokenService
 import com.letapay.backend.service.HealthService
+import com.letapay.backend.service.HealthSnapshot
 import com.letapay.backend.service.NotificationPayloadFactory
 import com.letapay.backend.service.PushMessagingClient
 import com.letapay.backend.service.PushNotificationService
@@ -28,7 +29,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -41,7 +41,7 @@ import org.koin.dsl.module as koinModule
 class Phase7Test {
     @Test
     fun `put device token with valid token returns 204`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.put("/device-token") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -56,7 +56,7 @@ class Phase7Test {
     fun `put device token twice keeps one active token per wallet and platform`() = testApplication {
         lateinit var service: DeviceTokenService
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
             service = get()
         }
 
@@ -81,7 +81,7 @@ class Phase7Test {
     fun `delete device token marks token inactive`() = testApplication {
         lateinit var service: DeviceTokenService
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
             service = get()
         }
 
@@ -104,7 +104,7 @@ class Phase7Test {
 
     @Test
     fun `health returns 200 with status field present`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.get("/health")
 
@@ -116,11 +116,18 @@ class Phase7Test {
     fun `health returns degraded db when probe reports degraded`() = testApplication {
         application {
             configureApp(
+                backendTestOverrides(),
                 koinModule {
                     single<HealthService> {
                         object : HealthService {
-                            override suspend fun dbStatus(): String = "degraded"
-                            override suspend fun firebaseStatus(): String = "ok"
+                            override suspend fun status(): HealthSnapshot =
+                                HealthSnapshot(
+                                    status = "degraded",
+                                    db = "degraded",
+                                    redis = "ok",
+                                    sidecar = "ok",
+                                    firebase = "ok",
+                                )
                         }
                     }
                 },
@@ -129,13 +136,13 @@ class Phase7Test {
 
         val response = client.get("/health")
 
-        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
         assertTrue(response.bodyAsText().contains("\"db\":\"degraded\""))
     }
 
     @Test
     fun `request body greater than 64kb returns 413`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val oversizedWallet = "0x" + "a".repeat(70_000)
         val response = client.post("/auth/request-nonce") {
@@ -150,6 +157,7 @@ class Phase7Test {
     fun `timeout on coinbase quote returns 504 upstream timeout`() = testApplication {
         application {
             configureApp(
+                backendTestOverrides(),
                 koinModule {
                     single<AgentKitClient> {
                         object : AgentKitClient {

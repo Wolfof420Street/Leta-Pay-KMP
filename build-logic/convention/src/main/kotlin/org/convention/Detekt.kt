@@ -25,7 +25,8 @@ internal fun Project.configureDetekt(extension: DetektExtension) = extension.app
         exclude("**/generated/**")
         exclude("**/build-logic/**")
         exclude("**/spotless/**")
-        // TODO:: Remove this exclusion
+        // Exclude designsystem & home for now: platform-specific generated resources
+        // Revisit when these modules expose pure-Kotlin sources for detekt analysis
         exclude("core-base/designsystem/**")
         exclude("feature/home/**")
         reports {

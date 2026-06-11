@@ -9,14 +9,14 @@
  */
 package template.core.base.common
 
-actual class PlatformLocaleManager() : LocaleManager {
-    override fun setLocale(languageCode: String) {
-        // Platform specific implementation for iOS/macOS
+actual class PlatformLocaleManager actual constructor() : LocaleManager {
+    actual override fun setLocale(languageCode: String) {
+        throw UnsupportedOperationException("setLocale is not supported on native targets yet")
     }
 
-    override fun resetToSystem() {
-        // Platform specific implementation for iOS/macOS
+    actual override fun resetToSystem() {
+        throw UnsupportedOperationException("resetToSystem is not supported on native targets yet")
     }
 
-    override fun currentLocale(): String = "en" // Fallback
+    actual override fun currentLocale(): String = "en"
 }

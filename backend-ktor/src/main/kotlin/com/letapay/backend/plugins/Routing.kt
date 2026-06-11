@@ -9,6 +9,7 @@
  */
 package com.letapay.backend.plugins
 
+import com.letapay.backend.config.AppConfig
 import com.letapay.backend.routes.configureAiRoutes
 import com.letapay.backend.routes.configureAuthRoutes
 import com.letapay.backend.routes.configureContactRoutes
@@ -30,14 +31,18 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.sse.SSE
+import org.koin.ktor.ext.get
 
 fun Application.configureRouting() {
+    val appConfig = get<AppConfig>()
     install(SSE)
     install(CachingHeaders)
     install(CORS) {
-        // Fix: replace permissive defaults with an explicit production-safe allowlist.
         allowHost("letapay.app", schemes = listOf("https"))
-        allowHost("localhost:3000", schemes = listOf("http"))
+        if (!appConfig.isProduction) {
+            allowHost("localhost:3000", schemes = listOf("http"))
+            allowHost("localhost:8080", schemes = listOf("http"))
+        }
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
         allowHeader("Idempotency-Key")

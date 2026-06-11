@@ -81,6 +81,7 @@ include(":feature:trade")
 include(":feature:yield")
 include(":feature:agent")
 include(":feature:profile")
+include(":feature:settings")
 
 include(":core-base:analytics")
 include(":core-base:common")

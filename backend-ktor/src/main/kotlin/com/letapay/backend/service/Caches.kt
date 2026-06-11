@@ -17,7 +17,7 @@ class PriceCache(
 ) {
     suspend fun get(key: String): String? = cache.get(key)
 
-    suspend fun getEntry(key: String): Entry? = cache.get(key)?.let { Entry(it, 0L) }
+    suspend fun getEntry(key: String): Entry? = cache.getEntry(key)?.let { Entry(it.value, it.expiresAt) }
 
     suspend fun put(key: String, price: String, ttlSeconds: Long = 45L) {
         cache.put(key, price, ttlSeconds)

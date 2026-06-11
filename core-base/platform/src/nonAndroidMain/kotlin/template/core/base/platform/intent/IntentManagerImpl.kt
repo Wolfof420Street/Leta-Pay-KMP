@@ -14,35 +14,35 @@ import template.core.base.platform.model.MimeType
 
 class IntentManagerImpl : IntentManager {
     override fun startActivity(intent: Any) {
-        // TODO("Not yet implemented")
+        println("IntentManagerImpl.startActivity is a no-op on this platform: $intent")
     }
 
     override fun launchUri(uri: String) {
-        // TODO("Not yet implemented")
+        println("IntentManagerImpl.launchUri is a no-op on this platform: $uri")
     }
 
     override fun shareText(text: String) {
-        // TODO("Not yet implemented")
+        println("IntentManagerImpl.shareText is a no-op on this platform: $text")
     }
 
     override fun shareFile(fileUri: String, mimeType: MimeType) {
-        // TODO("Not yet implemented")
+        println("IntentManagerImpl.shareFile is a no-op on this platform: $fileUri ($mimeType)")
     }
 
     override fun shareFile(fileUri: String, mimeType: MimeType, extraText: String) {
-        TODO("Not yet implemented")
+        println("IntentManagerImpl.shareFile(extraText) is a no-op on this platform: $fileUri ($mimeType)")
     }
 
     override suspend fun shareImage(title: String, image: ImageBitmap) {
-        TODO("Not yet implemented")
+        println("IntentManagerImpl.shareImage is a no-op on this platform: $title")
     }
 
     override fun createDocumentIntent(fileName: String): Any {
-        // TODO("Not yet implemented")
-        return Any()
+        println("IntentManagerImpl.createDocumentIntent is a no-op on this platform: $fileName")
+        return fileName
     }
 
     override fun startApplicationDetailsSettingsActivity() {
-        // TODO("Not yet implemented")
+        println("IntentManagerImpl.startApplicationDetailsSettingsActivity is a no-op on this platform")
     }
 }

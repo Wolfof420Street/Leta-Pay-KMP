@@ -13,8 +13,10 @@ import java.util.Locale
 
 // Minimal Android `actual` implementation that avoids AndroidX dependencies.
 // This acts as a safe stub for compilation and basic locale handling.
-actual class PlatformLocaleManager() : LocaleManager {
-    override fun setLocale(languageCode: String) {
+actual class PlatformLocaleManager actual constructor() : LocaleManager {
+    private val originalSystemLocale: Locale = Locale.getDefault()
+
+    actual override fun setLocale(languageCode: String) {
         try {
             Locale.setDefault(Locale.forLanguageTag(languageCode))
         } catch (_: Exception) {
@@ -22,10 +24,10 @@ actual class PlatformLocaleManager() : LocaleManager {
         }
     }
 
-    override fun resetToSystem() {
-        Locale.setDefault(Locale.getDefault())
+    actual override fun resetToSystem() {
+        Locale.setDefault(originalSystemLocale)
     }
 
-    override fun currentLocale(): String =
+    actual override fun currentLocale(): String =
         Locale.getDefault().toLanguageTag()
 }

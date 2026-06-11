@@ -24,7 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cmp.shared.ui.theme.LetaColors
+import com.letapay.app.core.designsystem.theme.LetaColors
 
 @Composable
 fun TypingIndicator(modifier: Modifier = Modifier) {

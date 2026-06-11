@@ -29,6 +29,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.slf4j.MDC
 import java.util.UUID
 
+private const val DEV_SWAP_ROUTER = "0x1111111254EEB25477B68fb85Ed929f73A960582"
+
 interface AgentKitClient {
     suspend fun buildTransfer(
         fromAddress: String,
@@ -45,7 +47,7 @@ interface AgentKitClient {
     suspend fun buildStake(fromAddress: String, request: StakeRequest, chainId: Long): Result<UnsignedTx>
 }
 
-class DevAgentKitClient : AgentKitClient {
+class StaticAgentKitFallbackClient : AgentKitClient {
     override suspend fun buildTransfer(
         fromAddress: String,
         toAddress: String,
@@ -58,7 +60,7 @@ class DevAgentKitClient : AgentKitClient {
             data = run {
                 val assetUp = asset.uppercase()
                 val digitsOnly = amount.filter(Char::isDigit).ifBlank { "0" }
-                val transferData = "0xtransfer${assetUp}${digitsOnly}"
+                val transferData = "0xtransfer${assetUp}$digitsOnly"
                 transferData
             },
             value = if (asset.equals("ETH", ignoreCase = true)) amount else "0x0",
@@ -91,10 +93,7 @@ class DevAgentKitClient : AgentKitClient {
 
     override suspend fun buildSwap(fromAddress: String, quote: SwapQuote): Result<UnsignedTx> = Result.success(
         UnsignedTx(
-            to = run {
-                val defaultSwapTo = "0x1111111254EEB25477B68fb85Ed929f73A960582"
-                defaultSwapTo
-            },
+            to = DEV_SWAP_ROUTER,
             data = quote.calldata,
             value = "0x0",
             gasLimit = "0x493e0",
@@ -147,7 +146,7 @@ class SidecarAgentKitClient(
                         "networkId" to chainId.toNetworkId(),
                     ),
                 )
-            }.body<SidecarCalldataResponse>().calldata.toUnsignedTx(chainId)
+            }.body<SidecarCalldataResponse>().calldata.toUnsignedTx(defaultChainId = chainId)
         }
     }
 
@@ -168,9 +167,11 @@ class SidecarAgentKitClient(
             }.body<SidecarQuoteResponse>()
 
             val quote = response.quote
-            val expiresAt = quote.long("expiresAt") ?: (System.currentTimeMillis() + 60_000)
+            val quoteId = requireNotNull(quote.string("quoteId")) { "Missing quoteId in sidecar quote response" }
+            val expiresAt = requireNotNull(quote.long("expiresAt")) { "Missing expiresAt in sidecar quote response" }
+            val calldata = requireNotNull(quote.string("calldata")) { "Missing calldata in sidecar quote response" }
             SwapQuote(
-                quoteId = quote.string("quoteId") ?: "quote-${System.currentTimeMillis()}",
+                quoteId = quoteId,
                 fromAsset = request.fromAsset,
                 toAsset = request.toAsset,
                 fromAmount = quote.string("fromAmount") ?: request.amount,
@@ -179,7 +180,7 @@ class SidecarAgentKitClient(
                 priceImpactBps = quote.int("priceImpactBps") ?: 25,
                 estimatedFeeUsd = quote.string("estimatedFeeUsd") ?: "0.12",
                 expiresAt = expiresAt,
-                calldata = quote.string("calldata") ?: "0x",
+                calldata = calldata,
                 chainId = request.chain,
                 slippageBps = request.slippageBps,
             )
@@ -200,7 +201,10 @@ class SidecarAgentKitClient(
                         "slippageBps" to quote.slippageBps,
                     ),
                 )
-            }.body<SidecarCalldataResponse>().calldata.toUnsignedTx(quote.chainId)
+            }.body<SidecarCalldataResponse>().calldata.toUnsignedTx(
+                toFallback = DEV_SWAP_ROUTER,
+                defaultChainId = quote.chainId,
+            )
         }
     }
 
@@ -217,7 +221,7 @@ class SidecarAgentKitClient(
                             "networkId" to chainId.toNetworkId(),
                         ),
                     )
-                }.body<SidecarCalldataResponse>().calldata.toUnsignedTx(chainId)
+                }.body<SidecarCalldataResponse>().calldata.toUnsignedTx(defaultChainId = chainId)
             }
         }
 
@@ -237,12 +241,9 @@ class SidecarAgentKitClient(
             else -> "ethereum-mainnet"
         }
 
-    private fun JsonObject.toUnsignedTx(defaultChainId: Long): UnsignedTx =
+    private fun JsonObject.toUnsignedTx(toFallback: String? = null, defaultChainId: Long): UnsignedTx =
         UnsignedTx(
-            to = run {
-                val defaultTo = "0x1111111254EEB25477B68fb85Ed929f73A960582"
-                string("to") ?: defaultTo
-            },
+            to = string("to") ?: toFallback ?: error("Missing destination 'to' in sidecar calldata response"),
             data = string("data") ?: "0x",
             value = string("value") ?: "0x0",
             gasLimit = string("gasLimit") ?: "0x493e0",

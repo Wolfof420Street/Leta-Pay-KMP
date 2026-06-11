@@ -12,17 +12,17 @@ package com.letapay.backend
 import com.letapay.backend.service.CircuitBreaker
 import com.letapay.backend.service.CircuitBreaker.State
 import com.letapay.backend.service.DefaultAiCommandService
+import com.letapay.backend.service.DefaultCoinbaseService
 import com.letapay.backend.service.HealthService
+import com.letapay.backend.service.HealthSnapshot
 import com.letapay.backend.service.InMemoryKeyValueCache
 import com.letapay.backend.service.ParseResultCache
 import com.letapay.backend.service.PriceCache
-import com.letapay.backend.service.StubCoinbaseService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.test.runTest
 import java.io.File
 import kotlin.test.Test
@@ -34,7 +34,7 @@ import org.koin.dsl.module as koinModule
 class Phase8Test {
     @Test
     fun `price cache returns cached value on second call`() = runTest {
-        val service = StubCoinbaseService(
+        val service = DefaultCoinbaseService(
             HttpClient(CIO),
             PriceCache(InMemoryKeyValueCache()),
             CircuitBreaker("coinbase"),
@@ -48,7 +48,7 @@ class Phase8Test {
 
     @Test
     fun `price cache returns stale value when coinbase throws`() = runTest {
-        val service = StubCoinbaseService(
+        val service = DefaultCoinbaseService(
             HttpClient(CIO),
             PriceCache(InMemoryKeyValueCache()),
             CircuitBreaker("coinbase"),
@@ -108,11 +108,18 @@ class Phase8Test {
     fun `health returns degraded db when probe fails`() = testApplication {
         application {
             configureApp(
+                backendTestOverrides(),
                 koinModule {
                     single<HealthService> {
                         object : HealthService {
-                            override suspend fun dbStatus(): String = "degraded"
-                            override suspend fun firebaseStatus(): String = "degraded"
+                            override suspend fun status(): HealthSnapshot =
+                                HealthSnapshot(
+                                    status = "degraded",
+                                    db = "degraded",
+                                    redis = "ok",
+                                    sidecar = "ok",
+                                    firebase = "degraded",
+                                )
                         }
                     }
                 },
@@ -121,7 +128,7 @@ class Phase8Test {
 
         val response = client.get("/health")
 
-        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
         assertTrue(response.bodyAsText().contains("\"db\":\"degraded\""))
     }
 

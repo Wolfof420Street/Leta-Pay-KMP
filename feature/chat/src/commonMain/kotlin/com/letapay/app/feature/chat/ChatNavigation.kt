@@ -68,7 +68,7 @@ import kmp_project_template.feature.chat.generated.resources.feature_chat_contac
 import kmp_project_template.feature.chat.generated.resources.feature_chat_contacts_title
 import kmp_project_template.feature.chat.generated.resources.feature_chat_firebase_binding_pending
 import kmp_project_template.feature.chat.generated.resources.feature_chat_firebase_ready
-import kmp_project_template.feature.chat.generated.resources.feature_chat_input_placeholder
+import kmp_project_template.feature.chat.generated.resources.feature_chat_input_hint
 import kmp_project_template.feature.chat.generated.resources.feature_chat_pending_suffix
 import kmp_project_template.feature.chat.generated.resources.feature_chat_preview_button
 import kmp_project_template.feature.chat.generated.resources.feature_chat_send_button
@@ -440,7 +440,7 @@ private fun ChatInputBar(
                 decorationBox = { inner ->
                     if (value.isEmpty()) {
                         Text(
-                            text = stringResource(Res.string.feature_chat_input_placeholder),
+                            text = stringResource(Res.string.feature_chat_input_hint),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyLarge,
                         )

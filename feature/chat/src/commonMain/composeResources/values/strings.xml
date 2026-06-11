@@ -27,7 +27,7 @@
     <string name="feature_chat_add_contact_button">Save</string>
     <string name="feature_chat_sync_button">Sync</string>
     <string name="feature_chat_pending_suffix">• pending</string>
-    <string name="feature_chat_input_placeholder">Send, swap, stake - just ask</string>
+    <string name="feature_chat_input_hint">Send, swap, stake - just ask</string>
     <string name="feature_chat_send_button">Send</string>
     <string name="feature_chat_no_execution_result">No execution result available.</string>
 </resources>

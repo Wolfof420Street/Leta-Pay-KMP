@@ -24,8 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shape
-import cmp.shared.ui.theme.LetaColors
 import cmp.shared.ui.theme.LetaShapes
+import com.letapay.app.core.designsystem.theme.LetaColors
 
 @Composable
 fun ShimmerBox(

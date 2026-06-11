@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.hikari)
     implementation(libs.postgresql)
+    implementation("io.lettuce:lettuce-core:6.5.5.RELEASE")
 
     implementation(libs.firebase.admin)
     implementation(libs.web3j)

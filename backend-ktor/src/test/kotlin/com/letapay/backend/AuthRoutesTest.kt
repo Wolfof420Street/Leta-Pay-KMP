@@ -17,7 +17,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.testing.testApplication
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Sign
 import java.nio.charset.StandardCharsets
@@ -29,7 +28,7 @@ import kotlin.test.assertTrue
 class AuthRoutesTest {
     @Test
     fun `POST auth request-nonce returns nonce and expiry`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/auth/request-nonce") {
             contentType(ContentType.Application.Json)
@@ -43,7 +42,7 @@ class AuthRoutesTest {
 
     @Test
     fun `POST auth verify-signature replay attack returns NONCE_ALREADY_USED`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val walletAddress = TEST_CREDENTIALS.address
         val nonceBody = client.post("/auth/request-nonce") {
@@ -75,7 +74,7 @@ class AuthRoutesTest {
 
     @Test
     fun `POST auth refresh-token with invalid token returns INVALID_REFRESH_TOKEN`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/auth/refresh-token") {
             contentType(ContentType.Application.Json)
@@ -88,7 +87,7 @@ class AuthRoutesTest {
 
     @Test
     fun `revoked session cannot reuse same jwt after revoke-session`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
         val walletAddress = TEST_CREDENTIALS.address
         val nonceBody = client.post("/auth/request-nonce") {
             contentType(ContentType.Application.Json)
@@ -124,7 +123,7 @@ class AuthRoutesTest {
 
     @Test
     fun `request-nonce cannot evade pre-auth rate limit by rotating forwarded for header`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
         val wallet = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         repeat(10) { attempt ->
             val response = client.post("/auth/request-nonce") {

@@ -30,15 +30,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import org.jetbrains.compose.resources.stringResource
 import com.letapay.app.core.designsystem.icon.AppIcons
 import com.letapay.app.core.ui.scaffold.KptScaffold
 import com.letapay.app.feature.settings.generated.resources.Res
-import com.letapay.app.feature.settings.generated.resources.feature_settings_change_language_placeholder_text
+import com.letapay.app.feature.settings.generated.resources.feature_settings_change_language_content_description
 import com.letapay.app.feature.settings.generated.resources.feature_settings_change_language_text
-import com.letapay.app.feature.settings.generated.resources.feature_settings_change_theme_placeholder_text
+import com.letapay.app.feature.settings.generated.resources.feature_settings_change_theme_content_description
 import com.letapay.app.feature.settings.generated.resources.feature_settings_change_theme_text
 import com.letapay.app.feature.settings.generated.resources.feature_settings_title
+import org.jetbrains.compose.resources.stringResource
 import template.core.base.analytics.AnalyticsHelper
 import template.core.base.analytics.TrackScreenView
 import template.core.base.analytics.rememberAnalyticsHelper
@@ -142,7 +142,7 @@ internal fun ThemeCard(
             ) {
                 Icon(
                     imageVector = AppIcons.ArrowRight,
-                    contentDescription = stringResource(Res.string.feature_settings_change_theme_placeholder_text),
+                    contentDescription = stringResource(Res.string.feature_settings_change_theme_content_description),
                 )
             }
         }
@@ -179,7 +179,9 @@ internal fun LanguageCard(
             ) {
                 Icon(
                     imageVector = AppIcons.ArrowRight,
-                    contentDescription = stringResource(Res.string.feature_settings_change_language_placeholder_text),
+                    contentDescription = stringResource(
+                        Res.string.feature_settings_change_language_content_description,
+                    ),
                 )
             }
         }

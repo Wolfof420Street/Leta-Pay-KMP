@@ -9,8 +9,14 @@
  */
 package com.letapay.app.core.domain
 
+data class KeyValueEntry<V : Any>(
+    val value: V,
+    val expiresAt: Long,
+)
+
 interface KeyValueCache<V : Any> {
     suspend fun get(key: String): V?
+    suspend fun getEntry(key: String): KeyValueEntry<V>?
     suspend fun put(key: String, value: V, ttlSeconds: Long)
     suspend fun invalidate(key: String)
 }

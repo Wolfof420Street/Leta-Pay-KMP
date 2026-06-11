@@ -32,13 +32,20 @@ fun AnalyticsHelper.trackAiIntent(command: String, intent: String) {
     )
 }
 
-fun AnalyticsHelper.trackSwapExecution(from: String, to: String, amount: String, txHash: String) {
+fun AnalyticsHelper.trackSwapExecution(
+    from: String,
+    toToken: String,
+    amount: String,
+    toAmount: String,
+    txHash: String,
+) {
     logEvent(
         LetaPayEventTypes.SWAP_EXECUTED,
         mapOf(
             LetaPayParamKeys.FROM_TOKEN to from,
-            LetaPayParamKeys.TO_TOKEN to to,
+            LetaPayParamKeys.TO_TOKEN to toToken,
             LetaPayParamKeys.FROM_AMOUNT to amount,
+            LetaPayParamKeys.TO_AMOUNT to toAmount,
             LetaPayParamKeys.TRANSACTION_HASH to txHash,
         ),
     )

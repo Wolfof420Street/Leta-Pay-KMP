@@ -9,12 +9,10 @@
  */
 package com.letapay.backend
 
-import com.letapay.backend.model.swap.SpotPrice
 import com.letapay.backend.model.swap.SwapQuote
 import com.letapay.backend.model.swap.SwapQuoteRequest
-import com.letapay.backend.model.swap.UnsignedSwapTx
 import com.letapay.backend.model.swap.UnsignedTx
-import com.letapay.backend.service.CoinbaseService
+import com.letapay.backend.service.AgentKitClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -23,7 +21,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -32,7 +29,7 @@ import org.koin.dsl.module as koinModule
 class SwapRoutesTest {
     @Test
     fun `swap quote with valid body returns quote response`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/swap/quote") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -51,7 +48,7 @@ class SwapRoutesTest {
 
     @Test
     fun `swap quote with low slippage returns 400`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/swap/quote") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -68,7 +65,7 @@ class SwapRoutesTest {
 
     @Test
     fun `swap quote with unknown chain returns 400`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/swap/quote") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -85,7 +82,7 @@ class SwapRoutesTest {
 
     @Test
     fun `swap execute with expired quote returns 422`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/swap/execute") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -104,7 +101,7 @@ class SwapRoutesTest {
 
     @Test
     fun `swap execute without idempotency key returns 400`() = testApplication {
-        application { configureApp() }
+        application { configureApp(backendTestOverrides()) }
 
         val response = client.post("/swap/execute") {
             header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -120,7 +117,7 @@ class SwapRoutesTest {
     fun `swap execute with kill switch active returns 503`() = testApplication {
         System.setProperty("KILL_SWITCH_VALUE_MOVES", "true")
         try {
-            application { configureApp() }
+            application { configureApp(backendTestOverrides()) }
 
             val response = client.post("/swap/execute") {
                 header(HttpHeaders.Authorization, "Bearer ${testJwt()}")
@@ -144,17 +141,22 @@ class SwapRoutesTest {
     fun `swap execute rejects mismatched quote execution params`() = testApplication {
         application {
             configureApp(
+                backendTestOverrides(),
                 koinModule {
-                    single<CoinbaseService> {
-                        object : CoinbaseService {
-                            override suspend fun getSpotPrice(
-                                fromAsset: String,
-                                toAsset: String,
-                                chain: Long,
-                            ): SpotPrice =
-                                SpotPrice(fromAsset, toAsset, chain, "1.0")
+                    single<AgentKitClient> {
+                        object : AgentKitClient {
+                            override suspend fun buildTransfer(
+                                fromAddress: String,
+                                toAddress: String,
+                                asset: String,
+                                amount: String,
+                                chainId: Long,
+                            ) = error("unused")
 
-                            override suspend fun getSwapQuote(request: SwapQuoteRequest): SwapQuote =
+                            override suspend fun getSwapQuote(
+                                fromAddress: String,
+                                request: SwapQuoteRequest,
+                            ): Result<SwapQuote> = Result.success(
                                 SwapQuote(
                                     quoteId = "q-1",
                                     fromAsset = request.fromAsset,
@@ -168,23 +170,29 @@ class SwapRoutesTest {
                                     calldata = "0x1",
                                     chainId = 137L,
                                     slippageBps = request.slippageBps,
-                                )
+                                ),
+                            )
 
-                            override suspend fun getSwapUnsignedTx(quoteId: String): UnsignedSwapTx =
-                                UnsignedSwapTx(
-                                    unsignedTx = UnsignedTx(
-                                        to = "0x1111111254EEB25477B68fb85Ed929f73A960582",
-                                        data = "0xfeedface",
-                                        value = "0x0",
-                                        gasLimit = "0x493e0",
-                                        maxFeePerGas = "0x0",
-                                        maxPriorityFeePerGas = "0x0",
-                                        chainId = 1L,
-                                    ),
-                                    expiresAt = System.currentTimeMillis() + 60_000L,
-                                )
+                            override suspend fun buildSwap(
+                                fromAddress: String,
+                                quote: SwapQuote,
+                            ): Result<UnsignedTx> = Result.success(
+                                UnsignedTx(
+                                    to = "0x1111111254EEB25477B68fb85Ed929f73A960582",
+                                    data = "0xfeedface",
+                                    value = "0x0",
+                                    gasLimit = "0x493e0",
+                                    maxFeePerGas = "0x0",
+                                    maxPriorityFeePerGas = "0x0",
+                                    chainId = 1L,
+                                ),
+                            )
 
-                            override suspend fun getTxStatus(txHash: String, chain: Long) = error("unused")
+                            override suspend fun buildStake(
+                                fromAddress: String,
+                                request: com.letapay.backend.model.yield.StakeRequest,
+                                chainId: Long,
+                            ) = error("unused")
                         }
                     }
                 },

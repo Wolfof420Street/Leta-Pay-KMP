@@ -72,7 +72,7 @@ class CoinbaseCdpClient(
                     parameters.append("buyToken", request.toToken)
                     parameters.append("sellToken", request.fromToken)
                     parameters.append("sellAmount", request.fromAmount)
-                    parameters.append("slippagePercentage", (request.slippageBps.toDouble() / 10_000.0).toString())
+                    parameters.append("slippagePercentage", (request.slippageBps / 10_000.0).toString())
                 }
             }.body<ZeroXSwapQuoteResponse>()
         }.getOrElse { cause ->

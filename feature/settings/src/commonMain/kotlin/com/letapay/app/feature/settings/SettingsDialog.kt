@@ -28,8 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.viewmodel.koinViewModel
 import com.letapay.app.core.model.DarkThemeConfig
 import com.letapay.app.core.model.ThemeBrand
 import com.letapay.app.feature.settings.generated.resources.Res
@@ -45,6 +43,8 @@ import com.letapay.app.feature.settings.generated.resources.feature_settings_dyn
 import com.letapay.app.feature.settings.generated.resources.feature_settings_dynamic_color_yes
 import com.letapay.app.feature.settings.generated.resources.feature_settings_loading
 import com.letapay.app.feature.settings.generated.resources.feature_settings_theme
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SettingsDialog(

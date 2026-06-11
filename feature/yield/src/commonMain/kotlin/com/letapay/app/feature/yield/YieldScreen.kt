@@ -136,7 +136,6 @@ private fun OpportunityRow(opp: YieldOpportunity) {
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Protocol icon placeholder
         Box(
             modifier = Modifier
                 .size(40.dp)

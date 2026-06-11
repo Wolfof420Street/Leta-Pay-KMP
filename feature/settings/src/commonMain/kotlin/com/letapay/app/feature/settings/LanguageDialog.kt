@@ -26,13 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.viewmodel.koinViewModel
 import com.letapay.app.core.model.LanguageConfig
 import com.letapay.app.feature.settings.generated.resources.Res
 import com.letapay.app.feature.settings.generated.resources.feature_settings_dismiss_dialog_button_text
 import com.letapay.app.feature.settings.generated.resources.feature_settings_language_preference
 import com.letapay.app.feature.settings.generated.resources.feature_settings_loading
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LanguageDialog(

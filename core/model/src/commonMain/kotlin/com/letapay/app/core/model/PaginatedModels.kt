@@ -17,6 +17,7 @@ data class PaginatedRequest(
     val offset: Int = 0,
 ) {
     val clampedLimit: Int get() = limit.coerceIn(1, 100)
+    val clampedOffset: Int get() = offset.coerceAtLeast(0)
 }
 
 @Serializable

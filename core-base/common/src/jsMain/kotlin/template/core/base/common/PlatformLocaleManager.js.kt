@@ -12,15 +12,15 @@ package template.core.base.common
 import kotlinx.browser.document
 import kotlinx.browser.window
 
-actual class PlatformLocaleManager() : LocaleManager {
-    override fun setLocale(languageCode: String) {
+actual class PlatformLocaleManager actual constructor() : LocaleManager {
+    actual override fun setLocale(languageCode: String) {
         document.documentElement?.setAttribute("lang", languageCode)
     }
 
-    override fun resetToSystem() {
+    actual override fun resetToSystem() {
         val browserLang = window.navigator.language
         document.documentElement?.setAttribute("lang", browserLang)
     }
 
-    override fun currentLocale(): String = window.navigator.language
+    actual override fun currentLocale(): String = window.navigator.language
 }

@@ -255,7 +255,7 @@ fun KptSearchAppBar(
     onSearchQueryChange: (String) -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search...",
+    searchHintText: String = "Search...",
     onSearchClick: (() -> Unit)? = null,
 ) {
     TopAppBar(
@@ -263,7 +263,7 @@ fun KptSearchAppBar(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
-                placeholder = { Text(placeholder) },
+                placeholder = { Text(searchHintText) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                 trailingIcon = if (searchQuery.isNotEmpty()) {
                     {

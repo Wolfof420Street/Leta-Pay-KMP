@@ -78,7 +78,7 @@ android {
         }
     }
 
-    // TODO:: Workaround for Ktor(3.2.0) R8/ProGuard Issue
+    // NOTE: Workaround for Ktor(3.2.0) R8/ProGuard issue — retained to avoid R8/ProGuard stripping in this build.
     androidComponents {
         onVariants { variant ->
             variant.instrumentation.transformClassesWith(

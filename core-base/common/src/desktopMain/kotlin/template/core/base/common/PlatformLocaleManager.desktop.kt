@@ -11,25 +11,21 @@ package template.core.base.common
 
 import java.util.Locale
 
-actual class PlatformLocaleManager() : LocaleManager {
-    override fun setLocale(languageCode: String) {
+actual class PlatformLocaleManager actual constructor() : LocaleManager {
+    private val originalDefaultLocale: Locale = Locale.getDefault()
+
+    actual override fun setLocale(languageCode: String) {
         val locale = languageCode.toLocale()
         Locale.setDefault(locale)
     }
 
-    override fun resetToSystem() {
-        val systemLocale = Locale.getDefault(Locale.Category.DISPLAY)
-        Locale.setDefault(systemLocale)
+    actual override fun resetToSystem() {
+        Locale.setDefault(originalDefaultLocale)
     }
 
-    override fun currentLocale(): String = Locale.getDefault().toLanguageTag()
+    actual override fun currentLocale(): String = Locale.getDefault().toLanguageTag()
 
     private fun String.toLocale(): Locale {
-        return if (contains("-")) {
-            val parts = split("-")
-            Locale(parts[0], parts[1])
-        } else {
-            Locale(this)
-        }
+        return Locale.forLanguageTag(this)
     }
 }

@@ -133,7 +133,7 @@ class DefaultYieldService(
             val totalCount = query.count().toInt()
             val resultRows = query
                 .orderBy(StakingPositions.createdAt to org.jetbrains.exposed.sql.SortOrder.DESC)
-                .limit(request.clampedLimit, offset = request.offset.toLong())
+                .limit(request.clampedLimit, offset = request.clampedOffset.toLong())
                 .toList()
             resultRows to totalCount
         }
@@ -152,7 +152,7 @@ class DefaultYieldService(
         return PaginatedResponse(
             items = items,
             total = total,
-            offset = request.offset,
+            offset = request.clampedOffset,
             limit = request.clampedLimit,
         )
     }

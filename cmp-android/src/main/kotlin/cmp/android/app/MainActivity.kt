@@ -17,8 +17,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cmp.shared.SharedApp
 import com.letapay.app.core.data.repository.NetworkMonitor
@@ -62,15 +60,7 @@ class MainActivity : AppCompatActivity() {
 
         setupEdgeToEdge(darkThemeConfigFlow)
 
-        lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onCreate(owner: LifecycleOwner) {
-                ShareUtils.setActivityProvider { this@MainActivity }
-            }
-
-            override fun onDestroy(owner: LifecycleOwner) {
-                ShareUtils.clearActivityProvider()
-            }
-        })
+        ShareUtils.setActivityProvider { this@MainActivity }
         FileKit.init(this)
 
         analyticsHelper.setUserId(deviceData)
@@ -106,6 +96,11 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         lifecycleTracker.markAppLaunchStart()
+    }
+
+    override fun onDestroy() {
+        ShareUtils.clearActivityProvider()
+        super.onDestroy()
     }
 
     private fun handleRecreate() {

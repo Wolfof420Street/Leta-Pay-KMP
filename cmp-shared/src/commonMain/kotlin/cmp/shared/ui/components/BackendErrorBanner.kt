@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cmp.shared.generated.resources.Res
 import cmp.shared.generated.resources.backend_error_banner_dismiss
-import cmp.shared.ui.theme.LetaColors
 import cmp.shared.ui.theme.LetaShapes
+import com.letapay.app.core.designsystem.theme.LetaColors
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

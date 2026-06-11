@@ -16,10 +16,14 @@ import com.letapay.backend.model.swap.SpotPrice
 import com.letapay.backend.model.swap.SwapQuote
 import com.letapay.backend.model.swap.SwapQuoteRequest
 import com.letapay.backend.model.swap.UnsignedSwapTx
-import com.letapay.backend.model.swap.UnsignedTx
 import io.ktor.client.HttpClient
-import java.math.BigDecimal
-import java.util.UUID
+import io.ktor.client.request.accept
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 data class TxStatus(
     val confirmed: Boolean,
@@ -37,17 +41,17 @@ interface CoinbaseService {
     suspend fun getTxStatus(txHash: String, chain: Long): TxStatus
 }
 
-class StubCoinbaseService(
+class DefaultCoinbaseService(
     private val httpClient: HttpClient,
     private val priceCache: PriceCache,
     private val circuitBreaker: CircuitBreaker,
 ) : CoinbaseService {
     private val cdpClient = CoinbaseCdpClient(httpClient)
+    private val json = Json { ignoreUnknownKeys = true }
     var spotPriceFetchCount = 0
     var failSpotPrice = false
 
     override suspend fun getSpotPrice(fromAsset: String, toAsset: String, chain: Long): SpotPrice {
-        val ignored = httpClient
         val cacheKey = "$chain:${fromAsset.uppercase()}:${toAsset.uppercase()}"
         priceCache.get(cacheKey)?.let { cachedPrice ->
             return SpotPrice(
@@ -64,7 +68,13 @@ class StubCoinbaseService(
                     throw CoinbaseApiError(message = "Spot price unavailable.")
                 }
                 spotPriceFetchCount += 1
-                SpotPrice(fromAsset = fromAsset, toAsset = toAsset, chain = chain, price = "1.00")
+                val product = "${fromAsset.uppercase()}-${toAsset.uppercase()}"
+                val response = httpClient.get("https://api.coinbase.com/v2/prices/$product/spot") {
+                    accept(ContentType.Application.Json)
+                }.bodyAsText().let { payload ->
+                    json.decodeFromString<CoinbaseSpotPriceResponse>(payload)
+                }
+                SpotPrice(fromAsset = fromAsset, toAsset = toAsset, chain = chain, price = response.data.amount)
                     .also { priceCache.put(cacheKey, it.price) }
             }
         } catch (exception: Exception) {
@@ -80,41 +90,21 @@ class StubCoinbaseService(
     }
 
     override suspend fun getSwapQuote(request: SwapQuoteRequest): SwapQuote {
-        val ignored = httpClient
         return try {
-            val fromAmount = BigDecimal(request.amount)
             circuitBreaker.execute {
-                val response = runCatching {
-                    cdpClient.requestSwapRoute(
-                        CdpSwapQuoteRequest(
-                            fromToken = request.fromAsset,
-                            toToken = request.toAsset,
-                            fromAmount = request.amount,
-                            chainId = request.chain,
-                            slippageBps = request.slippageBps,
-                        ),
-                    )
-                }.getOrElse {
-                    val fallbackToAmount = fromAmount.multiply(BigDecimal("0.98")).stripTrailingZeros().toPlainString()
-                    return@execute SwapQuote(
-                        quoteId = UUID.randomUUID().toString(),
-                        fromAsset = request.fromAsset,
-                        toAsset = request.toAsset,
+                val response = cdpClient.requestSwapRoute(
+                    CdpSwapQuoteRequest(
+                        fromToken = request.fromAsset,
+                        toToken = request.toAsset,
                         fromAmount = request.amount,
-                        toAmount = fallbackToAmount,
-                        rate = "0.98",
-                        priceImpactBps = 25,
-                        estimatedFeeUsd = "0.42",
-                        expiresAt = System.currentTimeMillis() + 60_000,
-                        calldata = "0xswapdeadbeef",
                         chainId = request.chain,
                         slippageBps = request.slippageBps,
-                    )
-                }
+                    ),
+                )
                 val toAmount = response.toAmount.takeIf { it.isNotBlank() }
-                    ?: fromAmount.multiply(BigDecimal("0.98")).stripTrailingZeros().toPlainString()
+                    ?: throw CoinbaseApiError(message = "Swap quote response did not contain to_amount.")
                 SwapQuote(
-                    quoteId = response.quoteId.ifBlank { UUID.randomUUID().toString() },
+                    quoteId = response.quoteId.ifBlank { throw CoinbaseApiError(message = "Swap quote id missing.") },
                     fromAsset = request.fromAsset,
                     toAsset = request.toAsset,
                     fromAmount = request.amount,
@@ -134,34 +124,19 @@ class StubCoinbaseService(
     }
 
     override suspend fun getSwapUnsignedTx(quoteId: String): UnsignedSwapTx {
-        val ignored = httpClient
         if (quoteId.isBlank()) {
             throw CoinbaseApiError(message = "Quote id is required.")
         }
-        return circuitBreaker.execute {
-            // Fix: wrap external swap execution calls in the Coinbase circuit
-            // breaker so repeated provider failures short-circuit quickly.
-            UnsignedSwapTx(
-                unsignedTx = UnsignedTx(
-                    to = "0x1111111254EEB25477B68fb85Ed929f73A960582",
-                    data = "0xfeedface",
-                    value = "0x0",
-                    gasLimit = "0x493e0",
-                    maxFeePerGas = "0x0",
-                    maxPriorityFeePerGas = "0x0",
-                    chainId = 1,
-                ),
-                expiresAt = System.currentTimeMillis() + 60_000,
-            )
-        }
+        throw CoinbaseApiError(message = "Direct Coinbase unsigned swap fetch is not supported by this backend path.")
     }
 
     override suspend fun getTxStatus(txHash: String, chain: Long): TxStatus =
         circuitBreaker.execute {
-            val ignored = httpClient
+            val response = cdpClient.fetchOnchainTxStatus(txHash, chain)
+            val normalizedStatus = response.status.lowercase()
             TxStatus(
-                confirmed = !txHash.endsWith("ff", ignoreCase = true),
-                failed = txHash.endsWith("ff", ignoreCase = true),
+                confirmed = normalizedStatus in setOf("confirmed", "complete", "succeeded", "success"),
+                failed = normalizedStatus in setOf("failed", "reverted", "error"),
                 networkName = when (chain) {
                     137L -> "Polygon"
                     8453L -> "Base"
@@ -170,3 +145,13 @@ class StubCoinbaseService(
             )
         }
 }
+
+@Serializable
+private data class CoinbaseSpotPriceResponse(
+    val data: CoinbaseSpotPricePayload,
+)
+
+@Serializable
+private data class CoinbaseSpotPricePayload(
+    @SerialName("amount") val amount: String,
+)

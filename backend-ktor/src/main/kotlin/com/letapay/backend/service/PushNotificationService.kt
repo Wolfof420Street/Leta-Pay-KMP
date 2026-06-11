@@ -14,6 +14,7 @@ import com.google.firebase.messaging.FirebaseMessagingException
 import com.google.firebase.messaging.Message
 import com.google.firebase.messaging.MulticastMessage
 import com.google.firebase.messaging.Notification
+import org.slf4j.LoggerFactory
 
 data class NotificationPayload(
     val title: String,
@@ -68,7 +69,7 @@ class FirebaseMessagingClient(
     }
 }
 
-class FakePushMessagingClient : PushMessagingClient {
+class NoOpPushMessagingClient : PushMessagingClient {
     val sent = mutableListOf<Pair<List<String>, NotificationPayload>>()
 
     override suspend fun sendSingle(token: String, payload: NotificationPayload): SendResult {
@@ -87,24 +88,47 @@ class PushNotificationService(
     private val client: PushMessagingClient,
 ) {
     suspend fun notifyWallet(walletAddress: String, payload: NotificationPayload) {
-        val activeTokens = deviceTokenService.activeTokens(walletAddress).map(DeviceTokenRecord::fcmToken)
-        if (activeTokens.isEmpty()) return
-
-        val results = if (activeTokens.size == 1) {
-            listOf(client.sendSingle(activeTokens.single(), payload))
-        } else {
-            client.sendMany(activeTokens, payload)
+        val activeTokens = runCatching {
+            deviceTokenService.activeTokens(walletAddress).map(DeviceTokenRecord::fcmToken)
+        }.getOrElse {
+            logger.warn(
+                "push_lookup_failed wallet={} reason={}",
+                walletAddress.truncatedWallet(),
+                it.javaClass.simpleName,
+            )
+            return
         }
 
-        // Fix: invalid device registrations are deactivated individually so one bad token does not fail the batch.
-        results.filter { !it.success && it.errorCode in INVALID_FCM_CODES }
-            .forEach { deviceTokenService.deactivateToken(it.token) }
+        if (activeTokens.isNotEmpty()) {
+            val results = runCatching {
+                if (activeTokens.size == 1) {
+                    listOf(client.sendSingle(activeTokens.single(), payload))
+                } else {
+                    client.sendMany(activeTokens, payload)
+                }
+            }.getOrElse {
+                logger.warn(
+                    "push_send_failed wallet={} tokenCount={} reason={}",
+                    walletAddress.truncatedWallet(),
+                    activeTokens.size,
+                    it.javaClass.simpleName,
+                )
+                return
+            }
+
+            results.filter { !it.success && it.errorCode in INVALID_FCM_CODES }
+                .forEach { deviceTokenService.deactivateToken(it.token) }
+        }
     }
 
     companion object {
         private val INVALID_FCM_CODES = setOf("UNREGISTERED", "INVALID_ARGUMENT")
+        private val logger = LoggerFactory.getLogger(PushNotificationService::class.java)
     }
 }
+
+private fun String.truncatedWallet(): String =
+    if (length <= 12) this else "${take(6)}...${takeLast(4)}"
 
 object NotificationPayloadFactory {
     fun incomingPayment(amount: String, asset: String, txHash: String, chain: Long) =
@@ -135,7 +159,11 @@ object NotificationPayloadFactory {
         NotificationPayload(
             title = "Transaction failed",
             body = "Your transaction on $networkName did not go through",
-            data = mapOf("type" to "TX_FAILED", "txHash" to txHash, "deepLink" to "letapay://transactions/$txHash"),
+            data = mapOf(
+                "type" to "TX_FAILED",
+                "txHash" to txHash,
+                "deepLink" to "letapay://transactions/$txHash",
+            ),
         )
 
     fun swapConfirmed(txHash: String, fromAmount: String, fromAsset: String, toAmount: String, toAsset: String) =

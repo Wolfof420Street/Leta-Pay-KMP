@@ -18,16 +18,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ApplicationTest {
     @Test
-    fun `health endpoint returns ok`() = testApplication {
+    fun `health endpoint returns ok`() = testBackendApplication {
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
         }
 
         val response = client.get("/health")
@@ -37,9 +36,9 @@ class ApplicationTest {
     }
 
     @Test
-    fun `request nonce returns nonce and expiry`() = testApplication {
+    fun `request nonce returns nonce and expiry`() = testBackendApplication {
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
         }
 
         val response = client.post("/auth/request-nonce") {
@@ -53,9 +52,9 @@ class ApplicationTest {
     }
 
     @Test
-    fun `ai parse returns deterministic send result`() = testApplication {
+    fun `ai parse returns deterministic send result`() = testBackendApplication {
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
         }
 
         val response = client.post("/ai/parse") {
@@ -74,9 +73,9 @@ class ApplicationTest {
     }
 
     @Test
-    fun `ai parse rate limit exceeded returns 429`() = testApplication {
+    fun `ai parse rate limit exceeded returns 429`() = testBackendApplication {
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
         }
 
         var limited: io.ktor.client.statement.HttpResponse? = null
@@ -92,14 +91,14 @@ class ApplicationTest {
             }
         }
 
-        assertTrue(limited != null, "Expected to hit rate limit within 180 requests")
-        assertTrue(limited!!.headers.contains("Retry-After"))
+        val limitedResponse = requireNotNull(limited) { "Expected to hit rate limit within 180 requests" }
+        assertTrue(limitedResponse.headers.contains("Retry-After"))
     }
 
     @Test
-    fun `transactions send without idempotency key returns 400`() = testApplication {
+    fun `transactions send without idempotency key returns 400`() = testBackendApplication {
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
         }
 
         val response = client.post("/transactions/send") {
@@ -113,11 +112,11 @@ class ApplicationTest {
     }
 
     @Test
-    fun `kill switch active returns 503 for transaction build`() = testApplication {
+    fun `kill switch active returns 503 for transaction build`() = testBackendApplication {
         System.setProperty("KILL_SWITCH_VALUE_MOVES", "true")
 
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
         }
 
         val response = client.post("/transactions/build") {
@@ -134,7 +133,7 @@ class ApplicationTest {
     @Test
     fun `invalid tx hash returns required error code`() = testApplication {
         application {
-            configureApp()
+            configureApp(backendTestOverrides())
         }
 
         val response = client.get("/transactions/status/not-a-hash") {

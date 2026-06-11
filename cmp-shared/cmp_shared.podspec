@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name                     = 'cmp_shared'
-    spec.version                  = '0.0.1-beta.0.1+20260430T083231Z'
+    spec.version                  = '0.0.1-beta.0.8+20260611T212038Z'
     spec.homepage                 = ''
     spec.source                   = { :http=> ''}
     spec.authors                  = ''

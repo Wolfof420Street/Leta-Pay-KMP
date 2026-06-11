@@ -1,0 +1,71 @@
+### Leta Pay API Testing Suite
+# Variables defined in http-client.private.env.json or manually here
+@host = {{host}}
+@wallet_address = 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+@session_token = {{session_token}}
+
+### 1. Health Check
+GET {{host}}/health
+Accept: application/json
+
+### 2. Auth: Request Nonce
+POST {{host}}/auth/request-nonce
+Content-Type: application/json
+
+{
+  "walletAddress": "{{wallet_address}}"
+}
+
+> {%
+ client.global.set("nonce", response.body.nonce);
+ %}
+
+### 3. Auth: Verify Signature (Mocked Payload)
+# Note: You need a real signature from a wallet to test this properly
+POST {{host}}/auth/verify-signature
+Content-Type: application/json
+
+{
+  "walletAddress": "{{wallet_address}}",
+  "signature": "0x...",
+  "nonce": "{{nonce}}",
+  "message": "Leta Pay Auth Request: {{nonce}}",
+  "deviceToken": "test-device-token"
+}
+
+### 4. AI: Parse Intent (Authenticated)
+POST {{host}}/ai/parse
+Authorization: Bearer {{session_token}}
+Content-Type: application/json
+
+{
+  "message": "Send 10 USDC to vitalik.eth"
+}
+
+### 5. AI: Plan Execution (Authenticated)
+POST {{host}}/ai/plan
+Authorization: Bearer {{session_token}}
+Content-Type: application/json
+
+{
+  "message": "Swap 0.1 ETH for USDC"
+}
+
+### 6. Transactions: Build (Authenticated)
+POST {{host}}/transactions/build
+Authorization: Bearer {{session_token}}
+Content-Type: application/json
+X-Chain-Id: 8453
+
+{
+  "type": "TRANSFER",
+  "params": {
+    "to": "0x123...",
+    "amount": "1000000",
+    "asset": "USDC"
+  }
+}
+
+### 7. Price Fetch
+GET {{host}}/prices/base/eth
+Accept: application/json

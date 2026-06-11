@@ -41,8 +41,8 @@ fun TrackLetaPayScreen(
 fun TrackAiInteraction(command: String, isStreaming: Boolean) {
     val analytics = rememberAnalyticsHelper()
 
-    LaunchedEffect(command) {
-        if (!isStreaming) {
+    LaunchedEffect(command, isStreaming) {
+        if (command.isNotBlank() && !isStreaming) {
             analytics.logEvent(
                 LetaPayEventTypes.AI_COMMAND_SUBMITTED,
                 LetaPayParamKeys.COMMAND_TEXT to command,

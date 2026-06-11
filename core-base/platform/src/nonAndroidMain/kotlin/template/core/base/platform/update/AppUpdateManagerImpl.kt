@@ -11,8 +11,10 @@ package template.core.base.platform.update
 
 class AppUpdateManagerImpl : AppUpdateManager {
     override fun checkForAppUpdate() {
+        println("AppUpdateManagerImpl.checkForAppUpdate is not supported on this platform")
     }
 
     override fun checkForResumeUpdateState() {
+        println("AppUpdateManagerImpl.checkForResumeUpdateState is not supported on this platform")
     }
 }

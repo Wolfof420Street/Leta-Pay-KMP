@@ -9,6 +9,7 @@
  */
 package com.letapay.app.core.network.auth
 
+import com.letapay.app.core.common.buildSiweMessage
 import com.letapay.app.core.model.auth.AuthChallenge
 import com.letapay.app.core.model.auth.WalletSession
 import com.letapay.app.core.model.blockchain.WalletAddress
@@ -33,7 +34,10 @@ class AuthApi(
         return AuthChallenge(
             walletAddress = walletAddress,
             nonce = response.nonce,
-            message = buildSignInMessage(walletAddress.value, response.nonce),
+            message = buildSignInMessage(
+                walletAddress = walletAddress.value,
+                nonce = response.nonce,
+            ),
             expiresAtEpochMillis = response.expiresAtEpochMillis,
         )
     }
@@ -135,15 +139,17 @@ private fun AuthTokensResponse.toModel(walletAddress: WalletAddress): WalletSess
 private fun buildSignInMessage(
     walletAddress: String,
     nonce: String,
-): String = buildString {
-    appendLine("letapay.app wants you to sign in with your Ethereum account:")
-    appendLine(walletAddress)
-    appendLine()
-    appendLine("Sign in to Leta Pay")
-    appendLine()
-    appendLine("URI: https://letapay.app")
-    appendLine("Version: 1")
-    appendLine("Chain ID: 1")
-    appendLine("Nonce: $nonce")
-    appendLine("Issued At: ${Clock.System.now()}")
-}
+): String = buildSiweMessage(
+    domain = DEFAULT_SIWE_DOMAIN,
+    address = walletAddress,
+    uri = DEFAULT_SIWE_URI,
+    nonce = nonce,
+    chainId = DEFAULT_SIWE_CHAIN_ID,
+    issuedAt = Clock.System.now(),
+    statement = DEFAULT_SIWE_STATEMENT,
+)
+
+private const val DEFAULT_SIWE_DOMAIN = "letapay.app"
+private const val DEFAULT_SIWE_URI = "https://letapay.app"
+private const val DEFAULT_SIWE_CHAIN_ID = 1
+private const val DEFAULT_SIWE_STATEMENT = "Sign in to Leta Pay"

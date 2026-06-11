@@ -9,10 +9,12 @@
  */
 package com.letapay.app.feature.profile
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import kotlinx.serialization.Serializable
+import org.koin.compose.viewmodel.koinViewModel
 import template.core.base.ui.composableWithStayTransitions
 
 @Serializable
@@ -22,6 +24,8 @@ fun NavController.navigateToProfile(navOptions: NavOptions? = null) = navigate(P
 
 fun NavGraphBuilder.profileDestination() {
     composableWithStayTransitions<ProfileRoute> {
-        ProfileScreen()
+        val viewModel: ProfileViewModel = koinViewModel()
+        val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+        ProfileScreen(uiState = uiState)
     }
 }

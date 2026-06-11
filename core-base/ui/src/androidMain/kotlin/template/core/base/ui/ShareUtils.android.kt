@@ -34,9 +34,9 @@ actual object ShareUtils {
     private var activityRef: WeakReference<Activity>? = null
 
     private fun requireActivity(): Activity =
-        activityRef?.get() ?: throw IllegalArgumentException(
-            "You need to set a valid activity using 'setActivityProvider()' method.",
-        )
+        checkNotNull(activityRef?.get()) {
+            "You need to set a valid activity using 'setActivityProvider()' method."
+        }
 
     fun setActivityProvider(provider: () -> Activity) {
         activityRef = WeakReference(provider())

@@ -11,15 +11,18 @@ package com.letapay.backend.service
 
 import com.letapay.app.core.domain.RateLimiter
 import com.letapay.backend.error.RateLimitExceededError
+import kotlin.math.ceil
 
 class RateLimiterService(
     private val rateLimiter: RateLimiter,
 ) {
     suspend fun enforce(key: String, limit: Int, windowMs: Long) {
-        val allowed = rateLimiter.isAllowed(key, limit, windowMs / 1000)
+        require(windowMs > 0) { "windowMs must be > 0" }
+        val windowSeconds = ceil(windowMs / 1000.0).toLong()
+        val allowed = rateLimiter.isAllowed(key, limit, windowSeconds)
         if (!allowed) {
-            // Approximation for retry after
-            throw RateLimitExceededError(retryAfterSeconds = (windowMs / 1000).toInt())
+            // Approximation for retry-after because limiter API is second-granularity.
+            throw RateLimitExceededError(retryAfterSeconds = ceil(windowMs / 1000.0).toInt())
         }
     }
 }

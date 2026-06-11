@@ -19,18 +19,23 @@ class InMemoryRateLimiter : RateLimiter {
     override suspend fun isAllowed(key: String, maxRequests: Int, windowSeconds: Long): Boolean {
         val now = System.currentTimeMillis()
         val windowMs = windowSeconds * 1000
-        val timestamps = windows.computeIfAbsent(key) { ArrayDeque() }
-        return synchronized(timestamps) {
-            while (timestamps.isNotEmpty() && now - timestamps.first() >= windowMs) {
-                timestamps.removeFirst()
-            }
-            if (timestamps.size >= maxRequests) {
-                false
-            } else {
-                timestamps.addLast(now)
-                true
+        var allowed = false
+        windows.compute(key) { _, deque ->
+            val timestamps = deque ?: ArrayDeque()
+            synchronized(timestamps) {
+                while (timestamps.isNotEmpty() && now - timestamps.first() >= windowMs) {
+                    timestamps.removeFirst()
+                }
+                if (timestamps.size >= maxRequests) {
+                    allowed = false
+                } else {
+                    timestamps.addLast(now)
+                    allowed = true
+                }
+                if (timestamps.isEmpty()) null else timestamps
             }
         }
+        return allowed
     }
 
     override suspend fun reset(key: String) {

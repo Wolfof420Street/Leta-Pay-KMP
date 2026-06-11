@@ -10,23 +10,27 @@
 package com.letapay.backend.config
 
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Utility to load environment variables from .env files based on the ENV variable.
  */
 object EnvLoader {
     private val loadedVars = mutableMapOf<String, String>()
+    private val loaded = AtomicBoolean(false)
 
     fun load() {
-        val env = System.getenv("ENV") ?: "dev"
+        if (!loaded.compareAndSet(false, true)) return
+
+        val env = System.getenv("ENV") ?: System.getenv("ENVIRONMENT") ?: "dev"
         val fileName = when (env.lowercase()) {
             "staging" -> ".env.staging"
+            "production", "prod" -> ".env"
             else -> ".env.dev"
         }
 
         val file = File(fileName)
         if (file.exists()) {
-            println("Loading environment from ${file.absolutePath}")
             file.bufferedReader().use { reader ->
                 reader.forEachLine { line ->
                     val trimmed = line.trim()
@@ -38,8 +42,6 @@ object EnvLoader {
                     }
                 }
             }
-        } else {
-            println("Warning: Environment file $fileName not found. Falling back to system environment.")
         }
     }
 

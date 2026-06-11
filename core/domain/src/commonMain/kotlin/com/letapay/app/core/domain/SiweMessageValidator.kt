@@ -10,7 +10,10 @@
 package com.letapay.app.core.domain
 
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Clock
+
+class SiweValidationException(
+    val error: SiweValidationError,
+) : RuntimeException(error.toString())
 
 class SiweMessageValidator {
 
@@ -42,7 +45,7 @@ class SiweMessageValidator {
             ),
         )
     } catch (e: Exception) {
-        Result.failure(e)
+        Result.failure(SiweValidationException(SiweValidationError.ParsingError))
     }
 
     fun validate(
@@ -50,17 +53,36 @@ class SiweMessageValidator {
         expectedNonce: String,
         config: SiweConfig,
     ): Result<Unit> {
-        val nowEpochMillis = Clock.System.now().toEpochMilliseconds()
+        val nowEpochMillis = currentTimeMillis()
         val messageEpochMillis = message.issuedAt.toEpochMilliseconds()
+        val messageOrigin = message.uri.toOriginOrNull()
+        val expectedOrigin = config.appOrigin.toOriginOrNull()
         val res = when {
-            message.nonce != expectedNonce -> Result.failure(Exception("invalid_nonce"))
-            message.domain != config.appDomain -> Result.failure(Exception("domain_mismatch"))
-            !message.uri.startsWith(config.appOrigin) -> Result.failure(Exception("uri_mismatch"))
+            message.nonce != expectedNonce ->
+                Result.failure(SiweValidationException(SiweValidationError.InvalidNonce))
+            message.domain != config.appDomain ->
+                Result.failure(SiweValidationException(SiweValidationError.DomainMismatch))
+            messageOrigin == null || expectedOrigin == null || messageOrigin != expectedOrigin ->
+                Result.failure(SiweValidationException(SiweValidationError.UriMismatch))
             messageEpochMillis > nowEpochMillis ||
                 messageEpochMillis < nowEpochMillis - 5.minutes.inWholeMilliseconds ->
-                Result.failure(Exception("message_expired"))
+                Result.failure(SiweValidationException(SiweValidationError.MessageExpired))
             else -> Result.success(Unit)
         }
         return res
     }
+}
+
+expect fun currentTimeMillis(): Long
+
+private fun String.toOriginOrNull(): String? {
+    val trimmed = trim()
+    val schemeIndex = trimmed.indexOf("://")
+    val scheme = trimmed.substring(0, schemeIndex).takeIf { schemeIndex > 0 }?.lowercase()
+        ?: return null
+    val authorityPart = trimmed.substring(schemeIndex + 3)
+        .substringBefore('/')
+        .substringBefore('?')
+        .substringBefore('#')
+    return authorityPart.takeIf(String::isNotBlank)?.let { "$scheme://$it" }
 }

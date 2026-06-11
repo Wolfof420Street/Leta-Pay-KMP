@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.letapay.app.core.designsystem.theme.LetaColors
 import com.letapay.app.core.designsystem.theme.LetaSpacing
 import com.letapay.app.core.model.blockchain.ChainId
 import com.letapay.app.core.model.wallet.AssetBalance
@@ -57,11 +58,6 @@ import kmp_project_template.feature.wallet.generated.resources.feature_wallet_to
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-
-// Chain-specific colors remain hardcoded as they represent brand colors
-private val ChainEthereum = androidx.compose.ui.graphics.Color(0xFF627EEA)
-private val ChainPolygon = androidx.compose.ui.graphics.Color(0xFF8247E5)
-private val ChainBase = androidx.compose.ui.graphics.Color(0xFF0052FF)
 
 private val CardMedium = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
 private val Pill = androidx.compose.foundation.shape.RoundedCornerShape(50)
@@ -236,9 +232,9 @@ private fun StaggeredAssetRow(asset: AssetBalance, index: Int) {
 @Composable
 private fun AssetRow(asset: AssetBalance) {
     val chainColor = when (asset.chainId.value) {
-        ChainId.Ethereum.value -> ChainEthereum
-        ChainId.Polygon.value -> ChainPolygon
-        ChainId.Base.value -> ChainBase
+        ChainId.Ethereum.value -> LetaColors.ChainEthereum
+        ChainId.Polygon.value -> LetaColors.ChainPolygon
+        ChainId.Base.value -> LetaColors.ChainBase
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     Row(

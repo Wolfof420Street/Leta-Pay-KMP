@@ -65,4 +65,5 @@ object LetaPayParamKeys {
 
     const val ASSET_SYMBOL = "asset_symbol"
     const val ACTION_TYPE = "action_type"
+    const val STATUS = "status"
 }

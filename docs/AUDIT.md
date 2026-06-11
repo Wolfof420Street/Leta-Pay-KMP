@@ -1,5 +1,5 @@
 # Audit Report
-_Generated: 2024-05-08_
+_Generated: 2026-05-21_
 
 ## Executive Summary
 
@@ -50,6 +50,15 @@ While the overall health of the codebase is high, several critical security and 
 - `MODULES.md`: Detailed the responsibilities of each Gradle module.
 - `DEPENDENCIES.md`: Inventoried tech stack and flagged version risks.
 - `SETUP.md`: Provided clean-checkout build instructions.
+
+## Gate Results (11 June 2026)
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| Spotless | PASS | Verified Gate 1: Code style consistency. |
+| Sidecar TS | PASS | Verified Gate 2: Security checks and ETH guardrails. |
+| Backend Tests | PASS | Verified Gate 3: 54 tests passed (AuthRoutes stability fixed). |
+| Frontend Compile | PASS | Verified Gate 4: Android, Desktop, Web targets compile. |
 
 ## Gate Results (21 May 2026)
 

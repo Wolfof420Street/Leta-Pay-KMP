@@ -9,6 +9,7 @@
  */
 package com.letapay.backend.service
 
+import com.letapay.backend.config.AppConfig
 import com.letapay.backend.error.AddressRejectedError
 import com.letapay.backend.model.transaction.BuildRequest
 import com.letapay.backend.model.transaction.BuildResponse
@@ -24,6 +25,7 @@ interface TransactionCommandService {
 class DefaultTransactionCommandService(
     private val screeningService: ScreeningService,
     private val agentKitClient: AgentKitClient,
+    private val appConfig: AppConfig,
 ) : TransactionCommandService {
     override suspend fun build(
         walletAddress: String,
@@ -33,6 +35,7 @@ class DefaultTransactionCommandService(
         if (!screeningService.check(request.to)) {
             throw AddressRejectedError()
         }
+        request.amount?.let { enforceTransactionLimit(it, appConfig) }
         val unsignedTx = agentKitClient.buildTransfer(
             fromAddress = walletAddress,
             toAddress = request.to,
